@@ -1,4 +1,5 @@
 require(File.join(ENV['gubg'], 'shared'))
+require('gubg/build/Executable')
 include GUBG
 
 task :default => :help
@@ -20,6 +21,13 @@ task :declare do
 end
 
 task :define => :declare do
+    hours = Build::Executable.new('hours')
+    hours.add_include_path(shared_dir('include'))
+    hours.add_sources('src/app/hours/hours.cpp')
+    hours.add_library_path(shared_dir('lib'))
+    hours.add_library('gubg.io')
+    hours.build
+    publish(hours.exe_filename, dst: 'bin')
 end
 
 namespace :task_warrior do
