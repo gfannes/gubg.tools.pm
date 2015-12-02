@@ -1,0 +1,17 @@
+#!/usr/bin/ruby
+
+context = `task _get rc.context`
+context_filter = nil
+context_filter = `task _get rc.context.#{context}` unless context.empty?
+
+if ARGV.empty?
+    system("task")
+else
+    args = ARGV.dup
+    case args[0]
+    when 'add'
+        args.push(context_filter) if context_filter
+    end
+    system("task #{args*' '}")
+    system('task list')
+end
