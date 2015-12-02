@@ -28,6 +28,8 @@ namespace :task_warrior do
         Dir.chdir(shared_dir('extern')) do
             case os
             when :linux, :osx
+                #Depends on the following ubuntu packages:
+                #sudo apt-get install libgnutls-dev uuid-dev
                 git_clone('https://git.tasktools.org/scm/tm', 'task') do
                     if !File.exist?('build')
                         Dir.mkdir('trybuild')
