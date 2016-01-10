@@ -54,3 +54,5 @@ namespace :task_warrior do
         end
     end
 end
+
+task :test
