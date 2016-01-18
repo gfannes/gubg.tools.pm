@@ -40,6 +40,7 @@ namespace :task_warrior do
                 #sudo apt-get install libgnutls-dev uuid-dev
                 git_clone('https://git.tasktools.org/scm/tm', 'task') do
                     if !File.exist?('build')
+                        rm_rf('trybuild') if File.exist?('trybuild')
                         Dir.mkdir('trybuild')
                         Dir.chdir('trybuild') do
                             sh 'cmake ..'
