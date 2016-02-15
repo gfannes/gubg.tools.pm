@@ -56,7 +56,7 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, gubg::plannin
 }
 pa::ReturnCode Plan::execute(const Options &options)
 {
-    MSS_BEGIN(ReturnCode, "Planning");
+    MSS_BEGIN(ReturnCode, logns);
 
     using namespace gubg::planning;
     Planner planner;

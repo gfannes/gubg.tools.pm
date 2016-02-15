@@ -11,6 +11,8 @@ namespace pa
 {
 	struct Planner
 	{
+        static constexpr const char *logns = "pa::Planner";
+
 		gubg::planning::Task::Ptr root;
 		gubg::planning::Task::Ptr current;
 		gubg::planning::Planning planning;
@@ -82,7 +84,7 @@ namespace pa
 
 		ReturnCode run()
 		{
-			MSS_BEGIN(ReturnCode);
+			MSS_BEGIN(ReturnCode, logns);
 
 			//Use model to build the gubg::planning::Task tree into root
 			gubg::tree::dfs::iterate(model(), *this);
@@ -95,6 +97,7 @@ namespace pa
 			{
 				gubg::planning::Day day;
 				MSS(planning.getLastDay(day));
+                MSS(!!root);
 				root->setDeadline(day);
 			}
 			MSS(planning.plan(*root));
@@ -105,9 +108,12 @@ namespace pa
 		template <typename Path>
 			bool open(Node &n, Path &p)
 			{
-				S(0);L(STREAM(n.desc, p.size(), n.total()));
+				S(logns);L(STREAM(n.desc, p.size(), n.total()));
 				if (n.total() <= 0)
+                {
+                    L(STREAM(n.total()));
 					return false;
+                }
 				if (!root)
 				{
 					assert(p.empty());

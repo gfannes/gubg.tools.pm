@@ -34,6 +34,8 @@ namespace :pa do
         pa.add_sources(FileList.new('src/app/pa/**/*.cpp'))
         pa.add_sources(FileList.new('src/app/pa/**/*.hpp'))
         pa.add_library_path(shared_dir('lib'))
+        pa.add_define('DEBUG')
+        pa.add_option('g')
         pa.add_library('gubg.io')
     end
     task :build => :setup do

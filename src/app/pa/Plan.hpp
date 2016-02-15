@@ -8,6 +8,9 @@ namespace pa
 {
     class Plan: public ITask
     {
+        private:
+            static constexpr const char *logns = "pa::Plan";
+
         public:
 			enum Level {Overview, Details};
 
