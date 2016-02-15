@@ -25,6 +25,10 @@ task :define => :declare do
     Rake::Task['pa:publish'].invoke
 end
 
+task :test do
+    Rake::Task['pa:test'].invoke
+end
+
 namespace :pa do
     pa = nil
     task :setup do
@@ -43,6 +47,20 @@ namespace :pa do
     end
     task :publish => :build do
         publish(pa.exe_filename, dst: 'bin')
+    end
+    task :test => :publish do
+        input_fn = 'src/app/test/pa/TODO.mm'
+        output_fn = 'TODO.txt'
+        options = []
+        # options += ['-h']
+        options += ['-i', input_fn]
+        options += ['-t', 'estimate']
+        options += ['-f', 'todo']
+        options += ['-l', '/Product A']
+        options += ['-l', '/Product B']
+        options += ['-o', output_fn]
+        options += ['-P']
+        sh shared_file(%w[bin pa.exe]), *options
     end
 end
 
@@ -88,5 +106,3 @@ namespace :task_warrior do
         end
     end
 end
-
-task :test
