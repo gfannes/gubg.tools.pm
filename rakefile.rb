@@ -21,13 +21,44 @@ task :declare do
 end
 
 task :define => :declare do
-    hours = Build::Executable.new('hours')
-    hours.add_include_path(shared_dir('include'))
-    hours.add_sources('src/app/hours/hours.cpp')
-    hours.add_library_path(shared_dir('lib'))
-    hours.add_library('gubg.io')
-    hours.build
-    publish(hours.exe_filename, dst: 'bin')
+    Rake::Task['hours:publish'].invoke
+    Rake::Task['pa:publish'].invoke
+end
+
+namespace :pa do
+    pa = nil
+    task :setup do
+        pa = Build::Executable.new('pa')
+        pa.add_include_path(shared_dir('include'))
+        pa.add_include_path('src/app')
+        pa.add_sources(FileList.new('src/app/pa/**/*.cpp'))
+        pa.add_sources(FileList.new('src/app/pa/**/*.hpp'))
+        pa.add_library_path(shared_dir('lib'))
+        pa.add_library('gubg.io')
+    end
+    task :build => :setup do
+        pa.build
+    end
+    task :publish => :build do
+        publish(pa.exe_filename, dst: 'bin')
+    end
+end
+
+namespace :hours do
+    hours = nil
+    task :setup do
+        hours = Build::Executable.new('hours')
+        hours.add_include_path(shared_dir('include'))
+        hours.add_sources('src/app/hours/hours.cpp')
+        hours.add_library_path(shared_dir('lib'))
+        hours.add_library('gubg.io')
+    end
+    task :build => :setup do
+        hours.build
+    end
+    task :publish => :build do
+        publish(hours.exe_filename, dst: 'bin')
+    end
 end
 
 namespace :task_warrior do
