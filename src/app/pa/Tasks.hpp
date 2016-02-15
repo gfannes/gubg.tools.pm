@@ -2,22 +2,12 @@
 #define HEADER_pa_Tasks_hpp_ALREADY_INCLUDED
 
 #include "pa/Codes.hpp"
-#include "gubg/file/File.hpp"
+#include "pa/Options.hpp"
 #include <list>
 #include <memory>
 
-namespace pa
-{
-    struct Options
-    {
-        gubg::file::File input;
-        gubg::file::File output;
-        std::string value;
-        std::string fraction;
-        std::string fraction_default;
-		std::string category;
-		std::vector<std::string> lines;
-    };
+namespace pa {
+
     class ITask
     {
         public:
@@ -25,6 +15,7 @@ namespace pa
             virtual ReturnCode execute(const Options &) = 0;
     };
     typedef std::list<ITask::Ptr> Tasks;
+
 }
 
 #include "pa/LoadMindMap.hpp"
