@@ -33,13 +33,14 @@ namespace :pa do
     pa = nil
     task :setup do
         pa = Build::Executable.new('pa')
+        pa.add_define('DEBUG')
+        pa.add_option('g')
         pa.add_include_path(shared_dir('include'))
         pa.add_include_path('src/app')
         pa.add_sources(FileList.new('src/app/pa/**/*.cpp'))
         pa.add_sources(FileList.new('src/app/pa/**/*.hpp'))
         pa.add_library_path(shared_dir('lib'))
-        pa.add_define('DEBUG')
-        pa.add_option('g')
+        pa.add_library('dl')
         pa.add_library('gubg.io')
     end
     task :build => :setup do
@@ -50,10 +51,12 @@ namespace :pa do
     end
     task :test => :publish do
         input_fn = 'src/app/test/pa/TODO.mm'
+        workers_fn = 'src/app/test/pa/workers.chai'
         output_fn = 'TODO.txt'
         options = []
         # options += ['-h']
         options += ['-i', input_fn]
+        options += ['-w', workers_fn]
         options += ['-t', 'estimate']
         options += ['-f', 'todo']
         options += ['-l', '/Product A']

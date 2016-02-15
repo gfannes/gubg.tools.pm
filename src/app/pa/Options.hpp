@@ -10,6 +10,7 @@ namespace pa {
     struct Options
     {
         gubg::file::File input;
+        gubg::file::File workers;
         gubg::file::File output;
         std::string value;
         std::string fraction;

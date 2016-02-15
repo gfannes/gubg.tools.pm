@@ -1,0 +1,2 @@
+add_worker("geertf", 0.8)
+set_nr_working_days(1000)

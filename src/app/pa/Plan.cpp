@@ -60,6 +60,7 @@ pa::ReturnCode Plan::execute(const Options &options)
 
     using namespace gubg::planning;
     Planner planner;
+    MSS(planner.add_workers(options.workers));
     MSS(planner.run());
     planner.root->stream(cout);
     stream(cout, planner, level_, Format::Text);
