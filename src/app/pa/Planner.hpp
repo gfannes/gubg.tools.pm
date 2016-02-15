@@ -20,7 +20,7 @@ namespace pa
 		gubg::planning::Planning planning;
 		std::ostringstream parseError_;
 		const std::string categoryName;
-        unsigned int nr_working_days = 0;
+        unsigned int nr_working_days = 1000;
 
 		Planner(const std::string &catName = ""): categoryName(catName) {}
 
