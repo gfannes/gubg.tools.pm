@@ -7,6 +7,10 @@
 using namespace pa;
 using namespace std;
 
+namespace  { 
+    const char *logns = "pa::Plan";
+} 
+
     template <typename Task>
 string taskDescription(const Task &task)
 {

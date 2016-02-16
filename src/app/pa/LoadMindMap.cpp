@@ -13,7 +13,7 @@ using namespace std;
 
 namespace pa
 {
-    const char *logns = "pa";
+    const char *logns = nullptr;//"LoadMindMap";
 
     struct Parser: gubg::xml::Parser_crtp<Parser>
     {
@@ -201,7 +201,7 @@ namespace
 }
 pa::ReturnCode LoadMindMap::execute(const Options &options)
 {
-	MSS_BEGIN(ReturnCode, "pa");
+	MSS_BEGIN(ReturnCode, logns);
     L("Loading mindmap: " << STREAM(options.input, options.value, options.fraction, options.fraction_default));
 
 	string xml;

@@ -13,7 +13,7 @@ namespace pa
 {
 	struct Planner
 	{
-        static constexpr const char *logns = "pa::Planner";
+        static constexpr const char *logns = nullptr;//"pa::Planner";
 
 		gubg::planning::Task::Ptr root;
 		gubg::planning::Task::Ptr current;
@@ -95,6 +95,23 @@ namespace pa
 						parseError_ << "Could not parse deadline attribute for node " << n.desc << ": \"" << n.attributes["deadline"] << "\"" << std::endl;
 					else
 						current->setDeadline(deadline);
+				}
+				if (n.attributes.count("startdate"))
+				{
+					gubg::planning::Day startdate(n.attributes["startdate"]);
+					if (!startdate.isValid())
+						parseError_ << "Could not parse startdate attribute for node " << n.desc << ": \"" << n.attributes["startdate"] << "\"" << std::endl;
+					else
+						current->setStartdate(startdate);
+				}
+				if (n.attributes.count("mode"))
+				{
+                    using namespace gubg::planning;
+                    const auto mode_str = n.attributes["mode"];
+                    if (false) {}
+                    else if (mode_str == "async") {current->setMode(Mode::Async);}
+                    else if (mode_str == "sync") {current->setMode(Mode::Sync);}
+                    
 				}
 				if (n.attributes.count(categoryName) > 0)
 				{

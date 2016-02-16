@@ -39,6 +39,7 @@ namespace :pa do
         pa.add_include_path('src/app')
         pa.add_sources(FileList.new('src/app/pa/**/*.cpp'))
         pa.add_sources(FileList.new('src/app/pa/**/*.hpp'))
+        pa.add_sources(FileList.new(shared('include/**/*.hpp')))
         pa.add_library_path(shared_dir('lib'))
         pa.add_library('dl')
         pa.add_library('gubg.io')
