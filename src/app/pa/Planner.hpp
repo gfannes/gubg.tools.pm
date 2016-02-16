@@ -13,7 +13,7 @@ namespace pa
 {
 	struct Planner
 	{
-        static constexpr const char *logns = nullptr;//"pa::Planner";
+        static constexpr const char *logns = "pa::Planner";
 
         using Task_ptr = gubg::planning::Task::Ptr;
         Task_ptr root;
@@ -52,9 +52,11 @@ namespace pa
             {
                 //We will change task, but its operator<() on the Task::Ptr should remain the same
                 auto task = p.first;
+                S(logns);L("Setting dependencies for " << task->fullName());
                 const auto &tags = p.second;
                 for (const auto &tag: tags)
                 {
+                    L(" => " << tag);
                     auto it = task_per_tag.find(tag);
                     MSS(it != task_per_tag.end(), std::cout << "ERROR: Could not find tag " << tag << " which is used as dependency for " << task->name << std::endl);
                     task->addDependency(it->second);
@@ -153,7 +155,9 @@ namespace pa
             }
             if (n.attributes.count("depends"))
             {
-                dependencies[current].push_back(n.attributes["depends"]);
+                const auto tag = n.attributes["depends"];
+                L("Task " << current->fullName() << " depends on " << tag);
+                dependencies[current].push_back(tag);
             }
             if (n.attributes.count(categoryName) > 0)
             {
