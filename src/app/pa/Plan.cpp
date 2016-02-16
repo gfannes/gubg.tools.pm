@@ -53,6 +53,32 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, gubg::plannin
                     break;
             }
             break;
+        case Plan::Products:
+            switch (format)
+            {
+                case Format::Text:
+                    {
+                        auto leafTasks = gubg::tree::dfs::leafs(*planner.root);
+                        using StopPerProduct = std::map<std::string, Day>;
+                        StopPerProduct stop_per_product;
+                        for (auto leaf: leafTasks)
+                        {
+                            auto &task = *leaf;
+                            const unsigned int product_level = 4;
+                            const auto basename = task.baseName(product_level);
+                            auto &stop = stop_per_product[basename];
+                            if (stop < task.stop)
+                                stop = task.stop;
+                        }
+                        for (const auto &p: stop_per_product)
+                            os << p.first << ": " << p.second << std::endl;
+                    }
+                    break;
+                case Format::Html:
+                    os << "<html><body>Not implemented yet</body></html>";
+                    break;
+            }
+            break;
         case Plan::Details:
             planner.planning.stream(os, format);
             break;

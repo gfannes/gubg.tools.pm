@@ -9,7 +9,7 @@ namespace pa
     class Plan: public ITask
     {
         public:
-			enum Level {Overview, Details};
+			enum Level {Overview, Products, Details};
 
             static Ptr create(Level level){return Ptr(new Plan(level));}
 

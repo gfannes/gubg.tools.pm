@@ -47,6 +47,12 @@ namespace
 					if (options.value.empty()) PA_FINALIZE_OK("You have to specify the totals to be used before the planning details");
 					tasks.push_back(Plan::create(Plan::Details));
 					});
+			optionParser.addSwitch("-x", "--plan-products", "Products details",
+					[&options, &tasks]()
+					{
+					if (options.value.empty()) PA_FINALIZE_OK("You have to specify the totals to be used before the planning products");
+					tasks.push_back(Plan::create(Plan::Products));
+					});
 			optionParser.addSwitch("-q", "--quarter", "Quarter view of the planning",
 					[&options, &tasks]()
 					{
