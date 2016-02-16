@@ -23,7 +23,8 @@ namespace pa
         const string value;
         const string fraction;
         const double defaultFraction;
-        Parser(Node &r, string n, string f, double df):root(r), value(n), fraction(f), defaultFraction(df){}
+        const double value2days;
+        Parser(Node &r, string n, string f, double df, double value2days):root(r), value(n), fraction(f), defaultFraction(df), value2days(value2days){}
 
 		typedef gubg::xml::Path Path;
 		typedef gubg::xml::Attributes Attributes;
@@ -73,17 +74,19 @@ namespace pa
 					//Totals value
 					MSS(!location.empty());
 					auto o = attrs.find("OBJECT");
+                    double totals = 0.0;
 					if (o != attrs.end())
 					{
 						gubg::Strange strange(o->second);
 						MSS(strange.popStringIf("org.freeplane.features.format.FormattedNumber|"));
-						MSS(strange.popFloat(location.back()->value));
+						MSS(strange.popFloat(totals));
 					}
 					else
 					{
 						gubg::Strange strange(v->second);
-						MSS(strange.popFloat(location.back()->value));
+						MSS(strange.popFloat(totals));
 					}
+                    location.back()->value = totals*value2days;
 					L("Detected value " << value << " for " << location.back()->desc << ": " << location.back()->value);
 				}
 				else if (n->second == fraction)
@@ -214,7 +217,7 @@ pa::ReturnCode LoadMindMap::execute(const Options &options)
 		MSS(strange.popFloat(defaultFraction));
 	}
 
-    Parser p(model(), options.value, options.fraction, defaultFraction);
+    Parser p(model(), options.value, options.fraction, defaultFraction, options.value2days);
     MSS(p.process(xml));
     L(STREAM(model().total()));
 
