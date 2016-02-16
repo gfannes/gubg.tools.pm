@@ -95,6 +95,15 @@ namespace pa
 
                 return true;
             }
+
+        template <typename CB>
+            static void process_attribute(Node &n, const std::string &attr, CB cb)
+            {
+                auto range = n.attributes.equal_range(attr);
+                for (auto it = range.first; it != range.second; ++it)
+                    cb(it->second);
+            }
+
         bool open_(Node &n)
         {
             MSS_BEGIN(bool, logns);
@@ -105,65 +114,89 @@ namespace pa
                 std::cout << "ERROR::Could not add new child \"" << n.desc << "\", only a leaf node can contain sweat" << std::endl;
             assert(current);
             current->setSweat(n.value*n.fraction);
-            if (n.attributes.count("allocate"))
+
             {
-                const auto str = n.attributes["allocate"];
-                gubg::Strange strange(str); 
-                std::string worker;
-                gubg::planning::Workers workers;
-                while (strange.popUntil(worker, '|'))
+                auto lambda = [&](const std::string &str)
                 {
+                    gubg::Strange strange(str); 
+                    std::string worker;
+                    gubg::planning::Workers workers;
+                    while (strange.popUntil(worker, '|'))
+                    {
+                        if (!worker.empty())
+                            workers.push_back(worker);
+                    }
+                    strange.popAll(worker);
                     if (!worker.empty())
                         workers.push_back(worker);
-                }
-                strange.popAll(worker);
-                if (!worker.empty())
-                    workers.push_back(worker);
-                current->setWorkers(workers);
+                    current->setWorkers(workers);
+                };
+                process_attribute(n, "allocate", lambda);
             }
-            if (n.attributes.count("deadline"))
-            {
-                gubg::planning::Day deadline(n.attributes["deadline"]);
-                if (!deadline.isValid())
-                    parseError_ << "Could not parse deadline attribute for node " << n.desc << ": \"" << n.attributes["deadline"] << "\"" << std::endl;
-                else
-                    current->setDeadline(deadline);
-            }
-            if (n.attributes.count("startdate"))
-            {
-                gubg::planning::Day startdate(n.attributes["startdate"]);
-                if (!startdate.isValid())
-                    parseError_ << "Could not parse startdate attribute for node " << n.desc << ": \"" << n.attributes["startdate"] << "\"" << std::endl;
-                else
-                    current->setStartdate(startdate);
-            }
-            if (n.attributes.count("mode"))
-            {
-                using namespace gubg::planning;
-                const auto mode_str = n.attributes["mode"];
-                if (false) {}
-                else if (mode_str == "async") {current->setMode(Mode::Async);}
-                else if (mode_str == "sync") {current->setMode(Mode::Sync);}
 
-            }
-            if (n.attributes.count("tag"))
             {
-                const auto tag = n.attributes["tag"];
-                auto it = task_per_tag.find(tag);
-                MSS(it == task_per_tag.end(), parseError_ << "Tag " << tag << " already exists for task " << it->second->name << std::endl);
-                task_per_tag[tag] = current;
+                auto lambda = [&](const std::string &str)
+                {
+                    gubg::planning::Day deadline(str);
+                    if (!deadline.isValid())
+                        parseError_ << "Could not parse deadline attribute for node " << n.desc << ": \"" << str << "\"" << std::endl;
+                    else
+                        current->setDeadline(deadline);
+                };
+                process_attribute(n, "deadline", lambda);
             }
-            if (n.attributes.count("depends"))
+
             {
-                const auto tag = n.attributes["depends"];
-                L("Task " << current->fullName() << " depends on " << tag);
-                dependencies[current].push_back(tag);
+                auto lambda = [&](const std::string &str)
+                {
+                    gubg::planning::Day startdate(str);
+                    if (!startdate.isValid())
+                        parseError_ << "Could not parse startdate attribute for node " << n.desc << ": \"" << str << "\"" << std::endl;
+                    else
+                        current->setStartdate(startdate);
+                };
+                process_attribute(n, "startdate", lambda);
             }
-            if (n.attributes.count(categoryName) > 0)
+
             {
-                L("Found a category");
-                current->setCategory(n.attributes[categoryName]);
+                auto lambda = [&](const std::string &str)
+                {
+                    using namespace gubg::planning;
+                    if (false) {}
+                    else if (str == "async") {current->setMode(Mode::Async);}
+                    else if (str == "sync") {current->setMode(Mode::Sync);}
+                };
+                process_attribute(n, "mode", lambda);
             }
+
+            {
+                auto lambda = [&](const std::string &str)
+                {
+                    auto it = task_per_tag.find(str);
+                    MSS(it == task_per_tag.end(), parseError_ << "Tag " << str << " already exists for task " << it->second->name << std::endl);
+                    task_per_tag[str] = current;
+                };
+                process_attribute(n, "tag", lambda);
+            }
+
+            {
+                auto lambda = [&](const std::string &str)
+                {
+                    L("Task " << current->fullName() << " depends on " << str);
+                    dependencies[current].push_back(str);
+                };
+                process_attribute(n, "depends", lambda);
+            }
+
+            {
+                auto lambda = [&](const std::string &str)
+                {
+                    L("Found category " << str);
+                    current->setCategory(str);
+                };
+                process_attribute(n, categoryName, lambda);
+            }
+
             MSS_END();
         }
 

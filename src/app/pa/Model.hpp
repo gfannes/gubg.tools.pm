@@ -14,7 +14,7 @@ namespace pa
         typedef double Fraction;
         typedef std::vector<Node> Childs;
         typedef std::string Id;
-        typedef std::map<std::string, std::string> Attributes;
+        typedef std::multimap<std::string, std::string> Attributes;
 
         Name desc;
 

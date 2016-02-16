@@ -111,7 +111,7 @@ namespace pa
 				{
 					//General attribute
 					MSS(!location.empty());
-					location.back()->attributes[n->second] = v->second;
+					location.back()->attributes.emplace(n->second, v->second);
 					L("Detected something else " << n->second << " for " << location.back()->desc << ": " << v->second);
 				}
 			}
@@ -191,9 +191,9 @@ namespace
 				if (p.empty())
 					return true;
 				const auto &attrs = p.back()->attributes;
-				auto it = attrs.find(attr_);
-				if (it != attrs.end())
-					n.attributes.insert(*it);
+                auto range = attrs.equal_range(attr_);
+                for (auto it = range.first; it != range.second; ++it)
+                    n.attributes.insert(*it);
 				return true;
             }
         template <typename Path>
