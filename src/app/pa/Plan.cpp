@@ -58,6 +58,7 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, gubg::plannin
             {
                 case Format::Text:
                     {
+                        os << "# Product delivery overview on " << today() << std::endl << std::endl;
                         auto leafTasks = gubg::tree::dfs::leafs(*planner.root);
                         using StopPerProduct = std::map<std::string, Day>;
                         StopPerProduct stop_per_product;
@@ -70,8 +71,23 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, gubg::plannin
                             if (stop < task.stop)
                                 stop = task.stop;
                         }
+                        using ProductsPerStop = std::multimap<Day, std::string>;
+                        ProductsPerStop products_per_stop;
+                        size_t max_product_size = 0;
                         for (const auto &p: stop_per_product)
-                            os << p.first << ": " << p.second << std::endl;
+                        {
+                            const auto &product = p.first;
+                            const auto &stop = p.second;
+                            products_per_stop.emplace(stop, product);
+                            max_product_size = std::max(product.size(), max_product_size);
+                        }
+                        for (const auto &p: products_per_stop)
+                        {
+                            const auto &stop = p.first;
+                            const auto &product = p.second;
+                            assert(product.size() <= max_product_size);
+                            os << product << std::string(max_product_size-product.size(), ' ') << " => ETA: " << stop << std::endl;
+                        }
                     }
                     break;
                 case Format::Html:
