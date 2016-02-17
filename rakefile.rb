@@ -99,10 +99,10 @@ namespace :task_warrior do
                         Dir.chdir('trybuild') do
                             sh 'cmake ..'
                             sh 'make -j 4'
-                            %w[calc lex task].each{|exe|cp "src/#{exe}", shared_dir('bin')}
                         end
                         mv('trybuild', 'build')
                     end
+                    %w[calc lex task].each{|exe|publish('build/src', pattern: exe, dst: 'bin')}
                 end if which('cmake')
             when :windows
             else raise("Unknown os #{os}") end
