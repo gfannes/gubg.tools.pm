@@ -35,7 +35,7 @@ pa::ReturnCode ShowWBS::execute(const Options &options)
 	if (!options.output.name().empty())
 	{
 		ofstream fo(options.output.name());
-		fo << "Work breakdown on " << gubg::planning::today() << endl;
+		fo << "# Work breakdown on " << gubg::planning::today() << endl << endl;
 		gubg::tree::dfs::iterate(model(), Show(fo));
 	}
 

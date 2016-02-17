@@ -1,11 +1,13 @@
 #include "pa/Plan.hpp"
 #include "pa/Planner.hpp"
+#include "gubg/xml/Builder.hpp"
 #include <string>
 #include <fstream>
 #include <map>
 #include <set>
 using namespace pa;
 using namespace std;
+using namespace gubg::xml::builder;
 
 namespace  { 
     const char *logns = "pa::Plan";
@@ -49,50 +51,96 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, gubg::plannin
                     }
                     break;
                 case Format::Html:
-                    os << "<html><body>Not implemented yet</body></html>";
+                    {
+                        Tag html(os, "html");
+                        auto body = html.tag("body");
+                        body.tag("h1") << "Planning overview on " << today();
+                        {
+                            auto table = body.tag("table");
+                            for (auto p: planner.root->tasksPerDeadline())
+                            {
+                                auto &task = *p.second;
+                                const auto descr = taskDescription(*p.second);
+                                auto tr = table.tag("tr");
+                                tr.tag("td") << descr;
+                                tr.tag("td") << task.start;
+                                tr.tag("td") << task.stop;
+                                if (task.stop > *p.first)
+                                {
+                                    tr.tag("td").tag("font").attr("color", "red") << *p.first;
+                                }
+                                else
+                                {
+                                    tr.tag("td") << *p.first;
+                                }
+                            }
+                        }
+                    }
                     break;
             }
             break;
         case Plan::Products:
-            switch (format)
             {
-                case Format::Text:
-                    {
-                        os << "# Product delivery overview on " << today() << std::endl << std::endl;
-                        auto leafTasks = gubg::tree::dfs::leafs(*planner.root);
-                        using StopPerProduct = std::map<std::string, Day>;
-                        StopPerProduct stop_per_product;
-                        for (auto leaf: leafTasks)
+                auto leafTasks = gubg::tree::dfs::leafs(*planner.root);
+                using StopPerProduct = std::map<std::string, Day>;
+                StopPerProduct stop_per_product;
+                for (auto leaf: leafTasks)
+                {
+                    auto &task = *leaf;
+                    const unsigned int product_level = 4;
+                    const auto basename = task.baseName(product_level);
+                    auto &stop = stop_per_product[basename];
+                    if (stop < task.stop)
+                        stop = task.stop;
+                }
+                using ProductsPerStop = std::multimap<Day, std::string>;
+                ProductsPerStop products_per_stop;
+                for (const auto &p: stop_per_product)
+                {
+                    const auto &product = p.first;
+                    const auto &stop = p.second;
+                    products_per_stop.emplace(stop, product);
+                }
+                switch (format)
+                {
+                    case Format::Text:
                         {
-                            auto &task = *leaf;
-                            const unsigned int product_level = 4;
-                            const auto basename = task.baseName(product_level);
-                            auto &stop = stop_per_product[basename];
-                            if (stop < task.stop)
-                                stop = task.stop;
+                            size_t max_product_size = 0;
+                            for (const auto &p: products_per_stop)
+                            {
+                                const auto &stop = p.first;
+                                const auto &product = p.second;
+                                max_product_size = std::max(product.size(), max_product_size);
+                            }
+                            os << "# Product delivery overview on " << today() << std::endl << std::endl;
+                            for (const auto &p: products_per_stop)
+                            {
+                                const auto &stop = p.first;
+                                const auto &product = p.second;
+                                assert(product.size() <= max_product_size);
+                                os << product << std::string(max_product_size-product.size(), ' ') << " => ETA: " << stop << std::endl;
+                            }
                         }
-                        using ProductsPerStop = std::multimap<Day, std::string>;
-                        ProductsPerStop products_per_stop;
-                        size_t max_product_size = 0;
-                        for (const auto &p: stop_per_product)
+                        break;
+                    case Format::Html:
                         {
-                            const auto &product = p.first;
-                            const auto &stop = p.second;
-                            products_per_stop.emplace(stop, product);
-                            max_product_size = std::max(product.size(), max_product_size);
+                            Tag html(os, "html");
+                            auto body = html.tag("body");
+                            body.tag("h1") << "Product delivery overview on " << today();
+                            {
+                                auto table = body.tag("table");
+                                for (const auto &p: products_per_stop)
+                                {
+                                    const auto &stop = p.first;
+                                    const auto &product = p.second;
+                                    auto tr = table.tag("tr");
+                                    tr.tag("td") << product;
+                                    tr.tag("td") << stop;
+                                }
+                            }
                         }
-                        for (const auto &p: products_per_stop)
-                        {
-                            const auto &stop = p.first;
-                            const auto &product = p.second;
-                            assert(product.size() <= max_product_size);
-                            os << product << std::string(max_product_size-product.size(), ' ') << " => ETA: " << stop << std::endl;
-                        }
-                    }
-                    break;
-                case Format::Html:
-                    os << "<html><body>Not implemented yet</body></html>";
-                    break;
+                        break;
+                }
             }
             break;
         case Plan::Details:
