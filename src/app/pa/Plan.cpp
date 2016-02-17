@@ -57,6 +57,13 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, gubg::plannin
                         body.tag("h1") << "Planning overview on " << today();
                         {
                             auto table = body.tag("table");
+                            {
+                                auto tr = table.tag("tr");
+                                tr.tag("th") << "Task";
+                                tr.tag("th") << "Start";
+                                tr.tag("th") << "Stop";
+                                tr.tag("th") << "Deadline";
+                            }
                             for (auto p: planner.root->tasksPerDeadline())
                             {
                                 auto &task = *p.second;
@@ -129,6 +136,11 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, gubg::plannin
                             body.tag("h1") << "Product delivery overview on " << today();
                             {
                                 auto table = body.tag("table");
+                                {
+                                    auto tr = table.tag("tr");
+                                    tr.tag("th") << "Product";
+                                    tr.tag("th") << "ETA";
+                                }
                                 for (const auto &p: products_per_stop)
                                 {
                                     const auto &stop = p.first;
