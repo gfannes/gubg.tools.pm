@@ -106,6 +106,6 @@ namespace :task_warrior do
                 end if which('cmake')
             when :windows
             else raise("Unknown os #{os}") end
-        end
+        end if false
     end
 end
