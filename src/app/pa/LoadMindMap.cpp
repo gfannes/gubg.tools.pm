@@ -78,7 +78,7 @@ namespace pa
 					if (o != attrs.end())
 					{
 						gubg::Strange strange(o->second);
-						MSS(strange.popStringIf("org.freeplane.features.format.FormattedNumber|"));
+						MSS(strange.pop_if("org.freeplane.features.format.FormattedNumber|"));
 						MSS(strange.popFloat(totals));
 					}
 					else
@@ -97,7 +97,7 @@ namespace pa
 					if (o != attrs.end())
 					{
 						gubg::Strange strange(o->second);
-						MSS(strange.popStringIf("org.freeplane.features.format.FormattedNumber|"));
+						MSS(strange.pop_if("org.freeplane.features.format.FormattedNumber|"));
 						MSS(strange.popFloat(location.back()->fraction));
 					}
 					else

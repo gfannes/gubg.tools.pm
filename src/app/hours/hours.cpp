@@ -13,7 +13,7 @@ bool popTime(double &time, Strange &strange)
 {
     Strange num;
     //Numbers can be separated by ' ' or '/'
-    if (!strange.popUntil(num, ' ') && !strange.popUntil(num, '/') &&!strange.popAll(num))
+    if (!strange.pop_until(num, ' ') && !strange.pop_until(num, '/') &&!strange.pop_all(num))
         return false;
     if (num.contains('.'))
     {
@@ -46,7 +46,7 @@ int main()
             return -1;
         Strange strange(line);
         //New day is started with 't' or '+'
-        if (strange.popCharIf('t') || strange.popCharIf('+'))
+        if (strange.pop_if('t') || strange.pop_if('+'))
         {
             //New day: read the start, lunch and stop to compute the total hours worked
             strange.strip(' ');

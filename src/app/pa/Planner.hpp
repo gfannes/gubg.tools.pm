@@ -126,12 +126,12 @@ namespace pa
                     gubg::Strange strange(str); 
                     std::string worker;
                     gubg::planning::Workers workers;
-                    while (strange.popUntil(worker, '|'))
+                    while (strange.pop_until(worker, '|'))
                     {
                         if (!worker.empty())
                             workers.push_back(worker);
                     }
-                    strange.popAll(worker);
+                    strange.pop_all(worker);
                     if (!worker.empty())
                         workers.push_back(worker);
                     current->setWorkers(workers);
