@@ -11,6 +11,10 @@ using namespace gubg::xml::builder;
 
 namespace  { 
     const char *logns = "pa::Plan";
+    enum class Format
+    {
+        Text, Html, Timeline,
+    };
 } 
 
     template <typename Task>
@@ -20,7 +24,7 @@ string taskDescription(const Task &task)
     oss << task.fullName() << "(" << task.cumulSweat << ")";
     return oss.str();
 }
-void stream(std::ostream &os, Planner &planner, Plan::Level level, gubg::planning::Format format)
+void stream(std::ostream &os, Planner &planner, Plan::Level level, Format format)
 {
     using namespace gubg::planning;
     switch (level)
@@ -28,7 +32,7 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, gubg::plannin
         case Plan::Overview:
             switch (format)
             {
-                case Format::Text:
+                case ::Format::Text:
                     {
                         size_t maxLen = 0;
                         for (auto p: planner.root->tasksPerDeadline())
@@ -50,7 +54,7 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, gubg::plannin
                         }
                     }
                     break;
-                case Format::Html:
+                case ::Format::Html:
                     {
                         Tag html(os, "html");
                         auto body = html.tag("body");
@@ -89,28 +93,62 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, gubg::plannin
         case Plan::Products:
             {
                 auto leafTasks = gubg::tree::dfs::leafs(*planner.root);
-                using StopPerProduct = std::map<std::string, Day>;
-                StopPerProduct stop_per_product;
+                using StartStop = std::pair<Day, Day>;
+                using StartStopPerNameParts = std::map<Task::NameParts, StartStop>;
+                StartStopPerNameParts startstop_per_nameparts;
+                StartStop period;
+                using StartStopPerProduct = std::map<std::string, StartStop>;
+                using StartStopPerProductPerLine = std::map<std::string ,StartStopPerProduct>;
+                StartStopPerProductPerLine startstop_per_product_per_line;
+                auto enlarge = [](StartStop &ss, const Day &start_, const Day &stop_)
+                {
+                    {
+                        auto &start = ss.first;
+                        if (!start.isValid() || start_ < start)
+                            start = start_;
+                    }
+                    {
+                        auto &stop = ss.second;
+                        if (stop < stop_)
+                            stop = stop_;
+                    }
+                };
+                auto name_from_parts = [](const Task::NameParts &parts)
+                {
+                    std::ostringstream oss;
+                    for (const auto &part: parts)
+                        oss << '/' << part;
+                    return oss.str();
+                };
                 for (auto leaf: leafTasks)
                 {
                     auto &task = *leaf;
-                    const unsigned int product_level = 4;
-                    const auto basename = task.baseName(product_level);
-                    auto &stop = stop_per_product[basename];
-                    if (stop < task.stop)
-                        stop = task.stop;
+
+                    for (auto parts = task.name_parts(); !parts.empty(); parts.pop_back())
+                        enlarge(startstop_per_nameparts[parts], task.start, task.stop);
+
+                    const unsigned int line_level = 2;
+                    const auto line = task.base_name(line_level);
+                    const unsigned int product_level = 5;
+                    const auto product = task.base_name(product_level, line_level);
+                    enlarge(startstop_per_product_per_line[line][product], task.start, task.stop);
+                    enlarge(period, task.start, task.stop);
                 }
                 using ProductsPerStop = std::multimap<Day, std::string>;
                 ProductsPerStop products_per_stop;
-                for (const auto &p: stop_per_product)
+                for (const auto &p: startstop_per_product_per_line)
                 {
-                    const auto &product = p.first;
-                    const auto &stop = p.second;
-                    products_per_stop.emplace(stop, product);
+                    const auto &line = p.first;
+                    for (const auto &pp: p.second)
+                    {
+                        const auto &product = pp.first;
+                        const auto &stop = pp.second.second;
+                        products_per_stop.emplace(stop, line+": "+product);
+                    }
                 }
                 switch (format)
                 {
-                    case Format::Text:
+                    case ::Format::Text:
                         {
                             size_t max_product_size = 0;
                             for (const auto &p: products_per_stop)
@@ -129,7 +167,7 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, gubg::plannin
                             }
                         }
                         break;
-                    case Format::Html:
+                    case ::Format::Html:
                         {
                             Tag html(os, "html");
                             auto body = html.tag("body");
@@ -152,11 +190,121 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, gubg::plannin
                             }
                         }
                         break;
+                    case ::Format::Timeline:
+                        {
+                            {
+                                Header header(os);
+                                header.attr("version", "1.0");
+                                header.attr("encoding", "utf-8");
+                            }
+                            Tag timeline(os, "timeline");
+                            timeline.tag("version") << "1.10.0 (1043763d680f 2016-04-30)";
+                            timeline.tag("timetype") << "gregoriantime";
+
+                            /* auto extract_category = [](const std::string &product) */
+                            /* { */
+                            /*     gubg::Strange strange(product); */
+                            /*     std::string cat; */
+                            /*     strange.pop_if('/') && (strange.pop_until(cat, '/') || strange.pop_all(cat)); */
+                            /*     return cat; */
+                            /* }; */
+                            /* using Categories = std::set<std::string>; */
+                            /* Categories categories; */
+                            /* for (const auto &p: startstop_per_product_per_line) */
+                            /* { */
+                            /*     const auto &product = p.first; */
+                            /*     categories.insert(extract_category(product)); */
+                            /* } */
+
+                            {
+                                auto categories_tag = timeline.tag("categories");
+                                {
+                                    auto line_cat = categories_tag.tag("category");
+                                    line_cat.tag("name") << "line";
+                                    line_cat.tag("color") << "255,80,80";
+                                    line_cat.tag("progress_color") << "255,80,80";
+                                    line_cat.tag("done_color") << "255,80,80";
+                                    line_cat.tag("font_color") << "255,255,255";
+                                }
+                                {
+                                    auto product_cat = categories_tag.tag("category");
+                                    product_cat.tag("name") << "product";
+                                    product_cat.tag("color") << "55,80,80";
+                                    product_cat.tag("progress_color") << "255,80,80";
+                                    product_cat.tag("done_color") << "255,80,80";
+                                    product_cat.tag("font_color") << "55,255,255";
+                                }
+                            }
+
+                            auto format_time = [](const Day &day, bool is_start)
+                            {
+                                std::ostringstream oss;
+                                oss << day.year() << '-' << day.month() << '-' << day.day();
+                                oss << (is_start ? " 00:00:01" : " 23:59:59");
+                                return oss.str();
+                            };
+
+                            {
+                                auto events = timeline.tag("events");
+                                for (const auto &p: startstop_per_product_per_line)
+                                {
+                                    const auto &line = p.first;
+
+                                    StartStop ss;
+
+                                    for (const auto &pp: p.second)
+                                    {
+                                        const auto &product = pp.first;
+                                        const auto &start = pp.second.first;
+                                        const auto &stop = pp.second.second;
+                                        enlarge(ss, start, stop);
+
+                                        auto event = events.tag("event");
+                                        event.tag("start") << format_time(start, true);
+                                        event.tag("end") << format_time(stop, false);
+                                        event.tag("text") << product;
+                                        event.tag("progress") << 0;
+                                        event.tag("fuzzy") << "False";
+                                        event.tag("locked") << "False";
+                                        event.tag("ends_today") << "False";
+                                        event.tag("category") << "product";
+                                        event.tag("default_color") << "200,200,200";
+                                    }
+
+                                    auto event = events.tag("event");
+                                    event.tag("start") << format_time(ss.first, true);
+                                    event.tag("end") << format_time(ss.second, false);
+                                    event.tag("text") << line;
+                                    event.tag("progress") << 0;
+                                    event.tag("fuzzy") << "False";
+                                    event.tag("locked") << "False";
+                                    event.tag("ends_today") << "False";
+                                    event.tag("category") << "line";
+                                    event.tag("default_color") << "200,200,200";
+                                }
+                            }
+                            {
+                                auto view = timeline.tag("view");
+                                {
+                                    auto displayed_period = view.tag("displayed_period");
+                                    displayed_period.tag("start") << format_time(period.first, true);
+                                    displayed_period.tag("end") << format_time(period.second, false);
+                                }
+                                {
+                                    auto hidden_categories = view.tag("hidden_categories");
+                                }
+                            }
+                        }
+                        break;
                 }
             }
             break;
         case Plan::Details:
-            planner.planning.stream(os, format);
+            switch (format)
+            {
+                case ::Format::Text: planner.planning.stream(os, gubg::planning::Format::Text); break;
+                case ::Format::Html: planner.planning.stream(os, gubg::planning::Format::Html); break;
+            }
             break;
     }
 }
@@ -169,20 +317,26 @@ pa::ReturnCode Plan::execute(const Options &options)
     MSS(planner.add_workers(options.workers));
     MSS(planner.run());
     planner.root->stream(cout);
-    stream(cout, planner, level_, Format::Text);
+    stream(cout, planner, level_, ::Format::Text);
     if (!options.output.name().empty())
     {
         {
             gubg::file::File fn(options.output.name());
             fn.setExtension("txt");
             ofstream fo(fn.name());
-            stream(fo, planner, level_, Format::Text);
+            stream(fo, planner, level_, ::Format::Text);
         }
         {
             gubg::file::File fn(options.output.name());
             fn.setExtension("html");
             ofstream fo(fn.name());
-            stream(fo, planner, level_, Format::Html);
+            stream(fo, planner, level_, ::Format::Html);
+        }
+        {
+            gubg::file::File fn(options.output.name());
+            fn.setExtension("timeline");
+            ofstream fo(fn.name());
+            stream(fo, planner, level_, ::Format::Timeline);
         }
     }
 
