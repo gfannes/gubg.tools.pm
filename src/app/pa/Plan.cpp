@@ -92,6 +92,7 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, Format format
             break;
         case Plan::Products:
             {
+                S(logns);
                 auto leafTasks = gubg::tree::dfs::leafs(*planner.root);
                 using StartStop = std::pair<Day, Day>;
                 using StartStopPerNameParts = std::map<Task::NameParts, StartStop>;
@@ -124,8 +125,18 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, Format format
                 {
                     auto &task = *leaf;
 
-                    for (auto parts = task.name_parts(); !parts.empty(); parts.pop_back())
-                        enlarge(startstop_per_nameparts[parts], task.start, task.stop);
+                    {
+                        auto parts = task.name_parts();
+                        if (!parts.empty())
+                        {
+                            parts.pop_front();
+                            for (; !parts.empty(); parts.pop_back())
+                            {
+                                enlarge(startstop_per_nameparts[parts], task.start, task.stop);
+                                L(C(name_from_parts(parts))C(task.start)C(task.stop));
+                            }
+                        }
+                    }
 
                     const unsigned int line_level = 2;
                     const auto line = task.base_name(line_level);
@@ -201,38 +212,35 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, Format format
                             timeline.tag("version") << "1.10.0 (1043763d680f 2016-04-30)";
                             timeline.tag("timetype") << "gregoriantime";
 
-                            /* auto extract_category = [](const std::string &product) */
-                            /* { */
-                            /*     gubg::Strange strange(product); */
-                            /*     std::string cat; */
-                            /*     strange.pop_if('/') && (strange.pop_until(cat, '/') || strange.pop_all(cat)); */
-                            /*     return cat; */
-                            /* }; */
-                            /* using Categories = std::set<std::string>; */
-                            /* Categories categories; */
-                            /* for (const auto &p: startstop_per_product_per_line) */
-                            /* { */
-                            /*     const auto &product = p.first; */
-                            /*     categories.insert(extract_category(product)); */
-                            /* } */
+                            auto category_name = [](size_t depth)
+                            {
+                                std::ostringstream oss; oss << "depth_" << depth;
+                                return oss.str();
+                            };
 
                             {
                                 auto categories_tag = timeline.tag("categories");
+                                size_t max_name_parts = 0;
+                                for (const auto &p: startstop_per_nameparts)
+                                    max_name_parts = std::max(max_name_parts, p.first.size());
+
+                                auto color = [&](float depth)
                                 {
-                                    auto line_cat = categories_tag.tag("category");
-                                    line_cat.tag("name") << "line";
-                                    line_cat.tag("color") << "255,80,80";
-                                    line_cat.tag("progress_color") << "255,80,80";
-                                    line_cat.tag("done_color") << "255,80,80";
-                                    line_cat.tag("font_color") << "255,255,255";
-                                }
+                                    depth -= 1;//0-based now
+                                    std::ostringstream oss;
+                                    const float factor = depth/float(max_name_parts-1);
+                                    oss << int(255.0*(1.0-factor)) << ',' << int(255.0*factor) << ',' << int(0*(1.0-factor));
+                                    return oss.str();
+                                };
+
+                                for (size_t depth = 1; depth <= max_name_parts; ++depth)
                                 {
-                                    auto product_cat = categories_tag.tag("category");
-                                    product_cat.tag("name") << "product";
-                                    product_cat.tag("color") << "55,80,80";
-                                    product_cat.tag("progress_color") << "255,80,80";
-                                    product_cat.tag("done_color") << "255,80,80";
-                                    product_cat.tag("font_color") << "55,255,255";
+                                    auto cat = categories_tag.tag("category");
+                                    cat.tag("name") << category_name(depth);
+                                    cat.tag("color") << color(depth);
+                                    cat.tag("progress_color") << "255,80,80";
+                                    cat.tag("done_color") << "255,80,80";
+                                    cat.tag("font_color") << "0,0,0";
                                 }
                             }
 
@@ -240,46 +248,26 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, Format format
                             {
                                 std::ostringstream oss;
                                 oss << day.year() << '-' << day.month() << '-' << day.day();
-                                oss << (is_start ? " 00:00:01" : " 23:59:59");
+                                oss << (is_start ? " 12:00:00" : " 12:00:00");
                                 return oss.str();
                             };
 
                             {
                                 auto events = timeline.tag("events");
-                                for (const auto &p: startstop_per_product_per_line)
+                                for (const auto &p: startstop_per_nameparts)
                                 {
-                                    const auto &line = p.first;
-
-                                    StartStop ss;
-
-                                    for (const auto &pp: p.second)
-                                    {
-                                        const auto &product = pp.first;
-                                        const auto &start = pp.second.first;
-                                        const auto &stop = pp.second.second;
-                                        enlarge(ss, start, stop);
-
-                                        auto event = events.tag("event");
-                                        event.tag("start") << format_time(start, true);
-                                        event.tag("end") << format_time(stop, false);
-                                        event.tag("text") << product;
-                                        event.tag("progress") << 0;
-                                        event.tag("fuzzy") << "False";
-                                        event.tag("locked") << "False";
-                                        event.tag("ends_today") << "False";
-                                        event.tag("category") << "product";
-                                        event.tag("default_color") << "200,200,200";
-                                    }
+                                    const auto &parts = p.first;
+                                    const auto &ss = p.second;
 
                                     auto event = events.tag("event");
                                     event.tag("start") << format_time(ss.first, true);
                                     event.tag("end") << format_time(ss.second, false);
-                                    event.tag("text") << line;
+                                    event.tag("text") << parts.back();
                                     event.tag("progress") << 0;
                                     event.tag("fuzzy") << "False";
                                     event.tag("locked") << "False";
                                     event.tag("ends_today") << "False";
-                                    event.tag("category") << "line";
+                                    event.tag("category") << category_name(parts.size());
                                     event.tag("default_color") << "200,200,200";
                                 }
                             }
@@ -332,6 +320,7 @@ pa::ReturnCode Plan::execute(const Options &options)
             ofstream fo(fn.name());
             stream(fo, planner, level_, ::Format::Html);
         }
+        if (level_ == Plan::Products)
         {
             gubg::file::File fn(options.output.name());
             fn.setExtension("timeline");
