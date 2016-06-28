@@ -23,10 +23,27 @@ end
 task :define => :declare do
     Rake::Task['hours:publish'].invoke
     Rake::Task['pa:publish'].invoke
+    Rake::Task['timeline:publish'].invoke
 end
 
 task :test do
     Rake::Task['pa:test'].invoke
+end
+
+namespace :timeline do
+    timeline_dir = shared('extern/timeline')
+    file timeline_dir do
+        Dir.chdir(shared_dir('extern')) do
+            url = 'https://sourceforge.net/projects/thetimelineproj/files/thetimelineproj/1.10.0/timeline-1.10.0.zip'
+            sh "wget #{url}"
+            base = 'timeline-1.10.0'
+            zip_fn = "#{base}.zip"
+            sh "unzip #{zip_fn}"
+            sh "mv #{base} timeline"
+        end
+    end
+    task :publish => timeline_dir do
+    end
 end
 
 namespace :pa do

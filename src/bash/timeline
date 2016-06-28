@@ -1,0 +1,4 @@
+#!/bin/bash
+
+python $gubg/extern/timeline/source/timeline.py $1
+
