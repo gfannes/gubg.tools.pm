@@ -1,22 +1,53 @@
 #include "pa/Planner.hpp"
+#include "gubg/Strange.hpp"
 #include "chaiscript/chaiscript.hpp"
 #include "chaiscript/chaiscript_stdlib.hpp"
 #include <sstream>
 using namespace chaiscript;
 using namespace gubg::planning;
 
+
 namespace pa
 {
-	bool Planner::add_workers(const gubg::file::File &workers_chaiscript)
-	{
+    bool Planner::add_absence(const std::string &worker, const std::string &span)
+    {
+        MSS_BEGIN(bool);
+        gubg::Strange strange(span);
+        int year, month, day;
+        MSS(strange.popDecimal(year));
+        MSS(strange.popCharIf('/'));
+        MSS(strange.popDecimal(month));
+        MSS(strange.popCharIf('/'));
+        MSS(strange.popDecimal(day));
+        if (strange.popCharIf('-'))
+        {
+            int year2, month2, day2;
+            MSS(strange.popDecimal(year2));
+            MSS(strange.popCharIf('/'));
+            MSS(strange.popDecimal(month2));
+            MSS(strange.popCharIf('/'));
+            MSS(strange.popDecimal(day2));
+            absence_per_worker[worker].push_back(Day(year, month, day));
+            for (auto d: dayRange(Day(year, month, day), Day(year2, month2, day2)))
+                absence_per_worker[worker].push_back(d);
+        }
+        else
+        {
+            absence_per_worker[worker].push_back(Day(year, month, day));
+        }
+        MSS_END();
+    }
+    bool Planner::add_workers(const gubg::file::File &workers_chaiscript)
+    {
         MSS_BEGIN(bool, logns);
 
         MSS(!workers_chaiscript.empty(), std::cout << "ERROR: You have to specify the workers file, someone has to do it, you know..." << std::endl);
 
         L("Loading workers from " << workers_chaiscript);
 
-		ChaiScript chai(Std_Lib::library());
+        ChaiScript chai(Std_Lib::library());
         chai.add(fun(&gubg::planning::Planning::addWorker, &planning), "add_worker");
+        chai.add(fun(&Planner::add_absence, this), "absence");
         chai.add(fun(&Planner::set_nr_working_days, this), "set_nr_working_days");
 
         {
@@ -33,6 +64,10 @@ namespace pa
 
         for (auto d: workDays(nr_working_days))
             planning.addDay(d);
+
+        for (const auto &p: absence_per_worker)
+            for (auto d: p.second)
+            planning.absence(p.first, d);
 
         MSS_END();
 

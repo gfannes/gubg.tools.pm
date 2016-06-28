@@ -18,6 +18,11 @@ namespace pa
         using Task_ptr = gubg::planning::Task::Ptr;
         Task_ptr root;
 		Task_ptr current;
+
+        using AbsencePerWorker = std::map<std::string, gubg::planning::Days>;
+        AbsencePerWorker absence_per_worker;
+        bool add_absence(const std::string &worker, const std::string &span);
+
 		gubg::planning::Planning planning;
 		std::ostringstream parseError_;
 		const std::string categoryName;
