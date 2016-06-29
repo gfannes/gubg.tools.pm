@@ -9,6 +9,7 @@ namespace pa
     {
         OK, Error,
 
+        UnknownExtension,
 		ParsingError,
     };
 }

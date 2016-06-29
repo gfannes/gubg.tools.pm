@@ -1,6 +1,7 @@
 #include "pa/LoadMindMap.hpp"
 #include "pa/Model.hpp"
 #include "gubg/parse/xml/Parser.hpp"
+#include "gubg/parse/tree/Parser.hpp"
 #include "gubg/parse/basic.hpp"
 #include "gubg/file/Filesystem.hpp"
 #include "gubg/tree/dfs/Iterate.hpp"
@@ -13,18 +14,66 @@ using namespace std;
 
 namespace pa
 {
-    const char *logns = nullptr;//"LoadMindMap";
+    const char *logns = "LoadMindMap";
 
-    struct Parser: gubg::xml::Parser_crtp<Parser>
+    using Location = std::vector<Node*>;
+
+    struct TreeParser: gubg::parse::tree::Parser_crtp<TreeParser>
     {
         Node &root;
-        typedef std::vector<Node*> Location;
-        Location location;
         const string value;
         const string fraction;
-        const double defaultFraction;
+        const double default_fraction;
         const double value2days;
-        Parser(Node &r, string n, string f, double df, double value2days):root(r), value(n), fraction(f), defaultFraction(df), value2days(value2days){}
+        Location location;
+        TreeParser(Node &r, string n, string f, double df, double value2days):root(r), value(n), fraction(f), default_fraction(df), value2days(value2days){}
+
+        template <typename Name, typename Attr>
+            void parser_open(const Name &name, const Attr &attr)
+            {
+                S("TreeParser");
+                L(C(name));
+                if (location.empty())
+                    location.push_back(&root);
+                else
+                {
+                    location.back()->childs.push_back(Node());
+                    location.push_back(&location.back()->childs.back());
+                }
+                location.back()->desc = name;
+                location.back()->fraction = default_fraction;
+                for (const auto &p: attr)
+                {
+                    const auto &k = p.first;
+                    const auto &v = p.second;
+                    if (false) {}
+                    else if (k == value)
+                    {
+                        const auto totals = std::stod(v);
+                        location.back()->value = totals*value2days;
+                    }
+                    else
+                    {
+                        location.back()->attributes.emplace(k, v);
+                    }
+                }
+            }
+            void parser_close()
+            {
+                S("TreeParser");
+                location.pop_back();
+            }
+    };
+
+    struct XmlParser: gubg::xml::Parser_crtp<XmlParser>
+    {
+        Node &root;
+        const string value;
+        const string fraction;
+        const double default_fraction;
+        const double value2days;
+        Location location;
+        XmlParser(Node &r, string n, string f, double df, double value2days):root(r), value(n), fraction(f), default_fraction(df), value2days(value2days){}
 
 		typedef gubg::xml::Path Path;
 		typedef gubg::xml::Attributes Attributes;
@@ -40,7 +89,7 @@ namespace pa
                     location.back()->childs.push_back(Node());
                     location.push_back(&location.back()->childs.back());
                 }
-                location.back()->fraction = defaultFraction;
+                location.back()->fraction = default_fraction;
             }
         }
         void parser_close(const string &tag, const Path &path)
@@ -207,18 +256,35 @@ pa::ReturnCode LoadMindMap::execute(const Options &options)
 	MSS_BEGIN(ReturnCode, logns);
     L("Loading mindmap: " << STREAM(options.input, options.value, options.fraction, options.fraction_default));
 
-	string xml;
-	MSS(read(xml, options.input));
-
-	double defaultFraction = 1.0;
+	double default_fraction = 1.0;
 	if (!options.fraction_default.empty())
 	{
 		gubg::Strange strange(options.fraction_default);
-		MSS(strange.popFloat(defaultFraction));
+		MSS(strange.popFloat(default_fraction));
 	}
 
-    Parser p(model(), options.value, options.fraction, defaultFraction, options.value2days);
-    MSS(p.process(xml));
+    string content;
+    MSS(read(content, options.input));
+
+    const auto ext = options.input.extension();
+    if (false) {}
+    else if (ext == "mm")
+    {
+        XmlParser p(model(), options.value, options.fraction, default_fraction, options.value2days);
+        MSS(p.process(content));
+    }
+    else if (ext == "tree")
+    {
+        TreeParser p(model(), options.value, options.fraction, default_fraction, options.value2days);
+        L("Before process");
+        MSS(p.process(content));
+        L("After process");
+    }
+    else
+    {
+        MSS(pa::ReturnCode::UnknownExtension, cerr << "Unknown extension " << ext << endl);
+    }
+    L("Loading the model went OK");
     L(STREAM(model().total()));
 
 	{
