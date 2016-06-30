@@ -49,8 +49,11 @@ namespace pa
                     if (false) {}
                     else if (k == value)
                     {
-                        const auto totals = std::stod(v);
-                        location.back()->value = totals*value2days;
+                        location.back()->value = std::stod(v)*value2days;
+                    }
+                    else if (k == fraction)
+                    {
+                        location.back()->fraction = std::stod(v);
                     }
                     else
                     {

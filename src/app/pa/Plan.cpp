@@ -248,7 +248,7 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, Format format
                             {
                                 std::ostringstream oss;
                                 oss << day.year() << '-' << day.month() << '-' << day.day();
-                                oss << (is_start ? " 12:00:00" : " 12:00:00");
+                                oss << (is_start ? " 14:00:00" : " 10:00:00");
                                 return oss.str();
                             };
 
@@ -259,16 +259,21 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, Format format
                                     const auto &parts = p.first;
                                     const auto &ss = p.second;
 
-                                    auto event = events.tag("event");
-                                    event.tag("start") << format_time(ss.first, true);
-                                    event.tag("end") << format_time(ss.second, false);
-                                    event.tag("text") << parts.back();
-                                    event.tag("progress") << 0;
-                                    event.tag("fuzzy") << "False";
-                                    event.tag("locked") << "False";
-                                    event.tag("ends_today") << "False";
-                                    event.tag("category") << category_name(parts.size());
-                                    event.tag("default_color") << "200,200,200";
+                                    //We only show the tasks that take at least one day.
+                                    //Else, format_time() will generate start date after the stop date
+                                    if (ss.first != ss.second)
+                                    {
+                                        auto event = events.tag("event");
+                                        event.tag("start") << format_time(ss.first, true);
+                                        event.tag("end") << format_time(ss.second, false);
+                                        event.tag("text") << parts.back();
+                                        event.tag("progress") << 0;
+                                        event.tag("fuzzy") << "False";
+                                        event.tag("locked") << "False";
+                                        event.tag("ends_today") << "False";
+                                        event.tag("category") << category_name(parts.size());
+                                        event.tag("default_color") << "200,200,200";
+                                    }
                                 }
                             }
                             {

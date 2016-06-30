@@ -187,8 +187,13 @@ namespace pa
             {
                 auto lambda = [&](const std::string &str)
                 {
-                    L("Task " << current->fullName() << " depends on " << str);
-                    dependencies[current].push_back(str);
+                    gubg::Strange strange(str); 
+                    std::string dep;
+                    while (strange.pop_until(dep, '|') || strange.pop_all(dep))
+                    {
+                        L("Task " << current->fullName() << " depends on " << dep);
+                        dependencies[current].push_back(dep);
+                    }
                 };
                 process_attribute(n, "depends", lambda);
             }
