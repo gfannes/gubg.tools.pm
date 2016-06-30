@@ -42,6 +42,11 @@ namespace :timeline do
             sh "mv #{base} timeline"
         end
     end
+    task :install_deps do
+        sh 'sudo apt install python-wxversion'
+        sh 'sudo apt install python-wxtools'
+        sh 'pip install --user git+https://github.com/thetimelineproj/humblewx.git'
+    end
     task :publish => timeline_dir do
     end
 end
