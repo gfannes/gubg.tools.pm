@@ -24,7 +24,7 @@ string taskDescription(const Task &task)
     oss << task.fullName() << "(" << task.cumulSweat << ")";
     return oss.str();
 }
-void stream(std::ostream &os, Planner &planner, Plan::Level level, Format format)
+void stream(ostream &os, Planner &planner, Plan::Level level, Format format)
 {
     using namespace gubg::planning;
     switch (level)
@@ -50,7 +50,7 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, Format format
                                 os << " !";
                             else
                                 os << "  ";
-                            os << "deadline: " << *p.first << std::endl;
+                            os << "deadline: " << *p.first << endl;
                         }
                     }
                     break;
@@ -94,12 +94,12 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, Format format
             {
                 S(logns);
                 auto leafTasks = gubg::tree::dfs::leafs(*planner.root);
-                using StartStop = std::pair<Day, Day>;
-                using StartStopPerNameParts = std::map<Task::NameParts, StartStop>;
+                using StartStop = pair<Day, Day>;
+                using StartStopPerNameParts = map<Task::NameParts, StartStop>;
                 StartStopPerNameParts startstop_per_nameparts;
                 StartStop period;
-                using StartStopPerProduct = std::map<std::string, StartStop>;
-                using StartStopPerProductPerLine = std::map<std::string ,StartStopPerProduct>;
+                using StartStopPerProduct = map<string, StartStop>;
+                using StartStopPerProductPerLine = map<string ,StartStopPerProduct>;
                 StartStopPerProductPerLine startstop_per_product_per_line;
                 auto enlarge = [](StartStop &ss, const Day &start_, const Day &stop_)
                 {
@@ -116,11 +116,12 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, Format format
                 };
                 auto name_from_parts = [](const Task::NameParts &parts)
                 {
-                    std::ostringstream oss;
+                    ostringstream oss;
                     for (const auto &part: parts)
                         oss << '/' << part;
                     return oss.str();
                 };
+                size_t max_line_size = 0;
                 for (auto leaf: leafTasks)
                 {
                     auto &task = *leaf;
@@ -138,14 +139,15 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, Format format
                         }
                     }
 
-                    const unsigned int line_level = 2;
+                    const unsigned int line_level = 3;
                     const auto line = task.base_name(line_level);
-                    const unsigned int product_level = 5;
+                    max_line_size = max(max_line_size, line.size());
+                    const unsigned int product_level = 4;
                     const auto product = task.base_name(product_level, line_level);
                     enlarge(startstop_per_product_per_line[line][product], task.start, task.stop);
                     enlarge(period, task.start, task.stop);
                 }
-                using ProductsPerStop = std::multimap<Day, std::string>;
+                using ProductsPerStop = multimap<Day, string>;
                 ProductsPerStop products_per_stop;
                 for (const auto &p: startstop_per_product_per_line)
                 {
@@ -154,7 +156,7 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, Format format
                     {
                         const auto &product = pp.first;
                         const auto &stop = pp.second.second;
-                        products_per_stop.emplace(stop, line+": "+product);
+                        products_per_stop.emplace(stop, line+": "+string(max_line_size-line.size(), ' ')+product);
                     }
                 }
                 switch (format)
@@ -166,15 +168,15 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, Format format
                             {
                                 const auto &stop = p.first;
                                 const auto &product = p.second;
-                                max_product_size = std::max(product.size(), max_product_size);
+                                max_product_size = max(product.size(), max_product_size);
                             }
-                            os << "# Product delivery overview on " << today() << std::endl << std::endl;
+                            os << "# Product delivery overview on " << today() << endl << endl;
                             for (const auto &p: products_per_stop)
                             {
                                 const auto &stop = p.first;
                                 const auto &product = p.second;
                                 assert(product.size() <= max_product_size);
-                                os << product << std::string(max_product_size-product.size(), ' ') << " => ETA: " << stop << std::endl;
+                                os << product << string(max_product_size-product.size(), ' ') << " => ETA: " << stop << endl;
                             }
                         }
                         break;
@@ -214,7 +216,7 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, Format format
 
                             auto category_name = [](size_t depth)
                             {
-                                std::ostringstream oss; oss << "depth_" << depth;
+                                ostringstream oss; oss << "depth_" << depth;
                                 return oss.str();
                             };
 
@@ -222,12 +224,12 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, Format format
                                 auto categories_tag = timeline.tag("categories");
                                 size_t max_name_parts = 0;
                                 for (const auto &p: startstop_per_nameparts)
-                                    max_name_parts = std::max(max_name_parts, p.first.size());
+                                    max_name_parts = max(max_name_parts, p.first.size());
 
                                 auto color = [&](float depth)
                                 {
                                     depth -= 1;//0-based now
-                                    std::ostringstream oss;
+                                    ostringstream oss;
                                     const float factor = depth/float(max_name_parts-1);
                                     oss << int(255.0*(1.0-factor)) << ',' << int(255.0*factor) << ',' << int(0*(1.0-factor));
                                     return oss.str();
@@ -246,7 +248,7 @@ void stream(std::ostream &os, Planner &planner, Plan::Level level, Format format
 
                             auto format_time = [](const Day &day, bool is_start)
                             {
-                                std::ostringstream oss;
+                                ostringstream oss;
                                 oss << day.year() << '-' << day.month() << '-' << day.day();
                                 oss << (is_start ? " 14:00:00" : " 10:00:00");
                                 return oss.str();
