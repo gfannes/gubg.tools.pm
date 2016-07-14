@@ -56,7 +56,8 @@ namespace
 			optionParser.addSwitch("-r", "--resource", "Resource view of the planning per month",
 					[&options, &tasks]()
 					{
-                    tasks.push_back(Quarter::create());
+					if (options.value.empty()) PA_FINALIZE_OK("You have to specify the totals to be used before the planning products");
+					tasks.push_back(Plan::create(Plan::Resource));
 					});
 			optionParser.addSwitch("-q", "--quarter", "Quarter view of the planning",
 					[&options, &tasks]()

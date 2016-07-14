@@ -9,7 +9,7 @@ namespace pa
     class Plan: public ITask
     {
         public:
-			enum View {Overview, Products, Details};
+            enum View {Overview, Products, Details, Resource};
 
             static Ptr create(View view){return Ptr(new Plan(view));}
 
@@ -17,7 +17,7 @@ namespace pa
 
         private:
             Plan(View view):view_(view){}
-			const View view_;
+            const View view_;
     };
 }
 

@@ -1,6 +1,7 @@
 #include "pa/Plan.hpp"
 #include "pa/Planner.hpp"
 #include "gubg/xml/Builder.hpp"
+#include "gubg/Range.hpp"
 #include <string>
 #include <fstream>
 #include <map>
@@ -24,8 +25,9 @@ string taskDescription(const Task &task)
     oss << task.fullName() << "(" << task.cumulSweat << ")";
     return oss.str();
 }
-void stream(ostream &os, Planner &planner, Plan::View view, Format format)
+bool stream(ostream &os, Planner &planner, Plan::View view, Format format)
 {
+    MSS_BEGIN(bool);
     using namespace gubg::planning;
     switch (view)
     {
@@ -301,7 +303,131 @@ void stream(ostream &os, Planner &planner, Plan::View view, Format format)
                 case ::Format::Html: planner.planning.stream(os, gubg::planning::Format::Html); break;
             }
             break;
+        case Plan::Resource:
+            {
+                os << "# Resource planning per worker on " << today() << endl << endl;
+                Day first_day, last_day;
+                MSS(planner.planning.get_first_day(first_day));
+                MSS(planner.planning.get_last_day(last_day));
+                const auto all_days = dayRange(first_day, last_day);
+
+                const auto workers = planner.planning.workers();
+                for (const auto &worker: workers)
+                {
+                    switch (format)
+                    {
+                        case ::Format::Text:
+                            os << endl << endl << "## Monthly planned overview for " << worker << ":" << endl;
+                            break;
+                    }
+
+                    auto all_days_range = gubg::make_range(RANGE(all_days));
+                    while (!all_days_range.empty())
+                    {
+                        Day first_day_of_month = all_days_range.front();
+                        std::set<Day> days;
+                        {
+                            for (; !all_days_range.empty(); all_days_range.pop_front())
+                            {
+                                const auto &day = all_days_range.front();
+                                if (day.year() != first_day_of_month.year() || day.month() != first_day_of_month.month())
+                                    break;
+                                days.insert(day);
+                            }
+                        }
+
+                        switch (format)
+                        {
+                            case ::Format::Text:
+                                {
+                                    Planning::SweatPerTask sweat_per_task;
+                                    planner.planning.get_sweat_per_task(sweat_per_task, worker, days, 3);
+
+                                    Planning::SweatPerTask sweat_per_task_cumul;
+                                    std::vector<Task::Ptr> ordered_prods;
+                                    double total_sweat = 0.0;
+                                    size_t max_name_size = 0;
+                                    for (const auto &t_s: sweat_per_task)
+                                    {
+                                        const auto sweat = t_s.second;
+                                        total_sweat += sweat;
+                                        auto task = t_s.first;
+                                        MSS(!!task);
+                                        ordered_prods.push_back(task);
+                                        max_name_size = std::max(max_name_size, task->fullName().size());
+                                        for (; !!task; task = task->parent.lock())
+                                            sweat_per_task_cumul[task] += sweat;
+                                    }
+                                    if (total_sweat == 0.0)
+                                        break;
+                                    std::sort(RANGE(ordered_prods), [](const Task::Ptr &a, const Task::Ptr &b){return a->fullName() < b->fullName();});
+
+                                    set<string> shown;
+                                    auto stream_line = [&](const string &name, double sweat)
+                                    {
+                                        if (shown.count(name))
+                                            return;
+                                        os << "      " << name << string(max_name_size-name.size(), ' ') << " (" << sweat << "days, " << std::fixed << 100.0*sweat/total_sweat << std::defaultfloat << "%)" << endl;
+                                        shown.insert(name);
+                                    };
+
+                                    std::function<void(const Task::Ptr &ptr, int &level, const int level_to_show)> stream_sweat;
+                                    stream_sweat = [&](const Task::Ptr &ptr, int &level, const int level_to_show)
+                                    {
+                                        if (!ptr)
+                                            return;
+                                        const auto &task = *ptr;
+                                        const auto sweat = sweat_per_task_cumul[ptr];
+
+                                        if (level_to_show >= 0)
+                                        {
+                                            //We have to start counting from the root
+                                            stream_sweat(task.parent.lock(), level, level_to_show);
+                                            if (level_to_show == level)
+                                                stream_line(task.fullName(), sweat);
+                                            //Increment after recursive call
+                                            ++level;
+                                        }
+                                        else
+                                        {
+                                            //We have to start counting from the leaf
+                                            //Decrement before recursive call
+                                            --level;
+                                            if (level_to_show == level)
+                                                stream_line(task.fullName(), sweat);
+                                            stream_sweat(task.parent.lock(), level, level_to_show);
+                                        }
+                                    };
+
+                                    os << " * " << *days.begin() << " - " << *days.rbegin() << endl;
+                                    os << "    * Total occupation: " << total_sweat << "days" << endl;
+                                    {
+                                        os << "    * Overview" << endl;
+                                        shown.clear();
+                                        for (const auto &ptr: ordered_prods)
+                                        {
+                                            int level = 0;
+                                            stream_sweat(ptr, level, 1);
+                                        }
+                                    }
+                                    {
+                                        os << "    * Details" << endl;
+                                        shown.clear();
+                                        for (const auto &ptr: ordered_prods)
+                                        {
+                                            int level = 0;
+                                            stream_sweat(ptr, level, -1);
+                                        }
+                                    }
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+            break;
     }
+    MSS_END();
 }
 pa::ReturnCode Plan::execute(const Options &options)
 {
@@ -312,27 +438,27 @@ pa::ReturnCode Plan::execute(const Options &options)
     MSS(planner.add_workers(options.workers));
     MSS(planner.run());
     planner.root->stream(cout);
-    stream(cout, planner, view_, ::Format::Text);
+    MSS(stream(cout, planner, view_, ::Format::Text));
     if (!options.output.name().empty())
     {
         {
             gubg::file::File fn(options.output.name());
             fn.setExtension("txt");
             ofstream fo(fn.name());
-            stream(fo, planner, view_, ::Format::Text);
+            MSS(stream(fo, planner, view_, ::Format::Text));
         }
         {
             gubg::file::File fn(options.output.name());
             fn.setExtension("html");
             ofstream fo(fn.name());
-            stream(fo, planner, view_, ::Format::Html);
+            MSS(stream(fo, planner, view_, ::Format::Html));
         }
         if (view_ == Plan::Products)
         {
             gubg::file::File fn(options.output.name());
             fn.setExtension("timeline");
             ofstream fo(fn.name());
-            stream(fo, planner, view_, ::Format::Timeline);
+            MSS(stream(fo, planner, view_, ::Format::Timeline));
         }
     }
 

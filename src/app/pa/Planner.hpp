@@ -70,7 +70,7 @@ namespace pa
 
 			{
 				gubg::planning::Day day;
-				MSS(planning.getLastDay(day));
+				MSS(planning.get_last_day(day));
                 MSS(!!root);
 				root->setDeadline(day);
 			}
