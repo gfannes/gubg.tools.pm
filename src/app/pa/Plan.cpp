@@ -305,7 +305,22 @@ bool stream(ostream &os, Planner &planner, Plan::View view, Format format)
             break;
         case Plan::Resource:
             {
-                os << "# Resource planning per worker on " << today() << endl << endl;
+                std::unique_ptr<Tag> html;
+                std::unique_ptr<Tag> body;
+                switch (format)
+                {
+                    case ::Format::Text:
+                        os << "# Resource planning per worker on " << today() << endl << endl;
+                        break;
+                    case ::Format::Html:
+                        {
+                            html.reset(new Tag(os, "html"));
+                            body.reset(new Tag(html->tag("body")));
+                            body->tag("h1") << "Resource planning overview on " << today();
+                        }
+                        break;
+                }
+
                 Day first_day, last_day;
                 MSS(planner.planning.get_first_day(first_day));
                 MSS(planner.planning.get_last_day(last_day));
@@ -318,6 +333,8 @@ bool stream(ostream &os, Planner &planner, Plan::View view, Format format)
                     {
                         case ::Format::Text:
                             os << endl << endl << "## Monthly planned overview for " << worker << ":" << endl;
+                            break;
+                        case ::Format::Html:
                             break;
                     }
 
