@@ -24,10 +24,10 @@ string taskDescription(const Task &task)
     oss << task.fullName() << "(" << task.cumulSweat << ")";
     return oss.str();
 }
-void stream(ostream &os, Planner &planner, Plan::Level level, Format format)
+void stream(ostream &os, Planner &planner, Plan::View view, Format format)
 {
     using namespace gubg::planning;
-    switch (level)
+    switch (view)
     {
         case Plan::Overview:
             switch (format)
@@ -312,27 +312,27 @@ pa::ReturnCode Plan::execute(const Options &options)
     MSS(planner.add_workers(options.workers));
     MSS(planner.run());
     planner.root->stream(cout);
-    stream(cout, planner, level_, ::Format::Text);
+    stream(cout, planner, view_, ::Format::Text);
     if (!options.output.name().empty())
     {
         {
             gubg::file::File fn(options.output.name());
             fn.setExtension("txt");
             ofstream fo(fn.name());
-            stream(fo, planner, level_, ::Format::Text);
+            stream(fo, planner, view_, ::Format::Text);
         }
         {
             gubg::file::File fn(options.output.name());
             fn.setExtension("html");
             ofstream fo(fn.name());
-            stream(fo, planner, level_, ::Format::Html);
+            stream(fo, planner, view_, ::Format::Html);
         }
-        if (level_ == Plan::Products)
+        if (view_ == Plan::Products)
         {
             gubg::file::File fn(options.output.name());
             fn.setExtension("timeline");
             ofstream fo(fn.name());
-            stream(fo, planner, level_, ::Format::Timeline);
+            stream(fo, planner, view_, ::Format::Timeline);
         }
     }
 

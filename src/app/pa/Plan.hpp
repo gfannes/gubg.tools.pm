@@ -9,15 +9,15 @@ namespace pa
     class Plan: public ITask
     {
         public:
-			enum Level {Overview, Products, Details};
+			enum View {Overview, Products, Details};
 
-            static Ptr create(Level level){return Ptr(new Plan(level));}
+            static Ptr create(View view){return Ptr(new Plan(view));}
 
             virtual ReturnCode execute(const Options &);
 
         private:
-            Plan(Level level):level_(level){}
-			const Level level_;
+            Plan(View view):view_(view){}
+			const View view_;
     };
 }
 
