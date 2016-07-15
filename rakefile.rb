@@ -23,6 +23,7 @@ end
 task :define => :declare do
     Rake::Task['hours:publish'].invoke
     Rake::Task['pa:publish'].invoke
+    Rake::Task['tt:publish'].invoke
     Rake::Task['timeline:publish'].invoke
 end
 
@@ -86,6 +87,28 @@ namespace :pa do
         options += ['-o', output_fn]
         options += ['-P']
         sh shared_file(%w[bin pa.exe]), *options
+    end
+end
+
+namespace :tt do
+    tt = nil
+    task :setup do
+        tt = Build::Executable.new('tt')
+        tt.add_define('DEBUG')
+        tt.add_option('g')
+        tt.add_include_path(shared_dir('include'))
+        tt.add_include_path('src/app')
+        tt.add_sources(FileList.new('src/app/tt/**/*.cpp'))
+        tt.add_sources(FileList.new('src/app/tt/**/*.hpp'))
+        tt.add_sources(FileList.new(shared('include/**/*.hpp')))
+        tt.add_library_path(shared_dir('lib'))
+        tt.add_library('dl', 'gubg.io', 'pthread')
+    end
+    task :build => :setup do
+        tt.build
+    end
+    task :publish => :build do
+        publish(tt.exe_filename, dst: 'bin')
     end
 end
 
