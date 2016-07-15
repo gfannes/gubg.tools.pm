@@ -14,19 +14,19 @@ namespace pa
         MSS_BEGIN(bool);
         gubg::Strange strange(span);
         int year, month, day;
-        MSS(strange.popDecimal(year));
+        MSS(strange.pop_decimal(year));
         MSS(strange.pop_if('/'));
-        MSS(strange.popDecimal(month));
+        MSS(strange.pop_decimal(month));
         MSS(strange.pop_if('/'));
-        MSS(strange.popDecimal(day));
+        MSS(strange.pop_decimal(day));
         if (strange.pop_if('-'))
         {
             int year2, month2, day2;
-            MSS(strange.popDecimal(year2));
+            MSS(strange.pop_decimal(year2));
             MSS(strange.pop_if('/'));
-            MSS(strange.popDecimal(month2));
+            MSS(strange.pop_decimal(month2));
             MSS(strange.pop_if('/'));
-            MSS(strange.popDecimal(day2));
+            MSS(strange.pop_decimal(day2));
             absence_per_worker[worker].push_back(Day(year, month, day));
             for (auto d: dayRange(Day(year, month, day), Day(year2, month2, day2)))
                 absence_per_worker[worker].push_back(d);

@@ -131,12 +131,12 @@ namespace pa
 					{
 						gubg::Strange strange(o->second);
 						MSS(strange.pop_if("org.freeplane.features.format.FormattedNumber|"));
-						MSS(strange.popFloat(totals));
+						MSS(strange.pop_float(totals));
 					}
 					else
 					{
 						gubg::Strange strange(v->second);
-						MSS(strange.popFloat(totals));
+						MSS(strange.pop_float(totals));
 					}
                     location.back()->value = totals*value2days;
 					L("Detected value " << value << " for " << location.back()->desc << ": " << location.back()->value);
@@ -150,12 +150,12 @@ namespace pa
 					{
 						gubg::Strange strange(o->second);
 						MSS(strange.pop_if("org.freeplane.features.format.FormattedNumber|"));
-						MSS(strange.popFloat(location.back()->fraction));
+						MSS(strange.pop_float(location.back()->fraction));
 					}
 					else
 					{
 						gubg::Strange strange(v->second);
-						MSS(strange.popFloat(location.back()->fraction));
+						MSS(strange.pop_float(location.back()->fraction));
 					}
 					L("Detected fraction " << fraction << " for " << location.back()->desc << ": " << location.back()->fraction);
 				}
@@ -263,7 +263,7 @@ pa::ReturnCode LoadMindMap::execute(const Options &options)
 	if (!options.fraction_default.empty())
 	{
 		gubg::Strange strange(options.fraction_default);
-		MSS(strange.popFloat(default_fraction));
+		MSS(strange.pop_float(default_fraction));
 	}
 
     string content;

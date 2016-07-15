@@ -17,13 +17,13 @@ bool popTime(double &time, Strange &strange)
         return false;
     if (num.contains('.'))
     {
-        if (!num.popFloat(time))
+        if (!num.pop_float(time))
             return false;
     }
     else
     {
         int min;
-        if (!num.popDecimal(min))
+        if (!num.pop_decimal(min))
             return false;
         if (min < 10)
             //We assume time was given in hours

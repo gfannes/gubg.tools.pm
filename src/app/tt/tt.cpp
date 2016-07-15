@@ -1,5 +1,6 @@
 #include "tt/ReturnCode.hpp"
 #include "tt/Options.hpp"
+#include "tt/Timesheet.hpp"
 #include "gubg/OptionParser.hpp"
 #include "gubg/macro/capture.hpp"
 #include <iostream>
@@ -22,6 +23,16 @@ namespace tt {
         if (options.print_help)
         {
             cout << parser.help();
+        }
+        else if (options.input_fn.empty())
+        {
+            cerr << "No input file given" << endl;
+        }
+        else
+        {
+            Timesheet timesheet;
+            MSS(timesheet.parse(options.input_fn));
+            cout << timesheet;
         }
 
         MSS_END();
