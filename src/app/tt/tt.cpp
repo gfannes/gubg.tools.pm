@@ -13,7 +13,8 @@ namespace tt {
         Options options;
 
         gubg::OptionParser parser("Timesheet tracker");
-        parser.add_switch("h", "help", "Print this help", [&](){options.print_help = true;});
+        parser.add_switch("-h", "--help", "Print this help", [&](){options.print_help = true;});
+        parser.add_mandatory("-i", "--input", "Time tree", [&](const std::string &str){options.input_fn = str;});
 
         auto args = gubg::OptionParser::create_args(argc, argv);
         MSS(parser.parse(args));
