@@ -307,6 +307,7 @@ bool stream(ostream &os, Planner &planner, Plan::View view, Format format)
             {
                 std::unique_ptr<Tag> html;
                 std::unique_ptr<Tag> body;
+                std::unique_ptr<Tag> table;
                 switch (format)
                 {
                     case ::Format::Text:
@@ -316,7 +317,8 @@ bool stream(ostream &os, Planner &planner, Plan::View view, Format format)
                         {
                             html.reset(new Tag(os, "html"));
                             body.reset(new Tag(html->tag("body")));
-                            body->tag("h1") << "Resource planning overview on " << today();
+                            MSS(!!body);
+                            body->tag("h1") << "Resource planning per worker on " << today();
                         }
                         break;
                 }
@@ -335,10 +337,13 @@ bool stream(ostream &os, Planner &planner, Plan::View view, Format format)
                             os << endl << endl << "## Monthly planned overview for " << worker << ":" << endl;
                             break;
                         case ::Format::Html:
+                            MSS(!!body);
+                            body->tag("h2") << "Monthly planned overview for " << worker;
                             break;
                     }
 
                     auto all_days_range = gubg::make_range(RANGE(all_days));
+                    L(all_days_range.size());
                     while (!all_days_range.empty())
                     {
                         Day first_day_of_month = all_days_range.front();
@@ -353,93 +358,147 @@ bool stream(ostream &os, Planner &planner, Plan::View view, Format format)
                             }
                         }
 
-                        switch (format)
+                        Planning::SweatPerTask sweat_per_task;
+                        planner.planning.get_sweat_per_task(sweat_per_task, worker, days, 3);
+
+                        Planning::SweatPerTask sweat_per_task_cumul;
+                        std::vector<Task::Ptr> ordered_prods;
+                        double total_sweat = 0.0;
+                        size_t max_name_size = 0;
+                        for (const auto &t_s: sweat_per_task)
                         {
-                            case ::Format::Text:
+                            const auto sweat = t_s.second;
+                            total_sweat += sweat;
+                            auto task = t_s.first;
+                            MSS(!!task);
+                            ordered_prods.push_back(task);
+                            max_name_size = std::max(max_name_size, task->fullName().size());
+                            for (; !!task; task = task->parent.lock())
+                                sweat_per_task_cumul[task] += sweat;
+                        }
+
+                        if (total_sweat > 0.0)
+                        {
+                            std::sort(RANGE(ordered_prods), [](const Task::Ptr &a, const Task::Ptr &b){return a->fullName() < b->fullName();});
+
+                            set<string> shown;
+                            auto stream_line = [&](const string &name, double sweat)
+                            {
+                                if (shown.count(name))
+                                    return;
+                                const auto pct = 100.0*sweat/total_sweat;
+                                switch (format)
                                 {
-                                    Planning::SweatPerTask sweat_per_task;
-                                    planner.planning.get_sweat_per_task(sweat_per_task, worker, days, 3);
-
-                                    Planning::SweatPerTask sweat_per_task_cumul;
-                                    std::vector<Task::Ptr> ordered_prods;
-                                    double total_sweat = 0.0;
-                                    size_t max_name_size = 0;
-                                    for (const auto &t_s: sweat_per_task)
-                                    {
-                                        const auto sweat = t_s.second;
-                                        total_sweat += sweat;
-                                        auto task = t_s.first;
-                                        MSS(!!task);
-                                        ordered_prods.push_back(task);
-                                        max_name_size = std::max(max_name_size, task->fullName().size());
-                                        for (; !!task; task = task->parent.lock())
-                                            sweat_per_task_cumul[task] += sweat;
-                                    }
-                                    if (total_sweat == 0.0)
+                                    case ::Format::Text:
+                                        os << "      " << name << string(max_name_size-name.size(), ' ') << " (" << sweat << "days, " << std::fixed << pct << std::defaultfloat << "%)" << endl;
                                         break;
-                                    std::sort(RANGE(ordered_prods), [](const Task::Ptr &a, const Task::Ptr &b){return a->fullName() < b->fullName();});
-
-                                    set<string> shown;
-                                    auto stream_line = [&](const string &name, double sweat)
-                                    {
-                                        if (shown.count(name))
-                                            return;
-                                        os << "      " << name << string(max_name_size-name.size(), ' ') << " (" << sweat << "days, " << std::fixed << 100.0*sweat/total_sweat << std::defaultfloat << "%)" << endl;
-                                        shown.insert(name);
-                                    };
-
-                                    std::function<void(const Task::Ptr &ptr, int &level, const int level_to_show)> stream_sweat;
-                                    stream_sweat = [&](const Task::Ptr &ptr, int &level, const int level_to_show)
-                                    {
-                                        if (!ptr)
-                                            return;
-                                        const auto &task = *ptr;
-                                        const auto sweat = sweat_per_task_cumul[ptr];
-
-                                        if (level_to_show >= 0)
+                                    case ::Format::Html:
+                                        if (!!table)
                                         {
-                                            //We have to start counting from the root
-                                            stream_sweat(task.parent.lock(), level, level_to_show);
-                                            if (level_to_show == level)
-                                                stream_line(task.fullName(), sweat);
-                                            //Increment after recursive call
-                                            ++level;
+                                            auto tr = table->tag("tr");
+                                            tr.tag("td") << "";
+                                            tr.tag("td") << name;
+                                            tr.tag("td") << sweat << " days";
+                                            tr.tag("td") << pct << " %";
                                         }
-                                        else
-                                        {
-                                            //We have to start counting from the leaf
-                                            //Decrement before recursive call
-                                            --level;
-                                            if (level_to_show == level)
-                                                stream_line(task.fullName(), sweat);
-                                            stream_sweat(task.parent.lock(), level, level_to_show);
-                                        }
-                                    };
+                                        break;
+                                }
+                                shown.insert(name);
+                            };
 
+                            std::function<void(const Task::Ptr &ptr, int &level, const int level_to_show)> stream_sweat;
+                            stream_sweat = [&](const Task::Ptr &ptr, int &level, const int level_to_show)
+                            {
+                                if (!ptr)
+                                    return;
+                                const auto &task = *ptr;
+                                const auto sweat = sweat_per_task_cumul[ptr];
+
+                                if (level_to_show >= 0)
+                                {
+                                    //We have to start counting from the root
+                                    stream_sweat(task.parent.lock(), level, level_to_show);
+                                    if (level_to_show == level)
+                                        stream_line(task.fullName(), sweat);
+                                    //Increment after recursive call
+                                    ++level;
+                                }
+                                else
+                                {
+                                    //We have to start counting from the leaf
+                                    //Decrement before recursive call
+                                    --level;
+                                    if (level_to_show == level)
+                                        stream_line(task.fullName(), sweat);
+                                    stream_sweat(task.parent.lock(), level, level_to_show);
+                                }
+                            };
+
+                            switch (format)
+                            {
+                                case ::Format::Text:
                                     os << " * " << *days.begin() << " - " << *days.rbegin() << endl;
                                     os << "    * Total occupation: " << total_sweat << "days" << endl;
+                                    break;
+                                case ::Format::Html:
+                                    if (!table)
                                     {
-                                        os << "    * Overview" << endl;
-                                        shown.clear();
-                                        for (const auto &ptr: ordered_prods)
-                                        {
-                                            int level = 0;
-                                            stream_sweat(ptr, level, 1);
-                                        }
+                                        table.reset(new Tag(body->tag("table")));
+                                        table->attr("border", "1");
+                                        auto tr = table->tag("tr");
+                                        tr.tag("th") << "Level";
+                                        tr.tag("th") << "Task";
+                                        tr.tag("th") << "Days";
+                                        tr.tag("th") << "Pct";
                                     }
                                     {
-                                        os << "    * Details" << endl;
-                                        shown.clear();
-                                        for (const auto &ptr: ordered_prods)
-                                        {
-                                            int level = 0;
-                                            stream_sweat(ptr, level, -1);
-                                        }
+                                        auto tr = table->tag("tr");
+                                        tr.tag("th") << *days.begin() << " - " << *days.rbegin();
+                                        tr.tag("th") << "";
+                                        tr.tag("td") << total_sweat << " days";
+                                        tr.tag("th") << "";
                                     }
+                                    break;
+                            }
+                            auto stream_level = [&](const string &level)
+                            {
+                                switch (format)
+                                {
+                                    case ::Format::Text:
+                                        os << "    * " << level << endl;
+                                        break;
+                                    case ::Format::Html:
+                                        {
+                                            auto tr = table->tag("tr");
+                                            tr.tag("td") << level;
+                                            tr.tag("td") << "";
+                                            tr.tag("td") << "";
+                                            tr.tag("td") << "";
+                                        }
+                                        break;
                                 }
-                                break;
+                            };
+                            {
+                                stream_level("Overview");
+                                shown.clear();
+                                for (const auto &ptr: ordered_prods)
+                                {
+                                    int level = 0;
+                                    stream_sweat(ptr, level, 1);
+                                }
+                            }
+                            {
+                                stream_level("Details");
+                                shown.clear();
+                                for (const auto &ptr: ordered_prods)
+                                {
+                                    int level = 0;
+                                    stream_sweat(ptr, level, -1);
+                                }
+                            }
                         }
                     }
+                    table.reset();
                 }
             }
             break;
