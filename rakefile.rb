@@ -9,6 +9,10 @@ task :help do
     puts("* define: does nothing for now")
 end
 
+task :clean do
+    rm_rf '.cache'
+end
+
 task :declare do
 	case os
 	when :linux, :osx
@@ -94,8 +98,13 @@ namespace :tt do
     tt = nil
     task :setup do
         tt = Build::Executable.new('tt')
-        tt.add_define('DEBUG')
-        tt.add_option('g')
+        case :release
+        when :debug
+            tt.add_define('DEBUG')
+            tt.add_option('g')
+        else
+            tt.add_define('NDEBUG')
+        end
         tt.add_include_path(shared_dir('include'))
         tt.add_include_path('src/app')
         tt.add_sources(FileList.new('src/app/tt/**/*.cpp'))

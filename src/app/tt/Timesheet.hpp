@@ -8,6 +8,7 @@
 #include <string>
 #include <map>
 #include <array>
+#include <vector>
 #include <memory>
 #include <chrono>
 #include <ostream>
@@ -16,6 +17,7 @@ namespace tt {
 
     using Day = gubg::planning::Day;
     using DayTime = gubg::time::DayTime;
+    using Duration = std::chrono::seconds;
 
     class Timesheet: public gubg::parse::tree::Parser_crtp<Timesheet>
     {
@@ -36,17 +38,21 @@ namespace tt {
             using YMD = std::array<unsigned int, 3>;
             YMD ymd_;
             YMD::iterator ymd_it_ = ymd_.begin();
+            std::vector<std::string> story_stack_;
 
             struct Info
             {
                 std::unique_ptr<DayTime> start;
                 std::unique_ptr<DayTime> stop;
-                std::chrono::seconds pause{0};
+                std::map<std::string, std::map<std::string, Duration>> duration_per_task_per_story;
                 void stream(std::ostream &) const;
                 void update();
             };
             using InfoPerDay = std::map<Day, Info>;
             InfoPerDay info_per_day_;
+
+            const DayTime pause_begin_{12,0,0};
+            const DayTime pause_end_{12,30,0};
     };
     inline std::ostream &operator<<(std::ostream &os, const Timesheet &ts)
     {
