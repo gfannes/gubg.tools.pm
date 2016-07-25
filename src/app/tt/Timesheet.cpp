@@ -240,8 +240,24 @@ namespace tt {
                     total_worked += sub_total_worked;
                 }
             }
-            os << endl << "\tTOTAL  =>" << "\t" << as_hours(total_worked);
-            os << endl;
+
+            std::string msg;
+            {
+                const DayTime eight_hours(8,0,0);
+                if (total_worked < eight_hours.duration())
+                {
+                    if (!!info.stop)
+                    {
+                        auto eight_hour_end = *info.stop;
+                        eight_hour_end += (eight_hours.duration()-total_worked);
+                        std::ostringstream oss;
+                        oss << "\tYou have to work until " << eight_hour_end;
+                        msg = oss.str();
+                    }
+                }
+            }
+
+            os << endl << "\tTOTAL  =>" << "\t" << as_hours(total_worked) << msg << endl;
         }
     }
 
