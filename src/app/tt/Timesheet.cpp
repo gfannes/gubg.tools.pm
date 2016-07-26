@@ -173,7 +173,8 @@ namespace tt {
                         {
                             L("Ends in the middle of the pause: we take a break now");
                             info.duration_per_task_per_story[story][task] += current_stop - previous_stop;
-                            current_stop += (pause_end_ - pause_begin_);
+                            info.pause += minimal_pause_();
+                            current_stop += minimal_pause_();
                             assert(pause_end_ <= current_stop);
                         }
                         else
@@ -181,6 +182,7 @@ namespace tt {
                             L("Skips the pause: we split this work and assume we paused in-between");
                             info.duration_per_task_per_story[story][task] += pause_begin_ - previous_stop;
                             info.duration_per_task_per_story[story][task] += current_stop - pause_end_;
+                            info.pause += minimal_pause_();
                         }
                     }
                     else
@@ -250,6 +252,8 @@ namespace tt {
                     {
                         auto eight_hour_end = *info.stop;
                         eight_hour_end += (eight_hours.duration()-total_worked);
+                        if (info.pause < minimal_pause_())
+                            eight_hour_end += (minimal_pause_()-info.pause);
                         std::ostringstream oss;
                         oss << "\tYou have to work until " << eight_hour_end;
                         msg = oss.str();

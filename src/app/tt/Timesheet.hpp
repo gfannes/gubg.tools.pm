@@ -45,6 +45,7 @@ namespace tt {
                 std::unique_ptr<DayTime> start;
                 std::unique_ptr<DayTime> stop;
                 std::map<std::string, std::map<std::string, Duration>> duration_per_task_per_story;
+                Duration pause{0};
                 void stream(std::ostream &) const;
                 void update();
             };
@@ -53,6 +54,7 @@ namespace tt {
 
             const DayTime pause_begin_{12,0,0};
             const DayTime pause_end_{12,30,0};
+            const Duration minimal_pause_() const {return pause_end_ - pause_begin_;}
     };
     inline std::ostream &operator<<(std::ostream &os, const Timesheet &ts)
     {
