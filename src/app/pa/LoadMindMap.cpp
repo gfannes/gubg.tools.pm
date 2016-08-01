@@ -24,9 +24,9 @@ namespace pa
         const string value;
         const string fraction;
         const double default_fraction;
-        const double value2days;
+        const Value2Days &value2days;
         Location location;
-        TreeParser(Node &r, string n, string f, double df, double value2days):root(r), value(n), fraction(f), default_fraction(df), value2days(value2days){}
+        TreeParser(Node &r, string n, string f, double df, const Value2Days &value2days):root(r), value(n), fraction(f), default_fraction(df), value2days(value2days){}
 
         template <typename Name, typename Attr>
             void parser_open(const Name &name, const Attr &attr)
@@ -49,7 +49,7 @@ namespace pa
                     if (false) {}
                     else if (k == value)
                     {
-                        location.back()->value = std::stod(v)*value2days;
+                        value2days.convert(location.back()->value, std::stod(v));
                     }
                     else if (k == fraction)
                     {
@@ -74,9 +74,9 @@ namespace pa
         const string value;
         const string fraction;
         const double default_fraction;
-        const double value2days;
+        const Value2Days &value2days;
         Location location;
-        XmlParser(Node &r, string n, string f, double df, double value2days):root(r), value(n), fraction(f), default_fraction(df), value2days(value2days){}
+        XmlParser(Node &r, string n, string f, double df, const Value2Days &value2days):root(r), value(n), fraction(f), default_fraction(df), value2days(value2days){}
 
 		typedef gubg::xml::Path Path;
 		typedef gubg::xml::Attributes Attributes;
@@ -138,7 +138,7 @@ namespace pa
 						gubg::Strange strange(v->second);
 						MSS(strange.pop_float(totals));
 					}
-                    location.back()->value = totals*value2days;
+                    value2days.convert(location.back()->value, totals);
 					L("Detected value " << value << " for " << location.back()->desc << ": " << location.back()->value);
 				}
 				else if (n->second == fraction)

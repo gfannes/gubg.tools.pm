@@ -26,7 +26,10 @@ namespace
 			optionParser.add_mandatory("-l", "--line NAME", "Line NAME to use", [&options](string name){options.lines.push_back(name);});
 			optionParser.add_mandatory("-t", "--totals NAME", "The totals to be used",
 					[&options, &tasks, &loadMindMap](string name){options.value = name; loadMindMap = true;});
-			optionParser.add_mandatory("-T", "--totals-to-days VALUE", "Factor to convert the totals to days", [&options](string value){options.value2days = std::stof(value);});
+			optionParser.add_mandatory("-T", "--totals-to-days VALUE", "Factor to convert the totals to days", [&options](string value){
+                    if (!options.value2days.set(value))
+                        PA_FINALIZE_OK("Could not understand the value2days");
+                    });
 			optionParser.add_mandatory("-c", "--category NAME", "The category to be used for quarter reporting",
 					[&options, &tasks, &loadMindMap](string name){options.category = name; loadMindMap = true;});
 			optionParser.add_switch("-d", "--details", "Show detailed work breakdown",
