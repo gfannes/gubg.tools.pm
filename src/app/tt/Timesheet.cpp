@@ -262,6 +262,16 @@ namespace tt {
             }
 
             os << endl << "\tTOTAL  =>" << "\t" << as_hours(total_worked) << msg << endl;
+            {
+                const DayTime progressive_start{9,0,0};
+                const DayTime progressive_lunch_start{13,0,0};
+                const DayTime progressive_lunch_end{14,0,0};
+                DayTime dt = progressive_start;
+                dt += total_worked;
+                if (dt > progressive_lunch_start)
+                    dt += (progressive_lunch_end-progressive_lunch_start);
+                os << "\tProgressive  =>" << "\t" << dt << "\t" << endl;
+            }
         }
     }
 
