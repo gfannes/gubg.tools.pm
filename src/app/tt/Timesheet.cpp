@@ -216,10 +216,16 @@ namespace tt {
 
     void Timesheet::stream(std::ostream &os) const
     {
+        const auto today = gubg::planning::today();
+
         for (const auto &di: info_per_day_)
         {
             const auto &day = di.first;
             const auto &info = di.second;
+
+            if (day == today)
+                os << std::endl << "***********************************************************" << std::endl;
+
             os << day << ": ";
             info.stream(os);
             Duration total_worked(0);
@@ -272,6 +278,9 @@ namespace tt {
                     dt += (progressive_lunch_end-progressive_lunch_start);
                 os << "\tProgressive  =>" << "\t" << dt << "\t" << endl;
             }
+
+            if (day == today)
+                os << "***********************************************************" << std::endl << std::endl;
         }
     }
 
