@@ -319,9 +319,12 @@ namespace tt {
                     const auto &day = pp.first;
                     const auto &duration = pp.second.first;
                     const auto &tasks = pp.second.second;
+                    os << story << ": " << day << ": " << as_hours(duration) << endl;
                     for (const auto &task: tasks)
-                        os << story << ": " << day << ": " << as_hours(duration) << ": " << task << endl;
+                        os << task << "; ";
+                    os << endl;
                 }
+                os << endl;
             }
         }
     }
