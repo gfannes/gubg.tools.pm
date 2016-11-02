@@ -8,6 +8,8 @@ namespace tt {
     {
         bool print_help = false;
         std::string input_fn;
+        int year = -1;
+        int month = -1;
     };
 } 
 

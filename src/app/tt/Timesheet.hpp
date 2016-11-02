@@ -22,6 +22,8 @@ namespace tt {
     class Timesheet: public gubg::parse::tree::Parser_crtp<Timesheet>
     {
         public:
+            ReturnCode filter(unsigned int year, unsigned int month);
+
             ReturnCode parse(const std::string &filename);
 
             using Name = gubg::parse::tree::Name;
@@ -51,6 +53,9 @@ namespace tt {
             };
             using InfoPerDay = std::map<Day, Info>;
             InfoPerDay info_per_day_;
+
+            using Filter = std::pair<unsigned int, unsigned int>;
+            std::unique_ptr<Filter> filter_;
 
             const DayTime pause_begin_{12,0,0};
             const DayTime pause_end_{12,30,0};

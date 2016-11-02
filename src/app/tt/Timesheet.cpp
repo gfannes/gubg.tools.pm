@@ -2,6 +2,7 @@
 #include "gubg/file/Filesystem.hpp"
 #include "gubg/Strange.hpp"
 #include "gubg/mss.hpp"
+#include <list>
 using namespace std;
 using namespace gubg;
 
@@ -16,6 +17,13 @@ namespace  {
 } 
 
 namespace tt { 
+    ReturnCode Timesheet::filter(unsigned int year, unsigned int month)
+    {
+        MSS_BEGIN(ReturnCode);
+        filter_.reset(new Filter(year, month));
+        MSS_END();
+    }
+
     ReturnCode Timesheet::parse(const string &filename)
     {
         MSS_BEGIN(ReturnCode);
@@ -29,7 +37,7 @@ namespace tt {
     {
         MSS_BEGIN(bool, ns);
         L(C(name));
-        
+
         ++level_;
 
         //We start with the story from the previous level, if any
@@ -218,10 +226,23 @@ namespace tt {
     {
         const auto today = gubg::planning::today();
 
+        using DetailsPerStory = std::map<std::string, std::map<Day, std::pair<Duration, std::list<std::string>>>>;
+        DetailsPerStory details_per_story;
+
         for (const auto &di: info_per_day_)
         {
             const auto &day = di.first;
             const auto &info = di.second;
+
+            if (filter_)
+            {
+                const auto wanted_year = filter_->first;
+                const auto wanted_month = filter_->second;
+                if (day.year() != wanted_year)
+                    continue;
+                if (day.month() != wanted_month)
+                    continue;
+            }
 
             if (day == today)
                 os << std::endl << "***********************************************************" << std::endl;
@@ -239,6 +260,11 @@ namespace tt {
                     {
                         const auto &task = pp.first;
                         const auto &duration = pp.second;
+                        {
+                            auto &details = details_per_story[story][day];
+                            details.first += duration;
+                            details.second.push_back(task);
+                        }
                         sub_total_worked += duration;
                         os << endl << "\t * " << story << "\t" << as_hours(duration) << "\t" << task;
                         if (story.empty())
@@ -281,6 +307,22 @@ namespace tt {
 
             if (day == today)
                 os << "***********************************************************" << std::endl << std::endl;
+        }
+
+        if (filter_)
+        {
+            for (const auto &p: details_per_story)
+            {
+                const auto &story = p.first;
+                for (const auto &pp: p.second)
+                {
+                    const auto &day = pp.first;
+                    const auto &duration = pp.second.first;
+                    const auto &tasks = pp.second.second;
+                    for (const auto &task: tasks)
+                        os << story << ": " << day << ": " << as_hours(duration) << ": " << task << endl;
+                }
+            }
         }
     }
 
