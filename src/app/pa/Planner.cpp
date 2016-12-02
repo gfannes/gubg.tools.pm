@@ -45,7 +45,9 @@ namespace pa
 
         L("Loading workers from " << workers_chaiscript);
 
-        ChaiScript chai(Std_Lib::library());
+        using Parser = chaiscript::parser::ChaiScript_Parser<chaiscript::eval::Noop_Tracer, chaiscript::optimizer::Optimizer_Default>;
+        chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library(), std::make_unique<Parser>());
+
         chai.add(fun(&gubg::planning::Planning::addWorker, &planning), "add_worker");
         chai.add(fun(&Planner::add_absence, this), "absence");
         chai.add(fun(&Planner::set_nr_working_days, this), "set_nr_working_days");
