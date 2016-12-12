@@ -60,8 +60,12 @@ namespace :pa do
     pa = nil
     task :setup do
         pa = Build::Executable.new('pa')
-        pa.add_define('DEBUG')
-        pa.add_option('g')
+        case :debug
+        when :debug
+            pa.add_option('g')
+        else
+            pa.add_define('NDEBUG')
+        end
         pa.add_include_path(shared_dir('include'))
         pa.add_include_path('src/app')
         pa.add_sources(FileList.new('src/app/pa/**/*.cpp'))
@@ -100,7 +104,6 @@ namespace :tt do
         tt = Build::Executable.new('tt')
         case :release
         when :debug
-            tt.add_define('DEBUG')
             tt.add_option('g')
         else
             tt.add_define('NDEBUG')
