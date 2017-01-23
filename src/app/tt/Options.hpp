@@ -10,6 +10,7 @@ namespace tt {
         std::string input_fn;
         int year = -1;
         int month = -1;
+        int day = 1;
     };
 } 
 

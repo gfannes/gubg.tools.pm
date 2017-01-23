@@ -16,7 +16,27 @@ namespace tt {
         gubg::OptionParser parser("Timesheet tracker");
         parser.add_switch("-h", "--help", "Print this help", [&](){options.print_help = true;});
         parser.add_mandatory("-i", "--input", "Time tree", [&](const std::string &str){options.input_fn = str;});
-        parser.add_mandatory("-m", "--month", "Month filter (YYYYMM)", [&](const std::string &str){options.year = std::stoi(str)/100;options.month = std::stoi(str)%100;});
+        auto parse_filter = [&](const std::string &str)
+        {
+            const auto v = std::stoi(str);
+            switch (str.size())
+            {
+                case 6:
+                    options.year = v/100;
+                    options.month = v%100;
+                    options.day = 1;
+                    break;
+                case 8:
+                    options.year = v/10000;
+                    options.month = (v/100)%100;
+                    options.day = v%100;
+                    break;
+                default:
+                    std::cout << "Could not parse filter " << str << std::endl;
+                    break;
+            }
+        };
+        parser.add_mandatory("-f", "--filter", "Filter everything before YYYYMM[DD]", parse_filter);
 
         auto args = gubg::OptionParser::create_args(argc, argv);
         MSS(parser.parse(args));
@@ -33,7 +53,7 @@ namespace tt {
         {
             Timesheet timesheet;
             if (options.year >= 0 && options.month >= 0)
-                timesheet.filter(options.year, options.month);
+                timesheet.filter(options.year, options.month, options.day);
             MSS(timesheet.parse(options.input_fn));
             cout << timesheet;
         }

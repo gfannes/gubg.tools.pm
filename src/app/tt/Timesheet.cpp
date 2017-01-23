@@ -17,10 +17,10 @@ namespace  {
 } 
 
 namespace tt { 
-    ReturnCode Timesheet::filter(unsigned int year, unsigned int month)
+    ReturnCode Timesheet::filter(unsigned int year, unsigned int month, unsigned int day)
     {
         MSS_BEGIN(ReturnCode);
-        filter_.reset(new Filter(year, month));
+        filter_from_day_.reset(new Day(year, month, day));
         MSS_END();
     }
 
@@ -234,15 +234,8 @@ namespace tt {
             const auto &day = di.first;
             const auto &info = di.second;
 
-            if (filter_)
-            {
-                const auto wanted_year = filter_->first;
-                const auto wanted_month = filter_->second;
-                if (day.year() != wanted_year)
-                    continue;
-                if (day.month() != wanted_month)
-                    continue;
-            }
+            if (filter_from_day_ && day < *filter_from_day_)
+                continue;
 
             if (day == today)
                 os << std::endl << "***********************************************************" << std::endl;
@@ -309,7 +302,7 @@ namespace tt {
                 os << "***********************************************************" << std::endl << std::endl;
         }
 
-        if (filter_)
+        if (filter_from_day_)
         {
             for (const auto &p: details_per_story)
             {
