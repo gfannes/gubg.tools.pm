@@ -9,7 +9,7 @@ using namespace std;
 namespace tt { 
     ReturnCode main(int argc, const char **argv)
     {
-        MSS_BEGIN(ReturnCode);
+        MSS_BEGIN(ReturnCode, "tt");
 
         Options options;
 

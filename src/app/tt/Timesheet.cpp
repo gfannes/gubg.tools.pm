@@ -33,10 +33,24 @@ namespace tt {
         MSS_END();
     }
 
-    bool Timesheet::parser_open(const Name &name, const Attributes &attrs)
+    bool Timesheet::tree_node_open(const Tag &tag)
+    {
+        MSS_BEGIN(bool);
+        name_ = tag;
+        attrs_.clear();
+        MSS_END();
+    }
+    bool Timesheet::tree_attr(const Key &key, const Value &value)
+    {
+        MSS_BEGIN(bool);
+        attrs_[key] = value;
+        MSS_END();
+    }
+    bool Timesheet::tree_attr_done()
     {
         MSS_BEGIN(bool, ns);
-        L(C(name));
+
+        L(C(name_)C(level_));
 
         ++level_;
 
@@ -49,7 +63,7 @@ namespace tt {
             L("Day is not known yet");
             if ((ymd_it_ - ymd_.begin()) == level_)
             {
-                Strange strange(name);
+                Strange strange(name_);
                 if (!strange.pop_decimal(*ymd_it_))
                 {
                     L("This is not a number, I will skip it");
@@ -70,11 +84,11 @@ namespace tt {
 
             MSS(story_stack_.size() == level_+1);
             auto &story = story_stack_[level_];
-            const auto &task = name;
+            const auto &task = name_;
 
             //We check for the begin time before anything else
             {
-                for (const auto &attr: attrs)
+                for (const auto &attr: attrs_)
                 {
                     const auto &key = attr.first;
                     const auto &value = attr.second;
@@ -100,7 +114,7 @@ namespace tt {
             if (!info.start)
             {
                 //Using durations directly
-                for (const auto &attr: attrs)
+                for (const auto &attr: attrs_)
                 {
                     const auto &key = attr.first;
                     const auto &value = attr.second;
@@ -123,7 +137,7 @@ namespace tt {
                 const auto previous_stop = *info.stop;
                 auto &stop = *info.stop;
 
-                for (const auto &attr: attrs)
+                for (const auto &attr: attrs_)
                 {
                     const auto &key = attr.first;
                     const auto &value = attr.second;
@@ -204,7 +218,7 @@ namespace tt {
 
         MSS_END();
     }
-    bool Timesheet::parser_close()
+    bool Timesheet::tree_node_close()
     {
         MSS_BEGIN(bool, ns);
         if ((ymd_it_-ymd_.begin()) == (level_+1))

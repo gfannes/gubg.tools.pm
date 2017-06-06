@@ -26,16 +26,22 @@ namespace tt {
 
             ReturnCode parse(const std::string &filename);
 
-            using Name = gubg::parse::tree::Name;
-            using Attributes = gubg::parse::tree::Attributes;
-            bool parser_open(const Name &, const Attributes &);
-            bool parser_close();
+            bool tree_text(const Text &){}
+            bool tree_node_open(const Tag &);
+            bool tree_attr(const Key &, const Value &);
+            bool tree_attr_done();
+            bool tree_node_close();
 
             Day day() const;
 
             void stream(std::ostream &) const;
 
         private:
+            using Name = std::string;
+            using Attributes = std::map<std::string, std::string>;
+            Name name_;
+            Attributes attrs_;
+
             int level_ = -1;
             using YMD = std::array<unsigned int, 3>;
             YMD ymd_;

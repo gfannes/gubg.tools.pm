@@ -26,8 +26,8 @@ end
 
 task :define => :declare do
     Rake::Task['hours:publish'].invoke
-    Rake::Task['pa:publish'].invoke
-    Rake::Task['tt:publish'].invoke
+    # Rake::Task['pa:publish'].invoke
+    # Rake::Task['tt:publish'].invoke
     Rake::Task['timeline:publish'].invoke
 end
 
