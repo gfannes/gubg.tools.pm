@@ -46,31 +46,31 @@ namespace pa
             location.back()->fraction = default_fraction;
             MSS_END();
         }
-        template <typename Key, typename Value>
-        bool tree_attr(const Key &key, const Value &value)
+        template <typename K, typename V>
+        bool tree_attr(const K &k, const V &v)
         {
             MSS_BEGIN(bool);
             if (false) {}
-            else if (key == value)
+            else if (k == value)
             {
-                value2days.convert(location.back()->value, std::stod(value));
+                value2days.convert(location.back()->value, std::stod(v));
             }
-            else if (key == fraction)
+            else if (k == fraction)
             {
-                location.back()->fraction = std::stod(value);
+                location.back()->fraction = std::stod(v);
             }
             else
             {
-                location.back()->attributes.emplace(key, value);
+                location.back()->attributes.emplace(k, v);
             }
             MSS_END();
         }
         bool tree_attr_done() {return true;}
         bool tree_node_close()
         {
-            S("TreeParser");
+            MSS_BEGIN(bool);
             location.pop_back();
-            return true;
+            MSS_END();
         }
     };
 
