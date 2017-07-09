@@ -6,6 +6,7 @@
 #include <fstream>
 #include <map>
 #include <set>
+#include <functional>
 using namespace pa;
 using namespace std;
 using namespace gubg::xml::builder;
