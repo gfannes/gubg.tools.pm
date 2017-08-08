@@ -1,0 +1,20 @@
+log(">> gubg.tools.pm recipes")
+
+recipe("tt", "exe", fun(r){
+    r.add_source("src/app", "tt/**.cpp")
+    r.add_header("src/app", "tt/**.hpp")
+
+    r.depends_on("gubg#func")
+})
+recipe("pa", "exe", fun(r){
+    r.add_source("src/app", "pa/**.cpp")
+    r.add_header("src/app", "pa/**.hpp")
+
+    r.depends_on("gubg#func")
+    r.depends_on("chai#func")
+
+    r.add_library("dl")
+    r.add_library("pthread")
+})
+
+log("<< gubg.tools.pm recipes")
