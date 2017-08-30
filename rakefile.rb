@@ -2,18 +2,15 @@ require(File.join(ENV['gubg'], 'shared'))
 require('gubg/build/Executable')
 include GUBG
 
-task :default => :help
-task :help do
-    puts("The following tasks can be specified:")
-    puts("* declare: installs bash, vim and git scripts to GUBG.shared")
-    puts("* define: does nothing for now")
+task :default do
+    sh "rake -T"
 end
 
 task :clean do
     rm_rf '.cache'
 end
 
-task :declare do
+task :prepare do
 	case os
 	when :linux, :osx
 		publish('src/bash', dst: 'bin', mode: 0755)
@@ -24,7 +21,7 @@ task :declare do
     Rake::Task['task_warrior:declare'].invoke
 end
 
-task :define => :declare do
+task :run do
     Rake::Task['hours:publish'].invoke
     # Rake::Task['pa:publish'].invoke
     # Rake::Task['tt:publish'].invoke
