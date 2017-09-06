@@ -26,7 +26,7 @@ namespace tt {
 
             ReturnCode parse(const std::string &filename);
 
-            bool tree_text(const Text &){}
+            bool tree_text(const Text &){return true;}
             bool tree_node_open(const Tag &);
             bool tree_attr(const Key &, const Value &);
             bool tree_attr_done();
