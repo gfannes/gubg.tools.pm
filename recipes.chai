@@ -1,20 +1,20 @@
-log(">> gubg.tools.pm recipes")
+add_book("tt", fun(b){
+    b.add_recipe("exe", fun(r){
+        r.add_source("src/app", "tt/**.cpp")
+        r.add_header("src/app", "tt/**.hpp")
 
-recipe("tt", "exe", fun(r){
-    r.add_source("src/app", "tt/**.cpp")
-    r.add_header("src/app", "tt/**.hpp")
-
-    r.depends_on("gubg#func")
+        r.depends_on("gubg#func")
+    })
 })
-recipe("pa", "exe", fun(r){
-    r.add_source("src/app", "pa/**.cpp")
-    r.add_header("src/app", "pa/**.hpp")
+add_book("pa", fun(b){
+    b.add_recipe("exe", fun(r){
+        r.add_source("src/app", "pa/**.cpp")
+        r.add_header("src/app", "pa/**.hpp")
 
-    r.depends_on("gubg#func")
-    r.depends_on("chai#func")
+        r.depends_on("gubg#func")
+        r.depends_on("chai#func")
 
-    r.add_library("dl")
-    r.add_library("pthread")
+        r.add_library("dl")
+        r.add_library("pthread")
+    })
 })
-
-log("<< gubg.tools.pm recipes")
