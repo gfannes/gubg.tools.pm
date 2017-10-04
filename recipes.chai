@@ -3,7 +3,7 @@ add_book("tt", fun(b){
         r.add_source("src/app", "tt/**.cpp")
         r.add_header("src/app", "tt/**.hpp")
 
-        r.depends_on("gubg#func")
+        r.depends_on("gubg.func")
     })
 })
 add_book("pa", fun(b){
@@ -11,8 +11,8 @@ add_book("pa", fun(b){
         r.add_source("src/app", "pa/**.cpp")
         r.add_header("src/app", "pa/**.hpp")
 
-        r.depends_on("gubg#func")
-        r.depends_on("chai#func")
+        r.depends_on("gubg.func")
+        r.depends_on("chai.func")
 
         r.add_library("dl")
         r.add_library("pthread")
