@@ -1,4 +1,4 @@
-add_book("tt", fun(b){
+open_book("tt", fun(b){
     b.add_recipe("exe", fun(r){
         r.target_type(executable)
 
@@ -9,7 +9,7 @@ add_book("tt", fun(b){
     })
 })
 
-add_book("pa", fun(b){
+open_book("pa", fun(b){
     b.add_recipe("exe", fun(r){
         r.target_type(executable)
 
