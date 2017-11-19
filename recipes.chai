@@ -1,25 +1,22 @@
-open_book("tt", fun(b){
-    b.add_recipe("exe", fun(r){
-        r.target_type(executable)
+root.book("tt", fun(b){
+    b.recipe("exe", "executable", fun(r){
+        r.add("src/app", "tt/**.cpp")
+        r.add("src/app", "tt/**.hpp")
 
-        r.add_source("src/app", "tt/**.cpp")
-        r.add_header("src/app", "tt/**.hpp")
-
-        for (e: ["std", "io", "algo"]) { r.depends_on("gubg.${e}.func") }
+        for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
     })
 })
 
-open_book("pa", fun(b){
-    b.add_recipe("exe", fun(r){
-        r.target_type(executable)
+root.book("pa", fun(b){
+    b.recipe("exe", "executable", fun(r){
 
-        r.add_source("src/app", "pa/**.cpp")
-        r.add_header("src/app", "pa/**.hpp")
+        r.add("src/app", "pa/**.cpp")
+        r.add("src/app", "pa/**.hpp")
 
-        for (e: ["std", "io", "algo"]) { r.depends_on("gubg.${e}.func") }
-        r.depends_on("chai.func")
+        for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
+        r.depends_on("chai/func")
 
-        r.add_library("dl")
-        r.add_library("pthread")
+        r.library("dl")
+        r.library("pthread")
     })
 })
