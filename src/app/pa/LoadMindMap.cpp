@@ -1,10 +1,10 @@
 #include "pa/LoadMindMap.hpp"
 #include "pa/Model.hpp"
 #include "gubg/parse/xml/Parser.hpp"
-#include "gubg/parse/tree/Parser.hpp"
+#include "gubg/parse/naft/Parser.hpp"
 #include "gubg/parse/basic.hpp"
 #include "gubg/file/Filesystem.hpp"
-#include "gubg/tree/dfs/Iterate.hpp"
+#include "gubg/naft/dfs/Iterate.hpp"
 #include <string>
 #include <fstream>
 #include <map>
@@ -18,7 +18,7 @@ namespace pa
 
     using Location = std::vector<Node*>;
 
-    struct TreeParser: gubg::parse::tree::Parser_crtp<TreeParser>
+    struct TreeParser: gubg::parse::naft::Parser_crtp<TreeParser>
     {
         Node &root;
         const string value;
@@ -282,7 +282,7 @@ pa::ReturnCode LoadMindMap::execute(const Options &options)
         XmlParser p(model(), options.value, options.fraction, default_fraction, options.value2days);
         MSS(p.process(content));
     }
-    else if (ext == "tree")
+    else if (ext == "naft")
     {
         TreeParser p(model(), options.value, options.fraction, default_fraction, options.value2days);
         L("Before process");
@@ -300,13 +300,13 @@ pa::ReturnCode LoadMindMap::execute(const Options &options)
         Pruner pruner;
         for (auto line: options.lines)
             pruner.add(gubg::parse::tokenize(line, "/"));
-        gubg::tree::dfs::iterate(model(), pruner);
+        gubg::naft::dfs::iterate(model(), pruner);
         L(STREAM(model().total()));
     }
-    gubg::tree::dfs::iterate(model(), Aggregate());
+    gubg::naft::dfs::iterate(model(), Aggregate());
     L(STREAM(model().total()));
     if (!options.category.empty())
-        gubg::tree::dfs::iterate(model(), Distribute(options.category));
+        gubg::naft::dfs::iterate(model(), Distribute(options.category));
     L(STREAM(model().total()));
 
     MSS_END();

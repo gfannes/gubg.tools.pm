@@ -2,7 +2,7 @@
 #define HEADER_tt_Timesheet_hpp_ALREADY_INCLUDED
 
 #include "tt/ReturnCode.hpp"
-#include "gubg/parse/tree/Parser.hpp"
+#include "gubg/parse/naft/Parser.hpp"
 #include "gubg/planning/Day.hpp"
 #include "gubg/time/DayTime.hpp"
 #include <string>
@@ -19,7 +19,7 @@ namespace tt {
     using DayTime = gubg::time::DayTime;
     using Duration = std::chrono::seconds;
 
-    class Timesheet: public gubg::parse::tree::Parser_crtp<Timesheet>
+    class Timesheet: public gubg::parse::naft::Parser_crtp<Timesheet>
     {
         public:
             ReturnCode filter(unsigned int year, unsigned int month, unsigned int day = 1);

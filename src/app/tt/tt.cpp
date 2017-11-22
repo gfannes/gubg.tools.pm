@@ -15,7 +15,7 @@ namespace tt {
 
         gubg::OptionParser parser("Timesheet tracker");
         parser.add_switch('h', "--help", "Print this help", [&](){options.print_help = true;});
-        parser.add_mandatory('i', "--input", "Time tree", [&](const std::string &str){options.input_fn = str;});
+        parser.add_mandatory('i', "--input", "Time naft", [&](const std::string &str){options.input_fn = str;});
         auto parse_filter = [&](const std::string &str)
         {
             const auto v = std::stoi(str);

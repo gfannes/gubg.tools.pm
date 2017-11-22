@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 ENV["gubg"] = "#{ENV["HOME"]}/gubg" unless ENV.has_key?("gubg")
-input_fn = "#{ENV["HOME"]}/nontech/auro.tree"
+input_fn = "#{ENV["HOME"]}/nontech/auro.naft"
 if ARGV.empty?
     system("tt.exe -i #{input_fn}")
 else

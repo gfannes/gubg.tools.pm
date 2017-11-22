@@ -69,7 +69,7 @@ namespace
 					if (options.category.empty()) PA_FINALIZE_OK("You have to specify the category to be used before the quarter view");
 					tasks.push_back(Quarter::create());
 					});
-			optionParser.add_switch('D', "--debug", "Debug view of the tree",
+			optionParser.add_switch('D', "--debug", "Debug view of the naft",
 					[&options, &tasks]()
 					{
 					if (options.value.empty()) PA_FINALIZE_OK("You have to specify the totals to be used before the debug view");

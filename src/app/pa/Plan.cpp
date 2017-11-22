@@ -96,7 +96,7 @@ bool stream(ostream &os, Planner &planner, Plan::View view, Format format)
         case Plan::Products:
             {
                 S(logns);
-                auto leafTasks = gubg::tree::dfs::leafs(*planner.root);
+                auto leafTasks = gubg::naft::dfs::leafs(*planner.root);
                 using StartStop = pair<Day, Day>;
                 using StartStopPerNameParts = map<Task::NameParts, StartStop>;
                 StartStopPerNameParts startstop_per_nameparts;
