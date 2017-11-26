@@ -33,20 +33,20 @@ namespace tt {
         MSS_END();
     }
 
-    bool Timesheet::tree_node_open(const Tag &tag)
+    bool Timesheet::naft_node_open(const Tag &tag)
     {
         MSS_BEGIN(bool);
         name_ = tag;
         attrs_.clear();
         MSS_END();
     }
-    bool Timesheet::tree_attr(const Key &key, const Value &value)
+    bool Timesheet::naft_attr(const Key &key, const Value &value)
     {
         MSS_BEGIN(bool);
         attrs_[key] = value;
         MSS_END();
     }
-    bool Timesheet::tree_attr_done()
+    bool Timesheet::naft_attr_done()
     {
         MSS_BEGIN(bool, ns);
 
@@ -218,7 +218,7 @@ namespace tt {
 
         MSS_END();
     }
-    bool Timesheet::tree_node_close()
+    bool Timesheet::naft_node_close()
     {
         MSS_BEGIN(bool, ns);
         if ((ymd_it_-ymd_.begin()) == (level_+1))

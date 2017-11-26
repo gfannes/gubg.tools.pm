@@ -1,6 +1,6 @@
 #include "pa/ShowWBS.hpp"
 #include "pa/Model.hpp"
-#include "gubg/naft/dfs/Iterate.hpp"
+#include "gubg/tree/dfs/Iterate.hpp"
 #include "gubg/planning/Day.hpp"
 #include "gubg/xml/Builder.hpp"
 #include <fstream>
@@ -50,7 +50,7 @@ pa::ReturnCode ShowWBS::execute(const Options &options)
 {
 	MSS_BEGIN(ReturnCode);L("Showing WBS");
 
-	gubg::naft::dfs::iterate(model(), ShowHtml(cout));
+	gubg::tree::dfs::iterate(model(), ShowHtml(cout));
 
 	if (!options.output.name().empty())
 	{
@@ -58,7 +58,7 @@ pa::ReturnCode ShowWBS::execute(const Options &options)
             ofstream fo(options.output.name());
             fo << "# Work breakdown on " << gubg::planning::today() << endl << endl;
             fo << "Units are days" << endl << endl;
-            gubg::naft::dfs::iterate(model(), Show(fo));
+            gubg::tree::dfs::iterate(model(), Show(fo));
         }
         {
             using namespace gubg::xml::builder;
@@ -69,7 +69,7 @@ pa::ReturnCode ShowWBS::execute(const Options &options)
             auto body = html.tag("body");
             body.tag("h1") << "Work breakdown on " << gubg::planning::today();
             body.tag("p").tag("i") << "Units are days";
-            gubg::naft::dfs::iterate(model(), ShowHtml(fo));
+            gubg::tree::dfs::iterate(model(), ShowHtml(fo));
         }
 	}
 

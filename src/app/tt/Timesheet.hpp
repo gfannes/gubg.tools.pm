@@ -26,11 +26,11 @@ namespace tt {
 
             ReturnCode parse(const std::string &filename);
 
-            bool tree_text(const Text &){return true;}
-            bool tree_node_open(const Tag &);
-            bool tree_attr(const Key &, const Value &);
-            bool tree_attr_done();
-            bool tree_node_close();
+            bool naft_text(const Text &){return true;}
+            bool naft_node_open(const Tag &);
+            bool naft_attr(const Key &, const Value &);
+            bool naft_attr_done();
+            bool naft_node_close();
 
             Day day() const;
 

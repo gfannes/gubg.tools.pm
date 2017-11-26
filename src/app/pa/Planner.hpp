@@ -4,7 +4,7 @@
 #include "pa/Codes.hpp"
 #include "pa/Model.hpp"
 #include "gubg/file/File.hpp"
-#include "gubg/naft/dfs/Iterate.hpp"
+#include "gubg/tree/dfs/Iterate.hpp"
 #include "gubg/planning/Task.hpp"
 #include "gubg/planning/Planning.hpp"
 #include <sstream>
@@ -43,9 +43,9 @@ namespace pa
 		{
 			MSS_BEGIN(ReturnCode, logns);
 
-			//Use model to build the gubg::planning::Task naft into root
+			//Use model to build the gubg::planning::Task tree into root
             parseError_.str("");
-			gubg::naft::dfs::iterate(model(), *this);
+			gubg::tree::dfs::iterate(model(), *this);
 			if (!parseError_.str().empty())
 			{
 				std::cout << parseError_.str();

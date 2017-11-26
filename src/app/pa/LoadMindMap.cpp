@@ -4,7 +4,7 @@
 #include "gubg/parse/naft/Parser.hpp"
 #include "gubg/parse/basic.hpp"
 #include "gubg/file/Filesystem.hpp"
-#include "gubg/naft/dfs/Iterate.hpp"
+#include "gubg/tree/dfs/Iterate.hpp"
 #include <string>
 #include <fstream>
 #include <map>
@@ -18,7 +18,7 @@ namespace pa
 
     using Location = std::vector<Node*>;
 
-    struct TreeParser: gubg::parse::naft::Parser_crtp<TreeParser>
+    struct NaftParser: gubg::parse::naft::Parser_crtp<NaftParser>
     {
         Node &root;
         const string value;
@@ -26,12 +26,12 @@ namespace pa
         const double default_fraction;
         const Value2Days &value2days;
         Location location;
-        TreeParser(Node &r, string n, string f, double df, const Value2Days &value2days):root(r), value(n), fraction(f), default_fraction(df), value2days(value2days){}
+        NaftParser(Node &r, string n, string f, double df, const Value2Days &value2days):root(r), value(n), fraction(f), default_fraction(df), value2days(value2days){}
 
         template <typename Text>
-        bool tree_text(const Text &) {return true;}
+        bool naft_text(const Text &) {return true;}
         template <typename Tag>
-        bool tree_node_open(const Tag &tag)
+        bool naft_node_open(const Tag &tag)
         {
             MSS_BEGIN(bool);
             L(C(tag));
@@ -47,7 +47,7 @@ namespace pa
             MSS_END();
         }
         template <typename K, typename V>
-        bool tree_attr(const K &k, const V &v)
+        bool naft_attr(const K &k, const V &v)
         {
             MSS_BEGIN(bool);
             if (false) {}
@@ -65,8 +65,8 @@ namespace pa
             }
             MSS_END();
         }
-        bool tree_attr_done() {return true;}
-        bool tree_node_close()
+        bool naft_attr_done() {return true;}
+        bool naft_node_close()
         {
             MSS_BEGIN(bool);
             location.pop_back();
@@ -284,7 +284,7 @@ pa::ReturnCode LoadMindMap::execute(const Options &options)
     }
     else if (ext == "naft")
     {
-        TreeParser p(model(), options.value, options.fraction, default_fraction, options.value2days);
+        NaftParser p(model(), options.value, options.fraction, default_fraction, options.value2days);
         L("Before process");
         MSS(p.process(content));
         L("After process");
@@ -300,13 +300,13 @@ pa::ReturnCode LoadMindMap::execute(const Options &options)
         Pruner pruner;
         for (auto line: options.lines)
             pruner.add(gubg::parse::tokenize(line, "/"));
-        gubg::naft::dfs::iterate(model(), pruner);
+        gubg::tree::dfs::iterate(model(), pruner);
         L(STREAM(model().total()));
     }
-    gubg::naft::dfs::iterate(model(), Aggregate());
+    gubg::tree::dfs::iterate(model(), Aggregate());
     L(STREAM(model().total()));
     if (!options.category.empty())
-        gubg::naft::dfs::iterate(model(), Distribute(options.category));
+        gubg::tree::dfs::iterate(model(), Distribute(options.category));
     L(STREAM(model().total()));
 
     MSS_END();

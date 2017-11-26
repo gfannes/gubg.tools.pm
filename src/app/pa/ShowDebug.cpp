@@ -1,6 +1,6 @@
 #include "pa/ShowDebug.hpp"
 #include "pa/Model.hpp"
-#include "gubg/naft/dfs/Iterate.hpp"
+#include "gubg/tree/dfs/Iterate.hpp"
 #include <fstream>
 #include <algorithm>
 using namespace pa;
@@ -49,12 +49,12 @@ pa::ReturnCode ShowDebug::execute(const Options &options)
 {
 	MSS_BEGIN(ReturnCode);L("Showing Debug");
 
-	gubg::naft::dfs::iterate(model(), Show(options, cout));
+	gubg::tree::dfs::iterate(model(), Show(options, cout));
 
 	if (!options.output.name().empty())
 	{
 		ofstream fo(options.output.name());
-		gubg::naft::dfs::iterate(model(), Show(options, fo));
+		gubg::tree::dfs::iterate(model(), Show(options, fo));
 	}
 
 	MSS_END();
