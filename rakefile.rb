@@ -4,7 +4,7 @@ include GUBG
 
 task :prepare do
 	case os
-	when :linux, :osx
+	when :linux, :macos
 		publish('src/bash', dst: 'bin', mode: 0755)
 	when :windows
 		# publish('src/bat', dst: 'bin')
@@ -18,7 +18,7 @@ namespace :task_warrior do
         build_ok_fn = 'gubg.build.ok'
         Dir.chdir(shared_dir('extern')) do
             case os
-            when :linux, :osx
+            when :linux, :macos
                 #Depends on the following ubuntu packages:
                 #sudo apt-get install libgnutls-dev uuid-dev
                 git_clone('https://git.tasktools.org/scm/tm', 'task') do
