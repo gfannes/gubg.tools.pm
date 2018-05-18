@@ -14,6 +14,7 @@
             [support dependencies between tasks]
         }
         [should](should){
+            [support for specifying the default pit.naft via env var]
             [support specification of a team, via chai?]
             [allow team definitions]
             [allow performance specification]
