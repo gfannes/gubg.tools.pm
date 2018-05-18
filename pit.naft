@@ -1,0 +1,33 @@
+[pit](note:development of project management tool){
+    [requirements]{
+        [must](must){
+            [be a command-line application]
+            [use the naft format to create the task tree]
+            [allow hierarchical tasks]{
+                [attribute inheritance]
+            }
+            [allow deadlines]
+            [support parallel and sequential task nodes]
+            [support ids and full text description for tasks]
+            [support dependencies between tasks]
+        }
+        [should](should){
+            [support specification of a team, via chai?]
+            [allow team definitions]
+            [allow performance specification]
+            [allow specification of tasks that can be worked-on per day to make sure one project does not get all the effort]
+            [support namespace lookup of dependencies]
+            [support commenting tasks]
+            [support data from different files via includes]
+            [allow new tasks to be entered via pit]
+        }
+        [could](could){
+            [support collecting all data into one file (export)]
+            [create graphical output]
+        }
+    }
+
+    [range-based naft parser]
+    [data model]
+    [chai engine]
+}

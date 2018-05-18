@@ -20,3 +20,8 @@ root.book("pa", fun(b){
         r.library("pthread")
     })
 })
+
+cook["pit"].recipe("exe", "executable", fun(r){
+    r.add("src/app", "pit/**.cpp")
+    r.add("src/app", "pit/**.hpp")
+})
