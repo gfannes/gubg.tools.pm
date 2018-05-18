@@ -9,6 +9,7 @@
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <map>
 
 namespace pit { 
 
@@ -24,10 +25,11 @@ namespace pit {
             std::string note;
             std::optional<Moscow> moscow;
             bool done = false;
+            std::optional<std::string> deadline;
             using Ptr = std::shared_ptr<Node>;
             using WPtr = std::weak_ptr<Node>;
             std::vector<Ptr> childs;
-            std::vector<WPtr> deps;
+            std::map<std::string, WPtr> deps;
 
             Node(const std::string &tag): tag(tag) {}
         };
@@ -93,6 +95,8 @@ namespace pit {
                     if (false) {}
                     else if (key == "note") {node.note = value;}
                     else if (key == "done") {node.done = true;}
+                    else if (key == "deadline") {node.deadline = value;}
+                    else if (key == "dep") {node.deps[value];}
                     else if (key == "must") {node.moscow = Moscow::Must;}
                     else if (key == "should") {node.moscow = Moscow::Should;}
                     else if (key == "could") {node.moscow = Moscow::Could;}
@@ -104,7 +108,7 @@ namespace pit {
                 }
                 gubg::naft::Range block;
                 if (range.pop_block(block))
-                    parse_(block);
+                    MSS(parse_(block));
                 path_.pop_back();
             }
             MSS_END();
