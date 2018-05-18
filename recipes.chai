@@ -24,4 +24,5 @@ root.book("pa", fun(b){
 cook["pit"].recipe("exe", "executable", fun(r){
     r.add("src/app", "pit/**.cpp")
     r.add("src/app", "pit/**.hpp")
+    for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
 })

@@ -2,7 +2,9 @@
     [requirements]{
         [must](must){
             [be a command-line application]
-            [use the naft format to create the task tree]
+            [use the naft format to create the task tree]{
+                [pre/post command]
+            }
             [allow hierarchical tasks]{
                 [attribute inheritance]
             }
