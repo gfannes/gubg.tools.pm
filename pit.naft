@@ -14,7 +14,12 @@
             [support dependencies between tasks](note:via the dep attribute)
         }
         [should](should){
-            [support for specifying the default pit.naft via env var](note:pit_default)(done)
+            [support for specifying the default pit.naft]{
+                [via env var](note:pit_default)(done)
+                [via local config file]{
+                    [per project]
+                }
+            }
             [support specification of a team, via chai?]
             [allow team definitions]
             [allow performance specification per worker]
@@ -31,6 +36,7 @@
     }
 
     [options parsing]
+    [config level]
     [range-based naft parser]
     [data model]
     [chai engine]
