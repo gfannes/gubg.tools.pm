@@ -2,6 +2,7 @@
 #define HEADER_pit_App_hpp_ALREADY_INCLUDED
 
 #include "pit/Options.hpp"
+#include "pit/Config.hpp"
 #include "pit/Model.hpp"
 #include "gubg/mss.hpp"
 #include <cstdlib>
@@ -11,22 +12,18 @@ namespace pit {
     class App
     {
     public:
-        bool parse(int argc, const char **argv)
+        bool process(int argc, const char **argv)
         {
             MSS_BEGIN(bool);
-            MSS(options_.parse(argc, argv));
-            if (options_.input_fn.empty())
-            {
-                auto pit_default = std::getenv("pit_default");
-                if (pit_default)
-                    options_.input_fn = pit_default;
-            }
-            MSS_END();
-        }
 
-        bool process()
-        {
-            MSS_BEGIN(bool);
+            MSS(options_.parse(argc, argv), std::cout << "Error: could not parse cli args" << std::endl);
+
+            {
+                auto config_path = config_path_();
+                config_.install(config_path);
+                MSS(config_.load(config_path), std::cout << "Error: could not load config" << std::endl);
+            }
+
             if (options_.verbose)
                 std::cout << options_;
             if (options_.help)
@@ -62,7 +59,22 @@ namespace pit {
         }
 
     private:
+        std::filesystem::path config_path_() const
+        {
+            std::filesystem::path res("pit_config.naft");
+            auto home = std::getenv("HOME");
+            if (home)
+            {
+                res = home;
+                res /= ".config";
+                res /= "pit";
+                res /= "config.naft";
+            }
+            return res;
+        }
+
         Options options_;
+        Config config_;
         Model model_;
     };
 } 

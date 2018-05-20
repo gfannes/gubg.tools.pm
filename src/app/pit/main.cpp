@@ -5,16 +5,12 @@ int main(int argc, const char **argv)
 {
     pit::App app;
 
-    if (!app.parse(argc, argv))
-    {
-        std::cout << "Error: could not parse cli args" << std::endl;
-        return -1;
-    }
-    if (!app.process())
+    if (!app.process(argc, argv))
     {
         std::cout << "Error: could not process the app" << std::endl;
         return -1;
     }
+
     std::cout << "Everything went OK" << std::endl;
     return 0;
 }

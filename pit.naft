@@ -36,8 +36,17 @@
     }
 
     [options parsing]
-    [config level]
-    [range-based naft parser]
-    [data model]
+    [config level]{
+        [auto-install in .config/pit]
+    }
+    [range-based naft parser](done)
+    [data model](50%)
     [chai engine]
+    [commands]{
+        [use](note:select root pit as default)
+        [add](note:add new root pit)
+        [tree](note:list task tree)
+        [pre](note:insert new task before given id)
+        [post](note:insert new task after given id)
+    }
 }
