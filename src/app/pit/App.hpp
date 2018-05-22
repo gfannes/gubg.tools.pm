@@ -7,6 +7,8 @@
 #include "gubg/mss.hpp"
 #include <cstdlib>
 #include <set>
+#include <iomanip>
+#include <cmath>
 
 namespace pit { 
     class App
@@ -44,6 +46,7 @@ namespace pit {
                     if (enter)
                     {
                         level++;
+                        std::cout << std::setw(3) << std::lround(node.progress*100.0) << "%";
                         std::cout << std::string(level*2, ' ') << node.tag << std::endl;
                     }
                     else

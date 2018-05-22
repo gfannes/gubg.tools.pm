@@ -24,7 +24,7 @@ namespace pit {
             std::string tag;
             std::string note;
             std::optional<Moscow> moscow;
-            bool done = false;
+            double progress = 0.0;
             std::optional<std::string> deadline;
             using Ptr = std::shared_ptr<Node>;
             using WPtr = std::weak_ptr<Node>;
@@ -94,13 +94,19 @@ namespace pit {
                     L(C(key)C(value));
                     if (false) {}
                     else if (key == "note") {node.note = value;}
-                    else if (key == "done") {node.done = true;}
+                    else if (key == "done") {node.progress = 1.0;}
                     else if (key == "deadline") {node.deadline = value;}
                     else if (key == "dep") {node.deps[value];}
                     else if (key == "must") {node.moscow = Moscow::Must;}
                     else if (key == "should") {node.moscow = Moscow::Should;}
                     else if (key == "could") {node.moscow = Moscow::Could;}
                     else if (key == "wont") {node.moscow = Moscow::Wont;}
+                    else if (!key.empty() && key.back() == '%')
+                    {
+                        gubg::Strange strange(key);
+                        MSS(strange.pop_float(node.progress));
+                        node.progress /= 100.0;
+                    }
                     else
                     {
                         MSS(false, std::cout << "Error: unknown attribute key \"" << key << "\"" << std::endl);
