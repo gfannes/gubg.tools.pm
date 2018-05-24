@@ -1,4 +1,4 @@
-#include "tt/Timesheet.hpp"
+#include "time_track/Timesheet.hpp"
 #include "gubg/file/Filesystem.hpp"
 #include "gubg/Strange.hpp"
 #include "gubg/mss.hpp"
@@ -8,7 +8,7 @@ using namespace gubg;
 
 namespace  { 
     const char *ns = "Timesheet";
-    std::string as_hours(tt::Duration duration)
+    std::string as_hours(time_track::Duration duration)
     {
         std::ostringstream oss;
         oss << std::fixed << double(duration.count())/3600.0;
@@ -16,7 +16,7 @@ namespace  {
     }
 } 
 
-namespace tt { 
+namespace time_track { 
     ReturnCode Timesheet::filter(unsigned int year, unsigned int month, unsigned int day)
     {
         MSS_BEGIN(ReturnCode);

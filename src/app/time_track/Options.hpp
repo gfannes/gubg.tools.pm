@@ -1,9 +1,9 @@
-#ifndef HEADER_tt_Options_hpp_ALREADY_INCLUDED
-#define HEADER_tt_Options_hpp_ALREADY_INCLUDED
+#ifndef HEADER_time_track_Options_hpp_ALREADY_INCLUDED
+#define HEADER_time_track_Options_hpp_ALREADY_INCLUDED
 
 #include <string>
 
-namespace tt { 
+namespace time_track { 
     struct Options
     {
         bool print_help = false;

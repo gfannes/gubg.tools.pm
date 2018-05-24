@@ -1,15 +1,15 @@
-#include "tt/ReturnCode.hpp"
-#include "tt/Options.hpp"
-#include "tt/Timesheet.hpp"
+#include "time_track/ReturnCode.hpp"
+#include "time_track/Options.hpp"
+#include "time_track/Timesheet.hpp"
 #include "gubg/OptionParser.hpp"
 #include "gubg/macro/capture.hpp"
 #include <iostream>
 using namespace std;
 
-namespace tt { 
+namespace time_track { 
     ReturnCode main(int argc, const char **argv)
     {
-        MSS_BEGIN(ReturnCode, "tt");
+        MSS_BEGIN(ReturnCode, "time_track");
 
         Options options;
 
@@ -64,10 +64,10 @@ namespace tt {
 
 int main(int argc, const char **argv)
 {
-    const auto rc = tt::main(argc, argv);
+    const auto rc = time_track::main(argc, argv);
     switch (rc)
     {
-        case tt::ReturnCode::OK:
+        case time_track::ReturnCode::OK:
             cout << "Everything went OK" << endl;
             break;
         default:

@@ -1,7 +1,7 @@
-#ifndef HEADER_tt_Timesheet_hpp_ALREADY_INCLUDED
-#define HEADER_tt_Timesheet_hpp_ALREADY_INCLUDED
+#ifndef HEADER_time_track_Timesheet_hpp_ALREADY_INCLUDED
+#define HEADER_time_track_Timesheet_hpp_ALREADY_INCLUDED
 
-#include "tt/ReturnCode.hpp"
+#include "time_track/ReturnCode.hpp"
 #include "gubg/parse/naft/Parser.hpp"
 #include "gubg/planning/Day.hpp"
 #include "gubg/time/DayTime.hpp"
@@ -13,7 +13,7 @@
 #include <chrono>
 #include <ostream>
 
-namespace tt { 
+namespace time_track { 
 
     using Day = gubg::planning::Day;
     using DayTime = gubg::time::DayTime;

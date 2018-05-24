@@ -1,7 +1,7 @@
-root.book("tt", fun(b){
+root.book("time_track", fun(b){
     b.recipe("exe", "executable", fun(r){
-        r.add("src/app", "tt/**.cpp")
-        r.add("src/app", "tt/**.hpp")
+        r.add("src/app", "time_track/**.cpp")
+        r.add("src/app", "time_track/**.hpp")
 
         for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
     })
