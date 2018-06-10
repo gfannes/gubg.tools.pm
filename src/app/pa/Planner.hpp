@@ -177,9 +177,11 @@ namespace pa
             {
                 auto lambda = [&](const std::string &str)
                 {
+                    MSS_BEGIN(bool);
                     auto it = task_per_tag.find(str);
                     MSS(it == task_per_tag.end(), parseError_ << "Tag " << str << " already exists for task " << it->second->name << std::endl);
                     task_per_tag[str] = current;
+                    MSS_END();
                 };
                 process_attribute(n, "tag", lambda);
             }
