@@ -86,8 +86,8 @@ namespace pit {
 
                 auto &node = *ptr;
 
-                gubg::naft::Attr attr; range.pop_attr(attr);
-                for (const auto &p: attr)
+                gubg::naft::Attrs attrs; range.pop_attrs(attrs);
+                for (const auto &p: attrs)
                 {
                     const auto &key = p.first;
                     const auto &value = p.second;
