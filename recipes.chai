@@ -16,8 +16,10 @@ root.book("pa", fun(b){
         for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
         r.depends_on("chai/func")
 
-        r.library("dl")
-        r.library("pthread")
+        if (my(OS) == OS.Linux){
+            r.library("dl")
+            r.library("pthread")
+        }
     })
 })
 
