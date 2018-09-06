@@ -7,7 +7,7 @@ task :prepare do
 	when :linux, :macos
 		publish('src/bash', dst: 'bin', mode: 0755)
 	when :windows
-		# publish('src/bat', dst: 'bin')
+		publish('src/bat', dst: 'bin')
 	else raise("Unknown os #{os}") end
 
     Rake::Task['task_warrior:declare'].invoke
