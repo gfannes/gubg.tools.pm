@@ -25,8 +25,10 @@ namespace pit {
             std::string tag;
             std::string note;
             std::optional<Moscow> moscow;
-            double progress = 0.0;
-            gubg::Army duration;
+            gubg::Army total_duration;
+            gubg::Army total_todo;
+            std::optional<gubg::Army> duration;
+            std::optional<gubg::Army> todo;
             std::optional<std::string> deadline;
             using Ptr = std::shared_ptr<Node>;
             using WPtr = std::weak_ptr<Node>;
@@ -90,6 +92,8 @@ namespace pit {
 
                 std::smatch m;
 
+                gubg::Army duration;
+
                 gubg::naft::Attrs attrs; range.pop_attrs(attrs);
                 for (const auto &p: attrs)
                 {
@@ -98,40 +102,41 @@ namespace pit {
                     L(C(key)C(value));
                     if (false) {}
                     else if (key == "note") {node.note = value;}
-                    else if (key == "done") {node.progress = 1.0;}
+                    else if (key == "todo")
+                    {
+                        node.todo.emplace();
+                        MSS(is_hours_(*node.todo, value) || is_army_(*node.todo, value));
+                    }
+                    else if (key == "done") {node.todo.emplace();}
                     else if (key == "deadline") {node.deadline = value;}
                     else if (key == "dep") {node.deps[value];}
                     else if (key == "must") {node.moscow = Moscow::Must;}
                     else if (key == "should") {node.moscow = Moscow::Should;}
                     else if (key == "could") {node.moscow = Moscow::Could;}
                     else if (key == "wont") {node.moscow = Moscow::Wont;}
-                    else if (is_progress_(node.progress, key)) {}
-                    else if (is_hours_(node.duration, key)) {}
-                    else if (is_army_(node.duration, key)) {}
+                    else if (is_hours_(duration, key)) {node.duration = duration;}
+                    else if (is_army_(duration, key)) {node.duration = duration;}
                     else
                     {
                         MSS(false, std::cout << "Error: unknown attribute key \"" << key << "\"" << std::endl);
                     }
                 }
+                if (node.duration)
+                    node.total_duration = *node.duration;
+                if (node.todo)
+                    node.total_todo = *node.todo;
+                else if (node.duration)
+                    node.total_todo = *node.duration;
                 gubg::naft::Range block;
                 if (range.pop_block(block))
                     MSS(parse_(block));
                 path_.pop_back();
+                path_.back()->total_duration += node.total_duration;
+                path_.back()->total_todo += node.total_todo;
             }
             MSS_END();
         }
 
-        static bool is_progress_(double &progress, const std::string &key)
-        {
-            MSS_BEGIN(bool);
-            gubg::Strange strange(key);
-            double v;
-            MSS_Q(strange.pop_float(v));
-            MSS_Q(strange.pop_if('%'));
-            MSS(strange.empty());
-            progress = v/100.0;
-            MSS_END();
-        }
         static bool is_hours_(gubg::Army &duration, const std::string &key)
         {
             MSS_BEGIN(bool);
