@@ -6,6 +6,7 @@
 #include "gubg/naft/Range.hpp"
 #include "gubg/file/System.hpp"
 #include "gubg/std/optional.hpp"
+#include "gubg/Army.hpp"
 #include <string>
 #include <iostream>
 #include <memory>
@@ -25,6 +26,7 @@ namespace pit {
             std::string note;
             std::optional<Moscow> moscow;
             double progress = 0.0;
+            gubg::Army duration;
             std::optional<std::string> deadline;
             using Ptr = std::shared_ptr<Node>;
             using WPtr = std::weak_ptr<Node>;
@@ -86,6 +88,8 @@ namespace pit {
 
                 auto &node = *ptr;
 
+                std::smatch m;
+
                 gubg::naft::Attrs attrs; range.pop_attrs(attrs);
                 for (const auto &p: attrs)
                 {
@@ -101,12 +105,9 @@ namespace pit {
                     else if (key == "should") {node.moscow = Moscow::Should;}
                     else if (key == "could") {node.moscow = Moscow::Could;}
                     else if (key == "wont") {node.moscow = Moscow::Wont;}
-                    else if (!key.empty() && key.back() == '%')
-                    {
-                        gubg::Strange strange(key);
-                        MSS(strange.pop_float(node.progress));
-                        node.progress /= 100.0;
-                    }
+                    else if (is_progress_(node.progress, key)) {}
+                    else if (is_hours_(node.duration, key)) {}
+                    else if (is_army_(node.duration, key)) {}
                     else
                     {
                         MSS(false, std::cout << "Error: unknown attribute key \"" << key << "\"" << std::endl);
@@ -120,10 +121,45 @@ namespace pit {
             MSS_END();
         }
 
+        static bool is_progress_(double &progress, const std::string &key)
+        {
+            MSS_BEGIN(bool);
+            gubg::Strange strange(key);
+            double v;
+            MSS_Q(strange.pop_float(v));
+            MSS_Q(strange.pop_if('%'));
+            MSS(strange.empty());
+            progress = v/100.0;
+            MSS_END();
+        }
+        static bool is_hours_(gubg::Army &duration, const std::string &key)
+        {
+            MSS_BEGIN(bool);
+            gubg::Strange strange(key);
+            double hours;
+            MSS_Q(strange.pop_float(hours));
+            MSS_Q(strange.pop_if('h'));
+            MSS(strange.empty());
+            duration.from_minutes(hours*60.0);
+            MSS_END();
+        }
+        static bool is_army_(gubg::Army &duration, const std::string &key)
+        {
+            MSS_BEGIN(bool);
+            gubg::Strange strange(key);
+            unsigned int v;
+            MSS_Q(strange.pop_decimal(v));
+            MSS(strange.empty());
+            duration.from_army(v);
+            MSS_END();
+        }
+
         Node::Ptr root_;
 
         using Path = std::vector<Node::Ptr>;
         Path path_;
+
+        const std::regex re_hours_{"\\d*h"};
     };
 } 
 
