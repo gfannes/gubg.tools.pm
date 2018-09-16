@@ -1,15 +1,17 @@
 [read single file](100)(done){
-    [aggregate over tree](100)(done)
     [read multiple attributes](30)
 }
-[include](2.5h)
-[dependencies]{
-    [create dag]
-    [aggregate over dag]
+[report]{
+    [tree](done)(100)
+    [color output]
 }
+[include](2.5h)
 [model]{
-    [forest]
-    [dag]
+    [xtree]{
+        [data]
+        [subtree dep and aggregation]
+        [integrate]
+    }
     [write-out]
 }
 [ui]{
