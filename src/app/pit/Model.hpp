@@ -1,6 +1,7 @@
 #ifndef HEADER_pit_Model_hpp_ALREADY_INCLUDED
 #define HEADER_pit_Model_hpp_ALREADY_INCLUDED
 
+#include "gubg/xtree/Model.hpp"
 #include "gubg/mss.hpp"
 #include "gubg/std/filesystem.hpp"
 #include "gubg/naft/Range.hpp"
@@ -20,7 +21,7 @@ namespace pit {
     {
     public:
 
-        struct Node
+        struct Data
         {
             std::string tag;
             std::string note;
@@ -30,12 +31,9 @@ namespace pit {
             std::optional<gubg::Army> duration;
             std::optional<gubg::Army> todo;
             std::optional<std::string> deadline;
-            using Ptr = std::shared_ptr<Node>;
-            using WPtr = std::weak_ptr<Node>;
-            std::vector<Ptr> childs;
-            std::map<std::string, WPtr> deps;
 
-            Node(const std::string &tag): tag(tag) {}
+            Data(){}
+            Data(const std::string &tag): tag(tag) {}
         };
 
         bool load(const std::filesystem::path &filename)
@@ -45,10 +43,9 @@ namespace pit {
             std::string content;
             MSS(gubg::file::read(content, filename));
             gubg::naft::Range range(content);
-            root_.reset(new Node("/"));
-            path_.push_back(root_);
+            xtree_.clear();
             //Recursive parsing of content
-            MSS(parse_(range), std::cout << "Error: parsing failed" << std::endl);
+            MSS(parse_(xtree_.root(), range), std::cout << "Error: parsing failed" << std::endl);
             MSS(range.empty(), std::cout << "Error: could not understand part \"" << range.str() << "\"" << std::endl);
             MSS_END();
         }
@@ -56,27 +53,13 @@ namespace pit {
         template <typename Ftor>
         bool dfs(Ftor &&ftor) const
         {
-            MSS_BEGIN(bool);
-            MSS(!!root_);
-            MSS(dfs_(*root_, ftor));
-            MSS_END();
+            return xtree_.accumulate(true, [&](bool ok, const auto &node){ftor(node); return true;});
         }
 
     private:
-        template <typename Ftor>
-        bool dfs_(const Node &node, Ftor &&ftor) const
-        {
-            MSS_BEGIN(bool);
-            MSS(ftor(node, true));
-            for (const auto &child: node.childs)
-            {
-                MSS(dfs_(*child, ftor));
-            }
-            MSS(ftor(node, false));
-            MSS_END();
-        }
+        using XTree = gubg::xtree::Model<Data>;
 
-        bool parse_(gubg::naft::Range &range)
+        bool parse_(XTree::Node &parent, gubg::naft::Range &range)
         {
             MSS_BEGIN(bool, "");
             std::string tag;
@@ -84,13 +67,7 @@ namespace pit {
             {
                 L(C(tag));
 
-                Node::Ptr ptr(new Node(tag));
-                path_.back()->childs.push_back(ptr);
-                path_.push_back(ptr);
-
-                auto &node = *ptr;
-
-                std::smatch m;
+                auto &node = parent.emplace_back(tag);
 
                 gubg::Army duration;
 
@@ -109,7 +86,6 @@ namespace pit {
                     }
                     else if (key == "done") {node.todo.emplace();}
                     else if (key == "deadline") {node.deadline = value;}
-                    else if (key == "dep") {node.deps[value];}
                     else if (key == "must") {node.moscow = Moscow::Must;}
                     else if (key == "should") {node.moscow = Moscow::Should;}
                     else if (key == "could") {node.moscow = Moscow::Could;}
@@ -129,10 +105,9 @@ namespace pit {
                     node.total_todo = *node.duration;
                 gubg::naft::Range block;
                 if (range.pop_block(block))
-                    MSS(parse_(block));
-                path_.pop_back();
-                path_.back()->total_duration += node.total_duration;
-                path_.back()->total_todo += node.total_todo;
+                    MSS(parse_(node, block));
+                parent.total_duration += node.total_duration;
+                parent.total_todo += node.total_todo;
             }
             MSS_END();
         }
@@ -159,12 +134,7 @@ namespace pit {
             MSS_END();
         }
 
-        Node::Ptr root_;
-
-        using Path = std::vector<Node::Ptr>;
-        Path path_;
-
-        const std::regex re_hours_{"\\d*h"};
+        XTree xtree_;
     };
 } 
 

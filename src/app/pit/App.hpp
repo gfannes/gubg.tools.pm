@@ -43,66 +43,56 @@ namespace pit {
                 std::cout << "   Aggregated    |       Node      " << std::endl;
                 std::cout << "Total Todo Progr | Total Todo Progr" << std::endl;
                 std::cout << "-----------------------------------" << std::endl;
-                int level = -1;
-                auto lambda = [&](const Model::Node &node, bool enter)
+                auto lambda = [&](const auto &node)
                 {
-                    if (enter)
+                    if (node.total_duration.as_minutes() == 0)
+                        std::cout << "----- ";
+                    else
+                        std::cout << std::setw(2) << node.total_duration << ' ';
+
+                    if (node.total_duration.as_minutes() == 0 && node.total_todo.as_minutes() == 0)
+                        std::cout << "----- ";
+                    else
+                        std::cout << std::setw(2) << node.total_todo << ' ';
+
                     {
-                        level++;
-
-                        if (node.total_duration.as_minutes() == 0)
-                            std::cout << "----- ";
-                        else
-                            std::cout << std::setw(2) << node.total_duration << ' ';
-
-                        if (node.total_duration.as_minutes() == 0 && node.total_todo.as_minutes() == 0)
-                            std::cout << "----- ";
-                        else
-                            std::cout << std::setw(2) << node.total_todo << ' ';
-
+                        const double duration = node.total_duration.as_minutes();
+                        if (duration > 0)
                         {
-                            const double duration = node.total_duration.as_minutes();
-                            if (duration > 0)
-                            {
-                                const double todo = node.total_todo.as_minutes();
-                                if (todo == 0.0)
-                                    std::cout << "DONE ";
-                                else
-                                {
-                                    const double progress = 1.0-todo/duration;
-                                    std::cout << std::setw(3) << std::lround(progress*100.0) << "% ";
-                                }
-                            }
+                            const double todo = node.total_todo.as_minutes();
+                            if (todo == 0.0)
+                                std::cout << "DONE ";
                             else
-                                std::cout << "---- ";
-                        }
-
-                        std::cout << "| ";
-
-                        if (node.duration)
-                            std::cout << std::setw(2) << *node.duration << ' ';
-                        else
-                            std::cout << "----- ";
-                        if (node.todo)
-                            std::cout << std::setw(2) << *node.todo << ' ';
-                        else
-                            std::cout << "----- ";
-                        if (node.duration)
-                        {
-                            const double duration = node.duration->as_minutes();
-                            MSS(duration > 0);
-                            const double todo = node.todo ? node.todo->as_minutes() : duration;
-                            const double progress = 1.0-todo/duration;
-                            std::cout << std::setw(3) << std::lround(progress*100.0) << "% ";
+                            {
+                                const double progress = 1.0-todo/duration;
+                                std::cout << std::setw(3) << std::lround(progress*100.0) << "% ";
+                            }
                         }
                         else
                             std::cout << "---- ";
-                        std::cout << std::string(level*2, ' ') << node.tag << std::endl;
+                    }
+
+                    std::cout << "| ";
+
+                    if (node.duration)
+                        std::cout << std::setw(2) << *node.duration << ' ';
+                    else
+                        std::cout << "----- ";
+                    if (node.todo)
+                        std::cout << std::setw(2) << *node.todo << ' ';
+                    else
+                        std::cout << "----- ";
+                    if (node.duration)
+                    {
+                        const double duration = node.duration->as_minutes();
+                        MSS(duration > 0);
+                        const double todo = node.todo ? node.todo->as_minutes() : duration;
+                        const double progress = 1.0-todo/duration;
+                        std::cout << std::setw(3) << std::lround(progress*100.0) << "% ";
                     }
                     else
-                    {
-                        level--;
-                    }
+                        std::cout << "---- ";
+                    std::cout << std::string(node.depth()*2, ' ') << node.tag << std::endl;
                     return true;
                 };
                 MSS(model_.dfs(lambda));

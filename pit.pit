@@ -3,20 +3,32 @@
 }
 [report]{
     [tree](done)(100)
-    [color output]
+    [color output]{
+        [gubg](100)
+        [integrate](15)
+    }
 }
 [include](2.5h)
 [model]{
     [xtree]{
-        [data]
-        [subtree dep and aggregation]
-        [integrate]
+        [data](100)(done)
+        [integrate](30)(done)
+        [subtree dep and aggregation](200)
     }
-    [write-out]
+    [write-out]{
+        [keep track of orig file](30)
+        [write](30)
+    }
 }
 [ui]{
     [select terminal framework](100)(todo:0.5h){
-        [rxterm]
+        [rxterm]{
+            [gubg.ui]{
+                [integrate](100)
+                [test](100)
+            }
+            [integrate](200)
+        }
     }
     [story output]
 }
