@@ -1,4 +1,5 @@
 [read single file](100)(done){
+    [read auro.pit](30)(done)
     [read multiple attributes](30)
 }
 [report]{
