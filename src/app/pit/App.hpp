@@ -40,20 +40,22 @@ namespace pit {
             if (false) {}
             else if (command == "tree")
             {
-                std::cout << "   Aggregated    |       Node       | Tree" << std::endl;
-                std::cout << "Total Todo Progr | Total Todo Progr |" << std::endl;
-                std::cout << "-----------------|------------------|---------------------------------" << std::endl;
+                std::cout << " Aggregated               | Node                     | Tree" << std::endl;
+                std::cout << " Total     Todo      Prog | Total     Todo      Prog |" << std::endl;
+                std::cout << "--------------------------|--------------------------|---------------------------------" << std::endl;
                 auto lambda = [&](const auto &node)
                 {
+                    std::cout << ' ';
+
                     //Aggregated
                     {
                         if (node.total_duration.as_minutes() == 0)
-                            std::cout << "----- ";
+                            std::cout << "--------- ";
                         else
                             std::cout << std::setw(2) << node.total_duration << ' ';
 
                         if (node.total_duration.as_minutes() == 0 && node.total_todo.as_minutes() == 0)
-                            std::cout << "----- ";
+                            std::cout << "--------- ";
                         else
                             std::cout << std::setw(2) << node.total_todo << ' ';
 
@@ -82,11 +84,11 @@ namespace pit {
                         if (node.duration)
                             std::cout << std::setw(2) << *node.duration << ' ';
                         else
-                            std::cout << "----- ";
+                            std::cout << "--------- ";
                         if (node.todo)
                             std::cout << std::setw(2) << *node.todo << ' ';
                         else
-                            std::cout << "----- ";
+                            std::cout << "--------- ";
                         if (node.duration)
                         {
                             const double duration = node.duration->as_minutes();

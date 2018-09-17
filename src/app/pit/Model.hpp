@@ -31,6 +31,7 @@ namespace pit {
             std::optional<gubg::Army> duration;
             std::optional<gubg::Army> todo;
             std::optional<std::string> deadline;
+            std::string story;
 
             Data(){}
             Data(const std::string &tag): tag(tag) {}
@@ -92,6 +93,7 @@ namespace pit {
                     else if (key == "should") {node.moscow = Moscow::Should;}
                     else if (key == "could") {node.moscow = Moscow::Could;}
                     else if (key == "wont") {node.moscow = Moscow::Wont;}
+                    else if (key == "s") {node.story = value;}
                     else if (key == "who") {}
                     else if (key == "dep") {}
                     else if (is_hours_(duration, key) || is_days_(duration, key) || is_army_(duration, key)) {node.duration = duration;}
