@@ -55,7 +55,7 @@ namespace pit {
 
             //Setup x-links
             {
-                auto insert_links = [&](bool ok, const auto &node)
+                auto insert_links = [&](bool ok, auto &node)
                 {
                     for (const auto &dep: node.deps)
                     {
@@ -63,10 +63,12 @@ namespace pit {
                         std::string error;
                         auto to = resolve_(dep, node, &error);
                         MSS(!!to, std::cout << error << std::endl);
+                        node.add_link(*to);
                     }
                     return true;
                 };
                 MSS(xtree_.accumulate(true, insert_links));
+                MSS(xtree_.process_xlinks([](const auto &node, const auto &from, const auto &msg){std::cout << "Error: problem detected for node " << uri_(node) << " from " << uri_(from) << ": " << msg << std::endl;}));
             }
 
             MSS_END();
@@ -93,7 +95,7 @@ namespace pit {
             {
                 auto &n = *res;
                 res.reset();
-                n.each_child([&](auto &child){if (child.tag == part) res = child.shared_from_this();});
+                n.each_child([&](auto &child){if (child.tag == part) {res = child.shared_from_this(); return false;} return true;});
                 if (!res)
                 {
                     if (!!error)
