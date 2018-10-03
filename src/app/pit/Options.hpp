@@ -66,6 +66,9 @@ namespace pit {
             os << "  -f <name>   Input filename\n";
             os << "  -v          Verbose\n";
             os << "  -h          Print this help\n";
+            os << "\n";
+            os << "Command \"tree\"\n";
+            os << "  <uri>?      URI of the start node, the root by default\n";
         }
 
     private:
