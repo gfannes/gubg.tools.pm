@@ -8,10 +8,12 @@
 #include "gubg/file/System.hpp"
 #include "gubg/std/optional.hpp"
 #include "gubg/Army.hpp"
+#include "gubg/string_algo/algo.hpp"
 #include <string>
 #include <iostream>
 #include <memory>
 #include <map>
+#include <list>
 
 namespace pit { 
 
@@ -32,6 +34,7 @@ namespace pit {
             std::optional<gubg::Army> todo;
             std::optional<std::string> deadline;
             std::string story;
+            std::list<std::string> deps;
 
             Data(){}
             Data(const std::string &tag): tag(tag) {}
@@ -45,9 +48,27 @@ namespace pit {
             MSS(gubg::file::read(content, filename));
             gubg::naft::Range range(content);
             xtree_.clear();
+
             //Recursive parsing of content
             MSS(parse_(xtree_.root(), range), std::cout << "Error: parsing failed" << std::endl);
             MSS(range.empty(), std::cout << "Error: could not understand part \"" << range.str().substr(0, 10) << "\"" << std::endl);
+
+            //Setup x-links
+            {
+                auto insert_links = [&](bool ok, const auto &node)
+                {
+                    for (const auto &dep: node.deps)
+                    {
+                        std::cout << uri_(node) << " => " << dep << std::endl;
+                        std::string error;
+                        auto to = resolve_(dep, node, &error);
+                        MSS(!!to, std::cout << error << std::endl);
+                    }
+                    return true;
+                };
+                MSS(xtree_.accumulate(true, insert_links));
+            }
+
             MSS_END();
         }
 
@@ -59,6 +80,42 @@ namespace pit {
 
     private:
         using XTree = gubg::xtree::Model<Data>;
+        using Node = typename XTree::Node;
+        using Node_ptr = typename XTree::Node_ptr;
+
+        Node_ptr resolve_(const std::string &dep, const Node &node, std::string *error = nullptr)
+        {
+            S("");
+            std::list<std::string> parts;
+            Node_ptr res = xtree_.root_ptr();
+            gubg::string_algo::split(parts, dep, '/');
+            for (const auto &part: parts)
+            {
+                auto &n = *res;
+                res.reset();
+                n.each_child([&](auto &child){if (child.tag == part) res = child.shared_from_this();});
+                if (!res)
+                {
+                    if (!!error)
+                    {
+                        std::ostringstream oss;
+                        oss << "Error: could not find part \"" << part << "\" from " << uri_(n) << " for " << uri_(node);
+                        *error = oss.str();
+                    }
+                    break;
+                }
+            }
+            return res;
+        }
+        static std::string uri_(const Node &node)
+        {
+            typename XTree::Path path;
+            node.path(path);
+            std::ostringstream oss;
+            for (const auto &n: path)
+                oss << n->tag << "/";
+            return oss.str();
+        }
 
         bool parse_(XTree::Node &parent, gubg::naft::Range &range)
         {
@@ -95,7 +152,7 @@ namespace pit {
                     else if (key == "wont") {node.moscow = Moscow::Wont;}
                     else if (key == "s") {node.story = value;}
                     else if (key == "who") {}
-                    else if (key == "dep") {}
+                    else if (key == "dep") {node.deps.push_back(value);}
                     else if (is_hours_(duration, key) || is_days_(duration, key) || is_army_(duration, key)) {node.duration = duration;}
 
                     else if (key.empty())
