@@ -11,7 +11,10 @@
 }
 [parser]{
     [dep](1h)
-    [include](2.5h)
+    [include](2.5h){
+        [define]
+        [test]
+    }
 }
 [model]{
     [xtree]{

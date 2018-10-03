@@ -22,7 +22,6 @@ namespace pit {
     class Model
     {
     public:
-
         struct Data
         {
             std::string tag;
@@ -39,6 +38,10 @@ namespace pit {
             Data(){}
             Data(const std::string &tag): tag(tag) {}
         };
+        using XTree = gubg::xtree::Model<Data>;
+        using Node = typename XTree::Node;
+        using Node_ptr = typename XTree::Node_ptr;
+        using Node_cptr = typename XTree::Node_cptr;
 
         bool load(const std::filesystem::path &filename)
         {
@@ -59,33 +62,53 @@ namespace pit {
                 {
                     for (const auto &dep: node.deps)
                     {
-                        std::cout << uri_(node) << " => " << dep << std::endl;
                         std::string error;
-                        auto to = resolve_(dep, node, &error);
+                        auto to = resolve(dep, node, &error);
                         MSS(!!to, std::cout << error << std::endl);
                         node.add_link(*to);
                     }
                     return true;
                 };
                 MSS(xtree_.accumulate(true, insert_links));
-                MSS(xtree_.process_xlinks([](const auto &node, const auto &from, const auto &msg){std::cout << "Error: problem detected for node " << uri_(node) << " from " << uri_(from) << ": " << msg << std::endl;}));
+                MSS(xtree_.process_xlinks([](const auto &node, const auto &from, const auto &msg){std::cout << "Error: problem detected for node " << uri(node) << " from " << uri(from) << ": " << msg << std::endl;}));
+            }
+
+            //Aggregate totals
+            {
+                auto add_totals = [](auto &dst, const auto &src)
+                {
+                    dst.total_duration += src.total_duration;
+                    dst.total_todo += src.total_todo;
+                    return true;
+                };
+                MSS(xtree_.aggregate(add_totals));
             }
 
             MSS_END();
         }
 
+        Node_cptr root() const {return xtree_.root_ptr();}
+
         template <typename Ftor>
-        bool dfs(Ftor &&ftor) const
+        bool traverse(const Node_cptr &node, Ftor &&ftor) const
         {
-            return xtree_.accumulate(true, [&](bool ok, const auto &node){ftor(node); return true;});
+            MSS_BEGIN(bool);
+            MSS(!!node);
+            MSS(node->traverse(ftor));
+            MSS_END();
         }
 
-    private:
-        using XTree = gubg::xtree::Model<Data>;
-        using Node = typename XTree::Node;
-        using Node_ptr = typename XTree::Node_ptr;
+        static std::string uri(const Node &node)
+        {
+            typename XTree::Path path;
+            node.path(path);
+            std::ostringstream oss;
+            for (const auto &n: path)
+                oss << n->tag << "/";
+            return oss.str();
+        }
 
-        Node_ptr resolve_(const std::string &dep, const Node &node, std::string *error = nullptr)
+        Node_ptr resolve(const std::string &dep, const Node &node, std::string *error = nullptr)
         {
             S("");
             std::list<std::string> parts;
@@ -101,7 +124,7 @@ namespace pit {
                     if (!!error)
                     {
                         std::ostringstream oss;
-                        oss << "Error: could not find part \"" << part << "\" from " << uri_(n) << " for " << uri_(node);
+                        oss << "Error: could not find part \"" << part << "\" from " << uri(n) << " for " << uri(node);
                         *error = oss.str();
                     }
                     break;
@@ -109,16 +132,8 @@ namespace pit {
             }
             return res;
         }
-        static std::string uri_(const Node &node)
-        {
-            typename XTree::Path path;
-            node.path(path);
-            std::ostringstream oss;
-            for (const auto &n: path)
-                oss << n->tag << "/";
-            return oss.str();
-        }
 
+    private:
         bool parse_(XTree::Node &parent, gubg::naft::Range &range)
         {
             MSS_BEGIN(bool, "");
@@ -179,8 +194,6 @@ namespace pit {
                 {
                     MSS(parse_(node, block));
                 }
-                parent.total_duration += node.total_duration;
-                parent.total_todo += node.total_todo;
             }
             MSS_END();
         }

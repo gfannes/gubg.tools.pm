@@ -40,11 +40,40 @@ namespace pit {
             if (false) {}
             else if (command == "tree")
             {
+                auto start_node = model_.root();
+                if (!options_.arguments.empty())
+                {
+                    const auto &uri = options_.arguments.front();
+                    std::string error;
+                    auto ptr = model_.resolve(uri, *start_node, &error);
+                    MSS(!!ptr, std::cout << "Error: could not find node " << uri << ": " << error << std::endl);
+                    start_node = ptr;
+                }
+
                 std::cout << " Aggregated               | Node                     | Tree" << std::endl;
                 std::cout << " Total     Todo      Prog | Total     Todo      Prog |" << std::endl;
                 std::cout << "--------------------------|--------------------------|---------------------------------" << std::endl;
-                auto lambda = [&](const auto &node)
+
+                unsigned int depth = 0;
+                std::list<Model::Node_cptr> path = {start_node->parent()};
+                auto lambda = [&](const auto &node, bool oc)
                 {
+                    const bool is_child = !path.empty() && node.parent() == path.back();
+
+                    if (oc)
+                    {
+                        ++depth;
+                        path.push_back(node.shared_from_this());
+                    }
+                    else
+                    {
+                        path.pop_back();
+                        --depth;
+                    }
+
+                    if (!oc)
+                        return true;
+
                     std::cout << ' ';
 
                     //Aggregated
@@ -105,13 +134,16 @@ namespace pit {
 
                     //Tree
                     {
-                        const auto tag = (node.depth() == 0) ? "<ALL>" : node.tag;
-                        std::cout << std::string(node.depth()*2, ' ') << tag << std::endl;
+                        const auto tag = (!node.parent()) ? "<ROOT>" : node.tag;
+                        if (is_child)
+                            std::cout << std::string(depth*2, ' ') << tag << std::endl;
+                        else
+                            std::cout << std::string(depth*2, ' ') << Model::uri(node) << std::endl;
                     }
 
                     return true;
                 };
-                MSS(model_.dfs(lambda));
+                MSS(model_.traverse(start_node, lambda));
             }
             else MSS(false, std::cout << "Error: unknown command \"" << command << "\"" << std::endl);
             MSS_END();
