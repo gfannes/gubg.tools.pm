@@ -20,7 +20,8 @@
     [xtree]{
         [data](100)(done)
         [integrate](30)(done)
-        [subtree dep and aggregation](200)(dep:parser/dep){
+        [xtree dep and aggregation](200)(dep:parser/dep){
+            [aggregate according to topological order](100)
         }
     }
     [include](dep:parser/include)
