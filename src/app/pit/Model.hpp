@@ -159,7 +159,8 @@ namespace pit {
                     else if (key == "todo")
                     {
                         node.todo.emplace();
-                        MSS(is_hours_(*node.todo, value) || is_days_(*node.todo, value) || is_army_(*node.todo, value));
+                        const auto ok = is_hours_(*node.todo, value) || is_days_(*node.todo, value) || is_army_(*node.todo, value);
+                        MSS(ok, std::cout << "Error: \"todo\" should have a duration at " << position_(range) << std::endl);
                     }
                     else if (key == "done") {node.todo.emplace();}
                     else if (key == "deadline") {node.deadline = value;}
@@ -168,7 +169,7 @@ namespace pit {
                     else if (key == "could") {node.moscow = Moscow::Could;}
                     else if (key == "wont") {node.moscow = Moscow::Wont;}
                     else if (key == "s") {node.story = value;}
-                    else if (key == "who") {}
+                    else if (key == "w") {}
                     else if (key == "dep") {node.deps.push_back(value);}
                     else if (is_hours_(duration, key) || is_days_(duration, key) || is_army_(duration, key)) {node.duration = duration;}
 
@@ -178,7 +179,7 @@ namespace pit {
 
                     else
                     {
-                        MSS(false, std::cout << "Error: unknown attribute key \"" << key << "\"" << std::endl);
+                        MSS(false, std::cout << "Error: unknown attribute key \"" << key << "\" at " << position_(range) << std::endl);
                     }
                 }
 
@@ -196,6 +197,14 @@ namespace pit {
                 }
             }
             MSS_END();
+        }
+
+        static std::string position_(const gubg::naft::Range &range)
+        {
+            std::ostringstream oss;
+            auto pos = range.position();
+            oss << "line " << pos.line+1 << ", column " << pos.column+1;
+            return oss.str();
         }
 
         static bool is_hours_(gubg::Army &duration, const std::string &key)
