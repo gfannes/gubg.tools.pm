@@ -15,8 +15,8 @@ namespace pit {
         std::string input_fn;
         bool verbose = false;
         bool help = false;
-        std::string command;
-        std::vector<std::string> arguments;
+        std::string uri;
+        int depth = -1;
 
         bool parse(int argc, const char **argv)
         {
@@ -24,8 +24,7 @@ namespace pit {
             MSS(argc > 0);
             exe_fn = argv[0];
             std::set<std::string> switches = {"-v", "-h"};
-            std::set<std::string> options = {"-f"};
-            std::set<std::string> commands = {"tree"};
+            std::set<std::string> options = {"-f", "-u", "-d"};
             for (auto i = 1; i < argc;)
             {
                 std::string arg = argv[i++];
@@ -40,9 +39,9 @@ namespace pit {
                     MSS(i < argc, std::cout << "Error: argument " << arg << " requires an value" << std::endl);
                     std::string value = argv[i++];
                     if (arg == "-f") { input_fn = value; }
+                    if (arg == "-u") { uri = value; }
+                    if (arg == "-d") { depth = std::stoi(value); }
                 }
-                else if (!command.empty()) { arguments.push_back(arg); }
-                else if (commands.count(arg)) { command = arg; }
                 else
                 {
                     MSS(false, std::cout << "Error: unknown argument " << arg << std::endl);
@@ -57,8 +56,8 @@ namespace pit {
             os << "  input filename: " << input_fn << std::endl;
             os << "  verbose: " << verbose << std::endl;
             os << "  help: " << help << std::endl;
-            os << "  command: " << command << std::endl;
-            os << "  arguments:"; for (const auto &arg: arguments) {os << " " << arg;} os << std::endl;
+            os << "  uri: " << uri << std::endl;
+            os << "  depth: " << depth << std::endl;
         }
         void stream_help(std::ostream &os) const
         {
@@ -66,9 +65,8 @@ namespace pit {
             os << "  -f <name>   Input filename\n";
             os << "  -v          Verbose\n";
             os << "  -h          Print this help\n";
-            os << "\n";
-            os << "Command \"tree\"\n";
-            os << "  <uri>?      URI of the start node, the root by default\n";
+            os << "  -u          URI\n";
+            os << "  -d          Depth\n";
         }
 
     private:

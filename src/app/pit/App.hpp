@@ -31,19 +31,13 @@ namespace pit {
             if (options_.help)
                 options_.stream_help(std::cout);
 
-            const auto &command = options_.command;
+            MSS(model_.load(options_.input_fn));
 
-            std::set<std::string> command_needs_model = {"tree"};
-            if (command_needs_model.count(command))
-                MSS(model_.load(options_.input_fn));
-
-            if (false) {}
-            else if (command == "tree")
             {
                 auto start_node = model_.root();
-                if (!options_.arguments.empty())
+                if (!options_.uri.empty())
                 {
-                    const auto &uri = options_.arguments.front();
+                    const auto &uri = options_.uri;
                     std::string error;
                     auto ptr = model_.resolve(uri, *start_node, &error);
                     MSS(!!ptr, std::cout << "Error: could not find node " << uri << ": " << error << std::endl);
@@ -72,6 +66,9 @@ namespace pit {
                     }
 
                     if (!oc)
+                        return true;
+
+                    if (options_.depth >= 0 && depth > options_.depth+1)
                         return true;
 
                     std::cout << ' ';
@@ -145,7 +142,7 @@ namespace pit {
                 };
                 MSS(model_.traverse(start_node, lambda));
             }
-            else MSS(false, std::cout << "Error: unknown command \"" << command << "\"" << std::endl);
+
             MSS_END();
         }
 
