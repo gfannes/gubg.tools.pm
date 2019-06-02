@@ -336,6 +336,48 @@ namespace time_track {
         }
     }
 
+    void Timesheet::stream_totals(std::ostream &os) const
+    {
+        const auto today = gubg::planning::today();
+
+        using DetailsPerStory = std::map<std::string, std::map<Day, std::pair<Duration, std::list<std::string>>>>;
+        DetailsPerStory details_per_story;
+
+        for (const auto &di: info_per_day_)
+        {
+            const auto &day = di.first;
+            const auto &info = di.second;
+
+            if (filter_from_day_ && day < *filter_from_day_)
+                continue;
+
+            Duration total_worked(0);
+            for (const auto &p: info.duration_per_task_per_story)
+            {
+                const auto &story = p.first;
+                if (story != "pause")
+                {
+                    Duration sub_total_worked(0);
+                    for (const auto &pp: p.second)
+                    {
+                        const auto &task = pp.first;
+                        const auto &duration = pp.second;
+                        {
+                            auto &details = details_per_story[story][day];
+                            details.first += duration;
+                            details.second.push_back(task);
+                        }
+                        sub_total_worked += duration;
+                    }
+                    total_worked += sub_total_worked;
+                }
+            }
+
+            if (total_worked != Duration::zero())
+                os << "\\hourrow{" << day << "}{" << as_hours(total_worked) << "}{95}" << std::endl;
+        }
+    }
+
     //Timesheet::Info
     void Timesheet::Info::stream(std::ostream &os) const
     {

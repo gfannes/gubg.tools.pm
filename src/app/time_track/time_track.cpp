@@ -56,6 +56,8 @@ namespace time_track {
                 timesheet.filter(options.year, options.month, options.day);
             MSS(timesheet.parse(options.input_fn));
             cout << timesheet;
+            if (options.print_totals)
+                timesheet.stream_totals(cout);
         }
 
         MSS_END();

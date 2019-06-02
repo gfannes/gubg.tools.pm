@@ -7,6 +7,7 @@ namespace time_track {
     struct Options
     {
         bool print_help = false;
+        bool print_totals = true;
         std::string input_fn;
         int year = -1;
         int month = -1;

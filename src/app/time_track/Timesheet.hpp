@@ -35,6 +35,7 @@ namespace time_track {
             Day day() const;
 
             void stream(std::ostream &) const;
+            void stream_totals(std::ostream &os) const;
 
         private:
             using Name = std::string;
