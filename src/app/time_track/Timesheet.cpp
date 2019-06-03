@@ -374,7 +374,7 @@ namespace time_track {
             }
 
             if (total_worked != Duration::zero())
-                os << "\\hourrow{" << day << "}{" << as_hours(total_worked) << "}{95}" << std::endl;
+                os << "\\hourrow{" << day << "}{" << as_hours(total_worked) << "}{93.5}" << std::endl;
         }
     }
 
