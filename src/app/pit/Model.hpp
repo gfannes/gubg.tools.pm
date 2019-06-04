@@ -94,7 +94,7 @@ namespace pit {
         {
             MSS_BEGIN(bool);
             MSS(!!node);
-            MSS(node->traverse(ftor));
+            MSS(xtree_.traverse(ftor, false, node));
             MSS_END();
         }
 

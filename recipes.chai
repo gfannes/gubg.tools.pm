@@ -28,3 +28,9 @@ cook["pit"].recipe("exe", "executable", fun(r){
     r.add("src/app", "pit/**.hpp")
     for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
 })
+
+cook["pigr"].recipe("exe", "executable", fun(r){
+    r.add("src/app", "pigr/**.cpp")
+    r.add("src/app", "pigr/**.hpp")
+    for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
+})
