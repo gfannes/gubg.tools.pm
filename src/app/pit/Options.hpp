@@ -1,7 +1,8 @@
 #ifndef HEADER_pit_Options_hpp_ALREADY_INCLUDED
 #define HEADER_pit_Options_hpp_ALREADY_INCLUDED
 
-#include "gubg/mss.hpp"
+#include <pit/Types.hpp>
+#include <gubg/mss.hpp>
 #include <gubg/Strange.hpp>
 #include <string>
 #include <ostream>
@@ -13,14 +14,7 @@ namespace pit {
     {
     public:
         std::string exe_fn;
-
-        struct InputFile
-        {
-            std::string ns;
-            std::string fn;
-        };
-        std::vector<InputFile> input_files;
-
+        InputFiles input_files;
         bool verbose = false;
         bool help = false;
         std::string uri;

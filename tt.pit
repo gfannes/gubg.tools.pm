@@ -1,0 +1,4 @@
+[output]{
+    [remove progressive output](10)
+    [remove hour price](10)
+}

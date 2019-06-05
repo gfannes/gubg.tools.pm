@@ -1,14 +1,15 @@
 #ifndef HEADER_pit_Model_hpp_ALREADY_INCLUDED
 #define HEADER_pit_Model_hpp_ALREADY_INCLUDED
 
-#include "gubg/xtree/Model.hpp"
-#include "gubg/mss.hpp"
-#include "gubg/std/filesystem.hpp"
-#include "gubg/naft/Range.hpp"
-#include "gubg/file/System.hpp"
-#include "gubg/std/optional.hpp"
-#include "gubg/Army.hpp"
-#include "gubg/string_algo/algo.hpp"
+#include <pit/Types.hpp>
+#include <gubg/xtree/Model.hpp>
+#include <gubg/mss.hpp>
+#include <gubg/std/filesystem.hpp>
+#include <gubg/naft/Range.hpp>
+#include <gubg/file/System.hpp>
+#include <gubg/std/optional.hpp>
+#include <gubg/Army.hpp>
+#include <gubg/string_algo/algo.hpp>
 #include <string>
 #include <iostream>
 #include <memory>
@@ -43,18 +44,32 @@ namespace pit {
         using Node_ptr = typename XTree::Node_ptr;
         using Node_cptr = typename XTree::Node_cptr;
 
-        bool load(const std::filesystem::path &filename)
+        bool load(const InputFiles &input_files)
         {
             MSS_BEGIN(bool, "");
-            MSS(std::filesystem::is_regular_file(filename), std::cout << "Error: file " << filename << " does not exist" << std::endl);
-            std::string content;
-            MSS(gubg::file::read(content, filename));
-            gubg::naft::Range range(content);
+
             xtree_.clear();
 
-            //Recursive parsing of content
-            MSS(parse_(xtree_.root(), range), std::cout << "Error: parsing failed" << std::endl);
-            MSS(range.empty(), std::cout << "Error: could not understand part \"" << range.str().substr(0, 10) << "\"" << std::endl);
+            for (const auto &input_file: input_files)
+            {
+                const std::filesystem::path filename = input_file.fn;
+
+                MSS(std::filesystem::is_regular_file(filename), std::cout << "Error: file " << filename << " does not exist" << std::endl);
+                std::string content;
+                MSS(gubg::file::read(content, filename));
+                gubg::naft::Range range(content);
+
+                //Recursive parsing of content
+                Node *root = &xtree_.root();
+                const auto &ns = input_file.ns;
+                if (!ns.empty())
+                {
+                    MSS(root->each_child([&](const auto &child){return child.tag != ns;}), std::cout << "Error: namespace \"" << ns << "\" is already in use" << std::endl);
+                    root = &root->emplace_back(ns);
+                }
+                MSS(parse_(*root, range), std::cout << "Error: parsing failed" << std::endl);
+                MSS(range.empty(), std::cout << "Error: could not understand part \"" << range.str().substr(0, 10) << "\"" << std::endl);
+            }
 
             //Setup x-links
             {

@@ -31,8 +31,7 @@ namespace pit {
             if (options_.help)
                 options_.stream_help(std::cout);
 
-            MSS(options_.input_files.size() == 1);
-            MSS(model_.load(options_.input_files[0].fn));
+            MSS(model_.load(options_.input_files));
 
             {
                 auto start_node = model_.root();
