@@ -2,6 +2,7 @@
 #define HEADER_pit_Options_hpp_ALREADY_INCLUDED
 
 #include "gubg/mss.hpp"
+#include <gubg/Strange.hpp>
 #include <string>
 #include <ostream>
 #include <set>
@@ -12,7 +13,14 @@ namespace pit {
     {
     public:
         std::string exe_fn;
-        std::string input_fn;
+
+        struct InputFile
+        {
+            std::string ns;
+            std::string fn;
+        };
+        std::vector<InputFile> input_files;
+
         bool verbose = false;
         bool help = false;
         std::string uri;
@@ -38,7 +46,14 @@ namespace pit {
                 {
                     MSS(i < argc, std::cout << "Error: argument " << arg << " requires an value" << std::endl);
                     std::string value = argv[i++];
-                    if (arg == "-f") { input_fn = value; }
+                    if (arg == "-f")
+                    {
+                        InputFile input_file;
+                        gubg::Strange strange{value};
+                        strange.pop_until(input_file.ns, ':');
+                        strange.pop_all(input_file.fn);
+                        input_files.push_back(input_file);
+                    }
                     if (arg == "-u") { uri = value; }
                     if (arg == "-d") { depth = std::stoi(value); }
                 }
@@ -53,7 +68,8 @@ namespace pit {
         void stream(std::ostream &os) const
         {
             os << "Options:" << std::endl;
-            os << "  input filename: " << input_fn << std::endl;
+            for (const auto &input_file: input_files)
+                os << "  input file: " << input_file.ns << " : " << input_file.fn << std::endl;
             os << "  verbose: " << verbose << std::endl;
             os << "  help: " << help << std::endl;
             os << "  uri: " << uri << std::endl;
