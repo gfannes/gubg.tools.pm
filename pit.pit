@@ -5,12 +5,12 @@
     [read multiple attributes](30)
 }
 [planner]{
-    [support for mode](10){
+    [support for mode](10)(done){
         [options](10)(done)
     }
 }
 [report]{
-    [toggle xlinks](20)
+    [toggle xlinks](20)(done)
     [tree](done)(100)
     [color output]{
         [gubg](100)

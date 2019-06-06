@@ -74,7 +74,7 @@ namespace pit {
 
         bool load(const InputFiles &input_files)
         {
-            MSS_BEGIN(bool, "");
+            MSS_BEGIN(bool);
 
             xtree_.clear();
 
@@ -113,7 +113,7 @@ namespace pit {
                     return true;
                 };
                 MSS(xtree_.accumulate(true, insert_links));
-                MSS(xtree_.process_xlinks([](const auto &node, const auto &from, const auto &msg){std::cout << "Error: problem detected for node " << uri(node) << " from " << uri(from) << ": " << msg << std::endl;}));
+                MSS(xtree_.process_xlinks([](const auto &node, const auto &from, const auto &msg){std::cout << "Error: problem detected for node " << TagPath(node) << " from " << TagPath(from) << ": " << msg << std::endl;}));
             }
 
             //Aggregate totals
@@ -141,13 +141,23 @@ namespace pit {
             MSS_END();
         }
 
-        static std::string uri(const Node &node)
+        std::string str() const
         {
-            typename XTree::Path path;
-            node.path(path);
             std::ostringstream oss;
-            for (const auto &n: path)
-                oss << n->tag << "/";
+            oss << "[model]{\n";
+            auto lambda = [&](bool ok, const Node &node){
+                oss << "  [node](path:" << TagPath{node} << "){\n";
+                if (false)
+                    node.each_in([&](const Node &n){oss << "    [in](path:" << TagPath{n} << ")\n"; return true;});
+                if (true)
+                    node.each_out([&](const Node &n){oss << "    [out](path:" << TagPath{n} << ")\n"; return true;});
+                if (true)
+                    node.each_sub([&](const Node &n){oss << "    [sub](path:" << TagPath{n} << ")\n"; return true;});
+                oss << "  }\n";
+                return ok;
+            };
+            xtree_.accumulate(true, lambda);
+            oss << "}\n";
             return oss.str();
         }
 
@@ -169,7 +179,7 @@ namespace pit {
             if (!!error)
             {
                 std::ostringstream oss;
-                oss << "Error: could not resolve dependency \"" << dep << "\" for " << uri(from);
+                oss << "Error: could not resolve dependency \"" << dep << "\" for " << TagPath(from);
                 *error = oss.str();
             }
             return Node_ptr{};

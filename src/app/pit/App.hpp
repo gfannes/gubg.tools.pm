@@ -33,6 +33,9 @@ namespace pit {
 
             MSS(model_.load(options_.input_files));
 
+            if (options_.verbose)
+                std::cout << model_.str();
+
             {
                 auto start_node = model_.root();
                 if (!options_.uri.empty())
@@ -146,7 +149,7 @@ namespace pit {
                         if (is_child)
                             std::cout << std::string(depth*2, ' ') << tag << std::endl;
                         else
-                            std::cout << std::string(depth*2, ' ') << Model::uri(node) << std::endl;
+                            std::cout << std::string(depth*2, ' ') << TagPath(node) << std::endl;
                     }
 
                     return true;
