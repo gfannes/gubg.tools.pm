@@ -14,9 +14,12 @@ namespace pit {
     {
     public:
         std::string exe_fn;
-        InputFiles input_files;
         bool verbose = false;
         bool help = false;
+
+        InputFiles input_files;
+        Mode mode = Mode::Report;
+        bool show_xlinks = false;
         std::string uri;
         int depth = -1;
 
@@ -26,7 +29,7 @@ namespace pit {
             MSS(argc > 0);
             exe_fn = argv[0];
             std::set<std::string> switches = {"-v", "-h"};
-            std::set<std::string> options = {"-f", "-u", "-d"};
+            std::set<std::string> options = {"-f", "-u", "-d", "-m"};
             for (auto i = 1; i < argc;)
             {
                 std::string arg = argv[i++];
@@ -50,6 +53,17 @@ namespace pit {
                     }
                     if (arg == "-u") { uri = value; }
                     if (arg == "-d") { depth = std::stoi(value); }
+                    if (arg == "-m")
+                    {
+                        gubg::Strange strange(value);
+                        if (strange.pop_if("plan")) { mode = Mode::Plan; }
+                        else if (strange.pop_if("report"))
+                        {
+                            mode = Mode::Report;
+                            show_xlinks = strange.pop_if(".full");
+                        }
+                        MSS(strange.empty(), std::cout << "Error: unknown mode \"" << value << "\"" << std::endl);
+                    }
                 }
                 else
                 {
@@ -66,6 +80,8 @@ namespace pit {
                 os << "  input file: " << input_file.ns << " : " << input_file.fn << std::endl;
             os << "  verbose: " << verbose << std::endl;
             os << "  help: " << help << std::endl;
+            os << "  mode: " << mode << std::endl;
+            os << "  show_xlinks: " << show_xlinks << std::endl;
             os << "  uri: " << uri << std::endl;
             os << "  depth: " << depth << std::endl;
         }

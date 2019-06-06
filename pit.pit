@@ -1,16 +1,27 @@
-[read single file](100)(done){
+[read from file](100)(done){
     [read auro.pit](30)(done)
+    [multi-file](20)(done)
+    [namespace](20)(done)
     [read multiple attributes](30)
 }
+[planner]{
+    [support for mode](10){
+        [options](10)(done)
+    }
+}
 [report]{
+    [toggle xlinks](20)
     [tree](done)(100)
     [color output]{
         [gubg](100)
         [integrate](15)
     }
 }
+[output]{
+}
 [parser]{
-    [dep](1h)
+    [dep](1h)(done)
+    [bel](20)
     [include](2.5h){
         [define]
         [test]
@@ -23,6 +34,7 @@
         [xtree dep and aggregation](200)(dep:parser/dep){
             [aggregate according to topological order](100)
         }
+        [dep and bel]
     }
     [include](dep:parser/include)
     [write-out]{

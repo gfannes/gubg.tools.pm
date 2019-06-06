@@ -50,25 +50,36 @@ namespace pit {
 
                 unsigned int depth = 0;
                 std::list<Model::Node_cptr> path = {start_node->parent()};
+                unsigned int xcount = 0;
                 auto lambda = [&](const auto &node, bool oc)
                 {
-                    const bool is_child = !path.empty() && node.parent() == path.back();
-
+                    bool is_child;
                     if (oc)
                     {
                         ++depth;
+                        is_child = !path.empty() && node.parent() == path.back();
                         path.push_back(node.shared_from_this());
+                        if (!is_child)
+                            ++xcount;
                     }
                     else
                     {
                         path.pop_back();
+                        is_child = !path.empty() && node.parent() == path.back();
+                        if (!is_child)
+                            --xcount;
                         --depth;
                     }
+
+                    /* std::cout << TagPath{node} << " " << C(oc)C(path.size())C(is_child)C(xcount) << std::endl; */
 
                     if (!oc)
                         return true;
 
                     if (options_.depth >= 0 && depth > options_.depth+1)
+                        return true;
+
+                    if (!options_.show_xlinks && xcount > 0)
                         return true;
 
                     std::cout << ' ';
@@ -140,7 +151,7 @@ namespace pit {
 
                     return true;
                 };
-                MSS(model_.traverse(start_node, lambda));
+                MSS(model_.traverse(start_node, lambda, options_.show_xlinks));
             }
 
             MSS_END();

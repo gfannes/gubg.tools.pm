@@ -8,7 +8,6 @@
 #include <gubg/naft/Range.hpp>
 #include <gubg/file/System.hpp>
 #include <gubg/std/optional.hpp>
-#include <gubg/Army.hpp>
 #include <gubg/string_algo/algo.hpp>
 #include <string>
 #include <iostream>
@@ -18,27 +17,56 @@
 
 namespace pit { 
 
-    enum class Moscow { Must, Should, Could, Wont, };
+    class TagPath: public std::vector<Tag>
+    {
+    public:
+        static const char sep() {return '/';}
+
+        template <typename Node>
+        TagPath(const Node &node)
+        {
+            for (const Node *ptr = &node; ptr; ptr = ptr->parent().get())
+                push_back(ptr->tag);
+            std::reverse(RANGE(*this));
+        }
+        TagPath(const std::string &str)
+        {
+            gubg::string_algo::split(*this, str, sep());
+        }
+        TagPath(const TagPath &a, const TagPath &b)
+        {
+            insert(end(), RANGE(a));
+            insert(end(), RANGE(b));
+        }
+
+        void stream(std::ostream &os) const
+        {
+            gubg::OnlyOnce skip_sep;
+            for (const auto &e: *this)
+            {
+                if (!skip_sep())
+                    os << sep();
+                os << e;
+            }
+        }
+        std::string str() const
+        {
+            oss_.str("");
+            stream(oss_);
+            return oss_.str();
+        }
+    private:
+        static std::ostringstream oss_;
+    };
+    inline std::ostream &operator<<(std::ostream &os, const TagPath &tp)
+    {
+        tp.stream(os);
+        return os;
+    }
 
     class Model
     {
     public:
-        struct Data
-        {
-            std::string tag;
-            std::string note;
-            std::optional<Moscow> moscow;
-            gubg::Army total_duration;
-            gubg::Army total_todo;
-            std::optional<gubg::Army> duration;
-            std::optional<gubg::Army> todo;
-            std::optional<std::string> deadline;
-            std::string story;
-            std::list<std::string> deps;
-
-            Data(){}
-            Data(const std::string &tag): tag(tag) {}
-        };
         using XTree = gubg::xtree::Model<Data>;
         using Node = typename XTree::Node;
         using Node_ptr = typename XTree::Node_ptr;
@@ -65,7 +93,7 @@ namespace pit {
                 if (!ns.empty())
                 {
                     MSS(root->each_child([&](const auto &child){return child.tag != ns;}), std::cout << "Error: namespace \"" << ns << "\" is already in use" << std::endl);
-                    root = &root->emplace_back(ns);
+                    root = &add_child(*root, ns);
                 }
                 MSS(parse_(*root, range), std::cout << "Error: parsing failed" << std::endl);
                 MSS(range.empty(), std::cout << "Error: could not understand part \"" << range.str().substr(0, 10) << "\"" << std::endl);
@@ -105,11 +133,11 @@ namespace pit {
         Node_cptr root() const {return xtree_.root_ptr();}
 
         template <typename Ftor>
-        bool traverse(const Node_cptr &node, Ftor &&ftor) const
+        bool traverse(const Node_cptr &node, Ftor &&ftor, bool show_xlinks) const
         {
             MSS_BEGIN(bool);
             MSS(!!node);
-            MSS(xtree_.traverse(ftor, false, node));
+            MSS(xtree_.traverse(ftor, show_xlinks, node));
             MSS_END();
         }
 
@@ -123,42 +151,48 @@ namespace pit {
             return oss.str();
         }
 
-        Node_ptr resolve(const std::string &dep, const Node &node, std::string *error = nullptr)
+        Node_ptr resolve(const std::string &dep, const Node &from, std::string *error = nullptr)
         {
-            S("");
-            std::list<std::string> parts;
-            Node_ptr res = xtree_.root_ptr();
-            gubg::string_algo::split(parts, dep, '/');
-            for (const auto &part: parts)
+            TagPath dep_tp{dep};
+
+            for (TagPath tp{from}; true; tp.pop_back())
             {
-                auto &n = *res;
-                res.reset();
-                n.each_child([&](auto &child){if (child.tag == part) {res = child.shared_from_this(); return false;} return true;});
-                if (!res)
-                {
-                    if (!!error)
-                    {
-                        std::ostringstream oss;
-                        oss << "Error: could not find part \"" << part << "\" from " << uri(n) << " for " << uri(node);
-                        *error = oss.str();
-                    }
+                const TagPath combined_tp{tp, dep_tp};
+
+                auto it = tagpath__node_.find(combined_tp);
+                if (it != tagpath__node_.end())
+                    return it->second;
+                if (tp.empty())
                     break;
-                }
             }
-            return res;
+            
+            if (!!error)
+            {
+                std::ostringstream oss;
+                oss << "Error: could not resolve dependency \"" << dep << "\" for " << uri(from);
+                *error = oss.str();
+            }
+            return Node_ptr{};
+        }
+
+        Node &add_child(Node &parent, const Tag &tag)
+        {
+            auto &node = parent.emplace_back(tag);
+            tagpath__node_[TagPath{node}] = node.shared_from_this();
+            return node;
         }
 
     private:
-        bool parse_(XTree::Node &parent, gubg::naft::Range &range)
+        bool parse_(Node &parent, gubg::naft::Range &range)
         {
-            MSS_BEGIN(bool, "");
+            MSS_BEGIN(bool);
 
-            std::string tag;
+            Tag tag;
             while (range.pop_tag(tag))
             {
                 L(C(tag));
 
-                auto &node = parent.emplace_back(tag);
+                auto &node = add_child(parent, tag);
 
                 gubg::Army duration;
 
@@ -256,6 +290,7 @@ namespace pit {
         }
 
         XTree xtree_;
+        std::map<TagPath, Node_ptr> tagpath__node_;
     };
 } 
 
