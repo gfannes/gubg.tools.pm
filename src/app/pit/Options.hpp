@@ -10,6 +10,7 @@
 #include <vector>
 
 namespace pit { 
+
     class Options
     {
     public:
@@ -20,8 +21,8 @@ namespace pit {
         InputFiles input_files;
         Mode mode = Mode::Report;
         bool show_xlinks = false;
-        std::string uri;
-        int depth = -1;
+        std::optional<std::string> uri;
+        std::optional<unsigned int> depth;
 
         bool parse(int argc, const char **argv)
         {
@@ -82,8 +83,10 @@ namespace pit {
             os << "  help: " << help << std::endl;
             os << "  mode: " << mode << std::endl;
             os << "  show_xlinks: " << show_xlinks << std::endl;
-            os << "  uri: " << uri << std::endl;
-            os << "  depth: " << depth << std::endl;
+            if (uri)
+                os << "  uri: " << *uri << std::endl;
+            if (depth)
+                os << "  depth: " << *depth << std::endl;
         }
         void stream_help(std::ostream &os) const
         {

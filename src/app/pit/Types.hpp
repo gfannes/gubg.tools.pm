@@ -2,6 +2,7 @@
 #define HEADER_pit_Types_hpp_ALREADY_INCLUDED
 
 #include <gubg/Army.hpp>
+#include <gubg/planning/Day.hpp>
 #include <string>
 #include <vector>
 #include <list>
@@ -57,6 +58,8 @@ namespace pit {
         os << "[data](tag:" << data.tag << ")";
         return os;
     }
+
+    using Day = gubg::planning::Day;
 
 } 
 

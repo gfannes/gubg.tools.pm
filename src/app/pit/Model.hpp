@@ -161,7 +161,7 @@ namespace pit {
             return oss.str();
         }
 
-        Node_ptr resolve(const std::string &dep, const Node &from, std::string *error = nullptr)
+        Node_ptr resolve(const std::string &dep, const Node &from, std::string *error = nullptr) const
         {
             TagPath dep_tp{dep};
 
