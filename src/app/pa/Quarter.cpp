@@ -11,7 +11,7 @@ using namespace std;
 void stream(ostream &os, Planner &planner)
 {
     os << "Quarters" << endl;
-    const auto quarters = gubg::planning::quarters(gubg::planning::today(), 3);
+    const auto quarters = gubg::planning::quarters(gubg::planning::Day::today(), 3);
     for (const auto &quarter: quarters)
     {
         auto b = quarter.begin();

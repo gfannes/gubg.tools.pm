@@ -143,7 +143,7 @@ namespace pa
                 auto lambda = [&](const std::string &str)
                 {
                     gubg::planning::Day deadline(str);
-                    if (!deadline.isValid())
+                    if (!deadline.is_valid())
                         parseError_ << "Could not parse deadline attribute for node " << n.desc << ": \"" << str << "\"" << std::endl;
                     else
                         current->setDeadline(deadline);
@@ -155,7 +155,7 @@ namespace pa
                 auto lambda = [&](const std::string &str)
                 {
                     gubg::planning::Day startdate(str);
-                    if (!startdate.isValid())
+                    if (!startdate.is_valid())
                         parseError_ << "Could not parse startdate attribute for node " << n.desc << ": \"" << str << "\"" << std::endl;
                     else
                         current->setStartdate(startdate);

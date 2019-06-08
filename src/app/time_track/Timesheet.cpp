@@ -238,7 +238,7 @@ namespace time_track {
 
     void Timesheet::stream(std::ostream &os) const
     {
-        const auto today = gubg::planning::today();
+        const auto today = gubg::planning::Day::today();
 
         using DetailsPerStory = std::map<std::string, std::map<Day, std::pair<Duration, std::list<std::string>>>>;
         DetailsPerStory details_per_story;
@@ -338,7 +338,7 @@ namespace time_track {
 
     void Timesheet::stream_totals(std::ostream &os) const
     {
-        const auto today = gubg::planning::today();
+        const auto today = gubg::planning::Day::today();
 
         using DetailsPerStory = std::map<std::string, std::map<Day, std::pair<Duration, std::list<std::string>>>>;
         DetailsPerStory details_per_story;

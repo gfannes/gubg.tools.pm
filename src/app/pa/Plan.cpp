@@ -61,7 +61,7 @@ bool stream(ostream &os, Planner &planner, Plan::View view, Format format)
                     {
                         Tag html(os, "html");
                         auto body = html.tag("body");
-                        body.tag("h1") << "Planning overview on " << today();
+                        body.tag("h1") << "Planning overview on " << Day::today();
                         {
                             auto table = body.tag("table");
                             {
@@ -108,7 +108,7 @@ bool stream(ostream &os, Planner &planner, Plan::View view, Format format)
                 {
                     {
                         auto &start = ss.first;
-                        if (!start.isValid() || start_ < start)
+                        if (!start.is_valid() || start_ < start)
                             start = start_;
                     }
                     {
@@ -173,7 +173,7 @@ bool stream(ostream &os, Planner &planner, Plan::View view, Format format)
                                 const auto &product = p.second;
                                 max_product_size = max(product.size(), max_product_size);
                             }
-                            os << "# Product delivery overview on " << today() << endl << endl;
+                            os << "# Product delivery overview on " << Day::today() << endl << endl;
                             for (const auto &p: products_per_stop)
                             {
                                 const auto &stop = p.first;
@@ -187,7 +187,7 @@ bool stream(ostream &os, Planner &planner, Plan::View view, Format format)
                         {
                             Tag html(os, "html");
                             auto body = html.tag("body");
-                            body.tag("h1") << "Product delivery overview on " << today();
+                            body.tag("h1") << "Product delivery overview on " << Day::today();
                             {
                                 auto table = body.tag("table");
                                 {
@@ -312,14 +312,14 @@ bool stream(ostream &os, Planner &planner, Plan::View view, Format format)
                 switch (format)
                 {
                     case ::Format::Text:
-                        os << "# Resource planning per worker on " << today() << endl << endl;
+                        os << "# Resource planning per worker on " << Day::today() << endl << endl;
                         break;
                     case ::Format::Html:
                         {
                             html.reset(new Tag(os, "html"));
                             body.reset(new Tag(html->tag("body")));
                             MSS(!!body);
-                            body->tag("h1") << "Resource planning per worker on " << today();
+                            body->tag("h1") << "Resource planning per worker on " << Day::today();
                         }
                         break;
                 }

@@ -21,6 +21,7 @@ namespace pit {
         InputFiles input_files;
         Mode mode = Mode::Report;
         bool show_xlinks = false;
+        std::string resources_fn;
         std::optional<std::string> uri;
         std::optional<unsigned int> depth;
 
@@ -30,7 +31,7 @@ namespace pit {
             MSS(argc > 0);
             exe_fn = argv[0];
             std::set<std::string> switches = {"-v", "-h"};
-            std::set<std::string> options = {"-f", "-u", "-d", "-m"};
+            std::set<std::string> options = {"-f", "-u", "-d", "-m", "-r"};
             for (auto i = 1; i < argc;)
             {
                 std::string arg = argv[i++];
@@ -65,6 +66,7 @@ namespace pit {
                         }
                         MSS(strange.empty(), std::cout << "Error: unknown mode \"" << value << "\"" << std::endl);
                     }
+                    if (arg == "-r") { resources_fn = value; }
                 }
                 else
                 {
@@ -83,6 +85,7 @@ namespace pit {
             os << "  help: " << help << std::endl;
             os << "  mode: " << mode << std::endl;
             os << "  show_xlinks: " << show_xlinks << std::endl;
+            os << "  resources_fn: " << resources_fn << std::endl;
             if (uri)
                 os << "  uri: " << *uri << std::endl;
             if (depth)

@@ -56,7 +56,7 @@ pa::ReturnCode ShowWBS::execute(const Options &options)
 	{
         {
             ofstream fo(options.output.name());
-            fo << "# Work breakdown on " << gubg::planning::today() << endl << endl;
+            fo << "# Work breakdown on " << gubg::planning::Day::today() << endl << endl;
             fo << "Units are days" << endl << endl;
             gubg::tree::dfs::iterate(model(), Show(fo));
         }
@@ -67,7 +67,7 @@ pa::ReturnCode ShowWBS::execute(const Options &options)
             ofstream fo(fn.name());
             Tag html(fo, "html");
             auto body = html.tag("body");
-            body.tag("h1") << "Work breakdown on " << gubg::planning::today();
+            body.tag("h1") << "Work breakdown on " << gubg::planning::Day::today();
             body.tag("p").tag("i") << "Units are days";
             gubg::tree::dfs::iterate(model(), ShowHtml(fo));
         }

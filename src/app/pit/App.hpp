@@ -1,11 +1,12 @@
 #ifndef HEADER_pit_App_hpp_ALREADY_INCLUDED
 #define HEADER_pit_App_hpp_ALREADY_INCLUDED
 
-#include "pit/Options.hpp"
-#include "pit/Config.hpp"
-#include "pit/Model.hpp"
+#include <pit/Options.hpp>
+#include <pit/Config.hpp>
+#include <pit/Model.hpp>
 #include <pit/Reporter.hpp>
-#include "gubg/mss.hpp"
+#include <pit/ResourceMgr.hpp>
+#include <gubg/mss.hpp>
 #include <cstdlib>
 #include <set>
 #include <iomanip>
@@ -31,9 +32,10 @@ namespace pit {
             if (options_.help)
                 options_.stream_help(std::cout);
 
+            MSS(resource_mgr_.load(options_.resources_fn));
             MSS(model_.load(options_.input_files));
 
-            if (options_.verbose)
+            if (options_.verbose && false)
                 std::cout << model_.str();
 
             Reporter reporter;
@@ -61,6 +63,7 @@ namespace pit {
         Options options_;
         Config config_;
         Model model_;
+        ResourceMgr resource_mgr_;
     };
 } 
 
