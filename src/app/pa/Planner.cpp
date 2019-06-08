@@ -28,7 +28,7 @@ namespace pa
             MSS(strange.pop_if('/'));
             MSS(strange.pop_decimal(day2));
             absence_per_worker[worker].push_back(Day(year, month, day));
-            for (auto d: dayRange(Day(year, month, day), Day(year2, month2, day2)))
+            for (auto d: day_range(Day(year, month, day), Day(year2, month2, day2)))
                 absence_per_worker[worker].push_back(d);
         }
         else
@@ -64,7 +64,7 @@ namespace pa
             MSS(error_str.empty(), std::cout << error_str << std::endl);
         }
 
-        for (auto d: workDays(nr_working_days))
+        for (auto d: work_days(nr_working_days))
             planning.addDay(d);
 
         for (const auto &p: absence_per_worker)
@@ -80,15 +80,15 @@ namespace pa
         /* planning.addWorker("emilev", 0.8); */
         /* planning.addWorker("ismaild", 0.8); */
         /* planning.addWorker("marnicr", 0.8); */
-        /* for (auto d: workDays(1000)) */
+        /* for (auto d: work_days(1000)) */
         /* { */
         /* 	planning.addDay(d); */
         /* } */
 #if 0
 #ifdef PAST
-        for (auto d: dayRange(Day(2013, 7, 4), Day(2013, 7, 18)))
+        for (auto d: day_range(Day(2013, 7, 4), Day(2013, 7, 18)))
             planning.absence("gfa", d);
-        for (auto d: dayRange(Day(2013, 7, 22), Day(2013, 8, 2)))
+        for (auto d: day_range(Day(2013, 7, 22), Day(2013, 8, 2)))
             planning.absence("wba", d);
         planning.absence("wba", Day(2013, 8, 16));
         planning.absence("wba", Day(2013, 11, 28));
@@ -97,17 +97,17 @@ namespace pa
         planning.absence("gfa", Day(2014, 3, 6));
         planning.absence("gfa", Day(2014, 3, 7));
         planning.absence("wba", Day(2014, 3, 7));
-        for (auto d: dayRange(Day(2014, 8, 4), Day(2014, 8, 14)))
+        for (auto d: day_range(Day(2014, 8, 4), Day(2014, 8, 14)))
             planning.absence("wba", d);
 
         {
 #ifdef PAST
-            auto verlof = dayRange(Day(2013, 12, 25), Day(2014, 1, 1));
+            auto verlof = day_range(Day(2013, 12, 25), Day(2014, 1, 1));
             verlof.push_back(Day(2013, 8, 15));
             verlof.push_back(Day(2013, 11, 1));
             verlof.push_back(Day(2013, 11, 11));
 #endif
-            auto verlof = dayRange(Day(2014, 12, 25), Day(2015, 1, 1));
+            auto verlof = day_range(Day(2014, 12, 25), Day(2015, 1, 1));
             verlof.push_back(Day(2014, 5, 1));
             verlof.push_back(Day(2014, 5, 2));
             verlof.push_back(Day(2014, 5, 29));
@@ -125,7 +125,7 @@ namespace pa
         }
 
         //Quality week
-        for (auto d: dayRange(Day(2014, 7, 7), Day(2014, 7, 11)))
+        for (auto d: day_range(Day(2014, 7, 7), Day(2014, 7, 11)))
         {
             planning.absence("gfa", d);
             planning.absence("wba", d);

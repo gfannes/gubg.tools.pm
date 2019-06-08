@@ -11,6 +11,10 @@
 
 namespace pit { 
 
+    using Day = gubg::planning::Day;
+
+    using Tag = std::string;
+
     enum class Mode
     {
         Report,
@@ -35,8 +39,6 @@ namespace pit {
 
     enum class Moscow { Must, Should, Could, Wont, };
 
-    using Tag = std::string;
-
     struct Data
     {
         Tag tag;
@@ -49,6 +51,11 @@ namespace pit {
         std::optional<std::string> deadline;
         std::string story;
         std::list<std::string> deps;
+        std::string required_skill;
+
+        std::optional<std::string> worker;
+        Day first;
+        Day last;
 
         Data(){}
         Data(const std::string &tag): tag(tag) {}
@@ -58,8 +65,6 @@ namespace pit {
         os << "[data](tag:" << data.tag << ")";
         return os;
     }
-
-    using Day = gubg::planning::Day;
 
 } 
 

@@ -2,18 +2,44 @@
     [read auro.pit](30)(done)
     [multi-file](20)(done)
     [namespace](20)(done)
-    [read multiple attributes](30)
+    [read multiple attributes](30)(skill:cd)
+}
+[dsl]{
+    [effort]
+    [duration]
+    [estimate]
+
+    [todo]
+    [done]
+
+    [dependency]
+    [belongs_to]
+
+    [skill]
+
+    [order]
+    [key]
 }
 [planner]{
     [support for mode](10)(done){
         [options](10)(done)
     }
+    [ResourceMgr](30)(done){
+        [parse and load](30)(done)
+    }
+    [Resources]{
+        [order for skill](10)(done)
+    }
+    [Planner]{
+        [start and end for node](30)(done)
+        [correct dependencies](30)(done)
+    }
 }
 [report]{
     [toggle xlinks](20)(done)
     [tree](done)(100)
-    [color output]{
-        [gubg](100)
+    [color output](100){
+        [gubg](1000)(skill:pipi)
         [integrate](15)
     }
 }

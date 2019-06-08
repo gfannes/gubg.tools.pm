@@ -327,7 +327,7 @@ bool stream(ostream &os, Planner &planner, Plan::View view, Format format)
                 Day first_day, last_day;
                 MSS(planner.planning.get_first_day(first_day));
                 MSS(planner.planning.get_last_day(last_day));
-                const auto all_days = dayRange(first_day, last_day);
+                const auto all_days = day_range(first_day, last_day);
 
                 const auto workers = planner.planning.workers();
                 for (const auto &worker: workers)
