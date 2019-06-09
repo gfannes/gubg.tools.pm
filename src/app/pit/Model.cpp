@@ -51,6 +51,7 @@ namespace pit {
 
         xtree_.clear();
 
+        //Parse all the input files and add them to the xtree_
         for (const auto &input_file: input_files)
         {
             const std::filesystem::path filename = input_file.fn;
@@ -76,6 +77,8 @@ namespace pit {
         {
             auto insert_links = [&](bool ok, auto &node)
             {
+                MSS_BEGIN(bool);
+                MSS(ok);
                 for (const auto &dep: node.deps)
                 {
                     std::string error;
@@ -83,9 +86,38 @@ namespace pit {
                     MSS(!!to, std::cout << error << std::endl);
                     node.add_link(*to);
                 }
-                return true;
+                if (node.sequential)
+                {
+                    Model::Node *prev = nullptr;
+                    auto lambda = [&](auto &child)
+                    {
+                        if (prev)
+                            child.add_link(*prev);
+                        prev = &child;
+                        return true;
+                    };
+                    MSS(node.each_child(lambda));
+                }
+                MSS_END();
             };
             MSS(xtree_.accumulate(true, insert_links));
+            auto propagate = [](bool ok, auto &node)
+            {
+                MSS_BEGIN(bool);
+                MSS(ok);
+                if (node.ui_required_skill)
+                {
+                    node.required_skill = *node.ui_required_skill;
+                }
+                else
+                {
+                    const auto &parent = node.parent();
+                    if (parent)
+                        node.required_skill = parent->required_skill;
+                }
+                MSS_END();
+            };
+            MSS(xtree_.accumulate(true, propagate));
             MSS(xtree_.process_xlinks([](const auto &node, const auto &from, const auto &msg){std::cout << "Error: problem detected for node " << TagPath(node) << " from " << TagPath(from) << ": " << msg << std::endl;}));
         }
 
@@ -191,7 +223,8 @@ namespace pit {
                 else if (key == "s") {node.story = value;}
                 else if (key == "w") {}
                 else if (key == "dep") {node.deps.push_back(value);}
-                else if (key == "skill") {node.required_skill = value;}
+                else if (key == "skill") {node.ui_required_skill = value;}
+                else if (key == "o") {node.sequential = true;}
                 else if (is_hours(duration, key) || is_days(duration, key) || is_army(duration, key))
                 {
                     node.duration = duration;

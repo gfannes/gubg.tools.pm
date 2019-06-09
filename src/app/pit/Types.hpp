@@ -51,7 +51,9 @@ namespace pit {
         std::optional<std::string> deadline;
         std::string story;
         std::list<std::string> deps;
+        std::optional<std::string> ui_required_skill;
         std::string required_skill;
+        bool sequential = false;
 
         std::optional<std::string> worker;
         Day first;
