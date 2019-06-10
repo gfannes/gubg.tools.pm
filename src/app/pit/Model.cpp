@@ -383,25 +383,16 @@ namespace pit {
                 else if (key == "skill") {node.ui_required_skill = value;}
                 else if (key == "key" || key == "j") {node.key = value;}
                 else if (key == "o") {node.sequential = true;}
-                else if (key == "p" || key == "points")
-                {
-                    node.duration.emplace().from_minutes(std::stol(value)*4*60);
-                    node.todo = node.duration;
-                }
-                else if (is_hours(duration, key) || is_days(duration, key) || is_army(duration, key))
-                {
-                    node.duration = duration;
-                    node.todo = node.duration;
-                }
-                else if (key.empty())
-                {
-                }
-
+                else if (key == "p" || key == "points") { node.duration.emplace().from_minutes(std::stol(value)*4*60); }
+                else if (is_hours(duration, key) || is_days(duration, key) || is_army(duration, key)) { node.duration = duration; }
+                else if (key.empty()) { }
                 else
                 {
                     MSS(false, std::cout << "Error: unknown attribute key \"" << key << "\" at " << position(range) << std::endl);
                 }
             }
+            if (!node.todo)
+                node.todo = node.duration;
 
             if (node.duration)
                 node.agg_duration = *node.duration;
