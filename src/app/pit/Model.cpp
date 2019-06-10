@@ -55,6 +55,7 @@ namespace pit {
         for (const auto &input_file: input_files)
         {
             const std::filesystem::path filename = input_file.fn;
+            std::cout << "Loading " << input_file.fn << " and " << input_file.ns << "\n";
 
             MSS(std::filesystem::is_regular_file(filename), std::cout << "Error: file " << filename << " does not exist" << std::endl);
             std::string content;
@@ -63,6 +64,7 @@ namespace pit {
 
             //Recursive parsing of content
             Node *root = &xtree_.root();
+            root->each_child([](const auto &ch){std::cout << ch << std::endl; return true;});
             const auto &ns = input_file.ns;
             if (!ns.empty())
             {
@@ -85,6 +87,13 @@ namespace pit {
                     auto to = resolve(dep, node, &error);
                     MSS(!!to, std::cout << error << std::endl);
                     node.add_link(*to);
+                }
+                for (const auto &bel: node.belongs)
+                {
+                    std::string error;
+                    auto from = resolve(bel, node, &error);
+                    MSS(!!from, std::cout << error << std::endl);
+                    from->add_link(node);
                 }
                 if (node.sequential)
                 {
@@ -118,18 +127,149 @@ namespace pit {
                 MSS_END();
             };
             MSS(xtree_.accumulate(true, propagate));
-            MSS(xtree_.process_xlinks([](const auto &node, const auto &from, const auto &msg){std::cout << "Error: problem detected for node " << TagPath(node) << " from " << TagPath(from) << ": " << msg << std::endl;}));
+            MSS(xtree_.process_xlinks([](const auto &cycle){std::cout << "Error: cycle detected of size " << cycle.size() << "\n"; for (const auto &ptr: cycle) {std::cout << *ptr << std::endl;}}));
         }
+
+        MSS_END();
+    }
+
+    bool Model::plan(ResourceMgr &resource_mgr)
+    {
+        MSS_BEGIN(bool);
+
+        int depth = 0;
+
+        auto lambda = [&](Model::Node &node, bool oc){
+            std::cout << std::string(2*depth, ' ') << node.tag << std::endl;
+            depth += (oc ? 1 : -1);
+
+            if (oc)
+            {
+                return true;
+            }
+
+            auto todo_minutes = node.todo.value_or(gubg::Army{}).as_minutes();
+            if (todo_minutes == 0)
+                return true;
+
+            const auto &required_skill = node.required_skill;
+            std::cout << "Planning \"" << node.tag << "\" for skill \"" << required_skill << "\" => " << todo_minutes << "min" << std::endl;
+
+            auto start_day = Day::today();
+            auto find_start_day = [&](const auto &n){
+                if (n.last >= start_day)
+                    start_day = n.last;
+                return true;
+            };
+            node.each_child(find_start_day);
+
+            for (auto day = start_day; todo_minutes > 0; ++day)
+            {
+                if (!resource_mgr.is_in_range(day))
+                {
+                    std::cout << "Error: could not plan task \"" << node.tag << "\" requiring skill \"" << required_skill << "\", out of days" << std::endl;
+                    return false;
+                }
+
+                if (false)
+                    std::cout << "  " << day << " " << todo_minutes << "min left" << std::endl;
+                Resources *resources = resource_mgr.get(day);
+                if (!resources)
+                    continue;
+
+                Resource *ptr = nullptr;
+                {
+                    if (!node.worker)
+                    {
+                        //This task is not yet assigned to a worker: take the most efficient one that is available today
+                        ptr = resources->get_most_efficient_for(required_skill);
+                        if (!ptr)
+                            continue;
+                        auto &resource = *ptr;
+                        std::cout << "  Assigning to " << resource.name << " on " << day << std::endl;
+                        node.worker = resource.name;
+                        node.first = day;
+                        node.agg_first = day;
+                    }
+                    else
+                    {
+                        //This task is already assigned to a worker: get that resource
+                        ptr = resources->get_by_name(*node.worker);
+                        if (!ptr)
+                            continue;
+                    }
+                }
+                auto &resource = *ptr;
+
+                const auto minutes_per_day = 8*60;
+                const auto efficiency = resource.efficiency(required_skill);
+                const auto required = todo_minutes/efficiency/minutes_per_day;
+                const auto available = 1.0-resource.occupancy;
+                if (required <= available)
+                {
+                    //We can finish the task today
+                    resource.occupancy += required;
+                    todo_minutes = 0;
+                    node.last = day;
+                    node.agg_last = day;
+                }
+                else
+                {
+                    //We cannot finish the task today
+                    resource.occupancy = 1.0;
+                    int done_minutes = efficiency*minutes_per_day*available;
+                    if (done_minutes == 0)
+                        //Make sure we do not get stuck in the float-int conversions: keep making progress
+                        done_minutes = 1;
+                    todo_minutes -= done_minutes;
+                }
+            }
+
+            return true;
+        };
+        MSS(traverse(root(), lambda, true));
+
+        MSS_END();
+    }
+
+    bool Model::aggregate()
+    {
+        MSS_BEGIN(bool);
 
         //Aggregate totals
         {
-            auto add_totals = [](auto &dst, const auto &src)
+            auto aggregator = [](auto &dst, const auto &src)
             {
-                dst.total_duration += src.total_duration;
-                dst.total_todo += src.total_todo;
+                std::cout << "Aggregating " << src << " into " << dst << "\n";
+                dst.agg_duration += src.agg_duration;
+                dst.agg_todo += src.agg_todo;
                 return true;
             };
-            MSS(xtree_.aggregate(add_totals));
+            MSS(xtree_.aggregate(aggregator));
+        }
+
+        //Compute agg_first and agg_last
+        {
+            auto lambda = [](auto &node, bool oc){
+                if (oc)
+                    return true;
+                auto lambda = [&](const auto &src){
+                    if (!node.agg_first)
+                        node.agg_first = src.agg_first;
+                    else if (src.agg_first)
+                        node.agg_first = std::min(*node.agg_first, *src.agg_first);
+
+                    if (!node.agg_last)
+                        node.agg_last = src.agg_last;
+                    else if (src.agg_last)
+                        node.agg_last = std::max(*node.agg_last, *src.agg_last);
+                    return true;
+                };
+                node.each_child(lambda);
+                node.each_sub(lambda);
+                return true;
+            };
+            MSS(xtree_.traverse(lambda));
         }
 
         MSS_END();
@@ -207,6 +347,7 @@ namespace pit {
                 L(C(key)C(value));
 
                 if (false) {}
+                else if (key == "name") {node.name = value;}
                 else if (key == "note") {node.note = value;}
                 else if (key == "todo")
                 {
@@ -220,15 +361,37 @@ namespace pit {
                 else if (key == "should") {node.moscow = Moscow::Should;}
                 else if (key == "could") {node.moscow = Moscow::Could;}
                 else if (key == "wont") {node.moscow = Moscow::Wont;}
-                else if (key == "s") {node.story = value;}
                 else if (key == "w") {}
-                else if (key == "dep") {node.deps.push_back(value);}
+                else if (key == "dep" || key == "d")
+                {
+                    std::string part;
+                    for (gubg::Strange strange{value}; !strange.empty(); )
+                    {
+                        strange.pop_until(part, ',') || strange.pop_all(part);
+                        node.deps.push_back(part);
+                    }
+                }
+                else if (key == "belong" || key == "b" || key == "s")
+                {
+                    std::string part;
+                    for (gubg::Strange strange{value}; !strange.empty(); )
+                    {
+                        strange.pop_until(part, ',') || strange.pop_all(part);
+                        node.belongs.push_back(part);
+                    }
+                }
                 else if (key == "skill") {node.ui_required_skill = value;}
+                else if (key == "key" || key == "j") {node.key = value;}
                 else if (key == "o") {node.sequential = true;}
+                else if (key == "p" || key == "points")
+                {
+                    node.duration.emplace().from_minutes(std::stol(value)*4*60);
+                    node.todo = node.duration;
+                }
                 else if (is_hours(duration, key) || is_days(duration, key) || is_army(duration, key))
                 {
                     node.duration = duration;
-                    node.todo = duration;
+                    node.todo = node.duration;
                 }
                 else if (key.empty())
                 {
@@ -241,11 +404,11 @@ namespace pit {
             }
 
             if (node.duration)
-                node.total_duration = *node.duration;
+                node.agg_duration = *node.duration;
             if (node.todo)
-                node.total_todo = *node.todo;
+                node.agg_todo = *node.todo;
             else if (node.duration)
-                node.total_todo = *node.duration;
+                node.agg_todo = *node.duration;
 
             gubg::naft::Range block;
             if (range.pop_block(block))

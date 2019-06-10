@@ -13,7 +13,7 @@ namespace pit {
     class ResourceMgr
     {
     public:
-        bool load(const std::string &filename)
+        bool load(const std::string &filename, unsigned int nr_work_days)
         {
             MSS_BEGIN(bool);
 
@@ -47,7 +47,7 @@ namespace pit {
                 }
             }
 
-            const auto days = gubg::planning::work_days(20);
+            const auto days = gubg::planning::work_days(nr_work_days);
             for (const auto &p: name__day__resource)
             {
                 const auto &name = p.first;

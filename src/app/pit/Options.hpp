@@ -24,6 +24,7 @@ namespace pit {
         std::string resources_fn;
         std::optional<std::string> uri;
         std::optional<unsigned int> depth;
+        unsigned int nr_work_days = 20;
 
         bool parse(int argc, const char **argv)
         {
@@ -31,7 +32,7 @@ namespace pit {
             MSS(argc > 0);
             exe_fn = argv[0];
             std::set<std::string> switches = {"-v", "-h"};
-            std::set<std::string> options = {"-f", "-u", "-d", "-m", "-r"};
+            std::set<std::string> options = {"-f", "-u", "-d", "-m", "-r", "-n"};
             for (auto i = 1; i < argc;)
             {
                 std::string arg = argv[i++];
@@ -55,6 +56,7 @@ namespace pit {
                     }
                     if (arg == "-u") { uri = value; }
                     if (arg == "-d") { depth = std::stoi(value); }
+                    if (arg == "-n") { nr_work_days = std::stol(value); }
                     if (arg == "-m")
                     {
                         gubg::Strange strange(value);
@@ -84,6 +86,7 @@ namespace pit {
             os << "  verbose: " << verbose << std::endl;
             os << "  help: " << help << std::endl;
             os << "  mode: " << mode << std::endl;
+            os << "  nr_work_days: " << nr_work_days << std::endl;
             os << "  show_xlinks: " << show_xlinks << std::endl;
             os << "  resources_fn: " << resources_fn << std::endl;
             if (uri)

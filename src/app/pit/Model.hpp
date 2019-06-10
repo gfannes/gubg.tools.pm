@@ -3,6 +3,7 @@
 
 #include <pit/Types.hpp>
 #include <pit/TagPath.hpp>
+#include <pit/ResourceMgr.hpp>
 #include <gubg/xtree/Model.hpp>
 #include <gubg/mss.hpp>
 #include <gubg/std/filesystem.hpp>
@@ -26,6 +27,10 @@ namespace pit {
         using Node_cptr = typename XTree::Node_cptr;
 
         bool load(const InputFiles &input_files);
+
+        bool plan(ResourceMgr &resource_mgr);
+
+        bool aggregate();
 
         Node_cptr root() const {return xtree_.root_cptr();}
         Node_ptr root() {return xtree_.root_ptr();}

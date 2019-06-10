@@ -22,6 +22,7 @@ namespace pit {
         bool process(const Model &model)
         {
             MSS_BEGIN(bool);
+
             auto start_node = model.root();
             if (uri_)
             {
@@ -74,21 +75,21 @@ namespace pit {
 
                 //Aggregated
                 {
-                    if (node.total_duration.as_minutes() == 0)
+                    if (node.agg_duration.as_minutes() == 0)
                         std::cout << "--------- ";
                     else
-                        std::cout << std::setw(2) << node.total_duration << ' ';
+                        std::cout << std::setw(2) << node.agg_duration << ' ';
 
-                    if (node.total_duration.as_minutes() == 0 && node.total_todo.as_minutes() == 0)
+                    if (node.agg_duration.as_minutes() == 0 && node.agg_todo.as_minutes() == 0)
                         std::cout << "--------- ";
                     else
-                        std::cout << std::setw(2) << node.total_todo << ' ';
+                        std::cout << std::setw(2) << node.agg_todo << ' ';
 
                     {
-                        const double duration = node.total_duration.as_minutes();
+                        const double duration = node.agg_duration.as_minutes();
                         if (duration > 0)
                         {
-                            const double todo = node.total_todo.as_minutes();
+                            const double todo = node.agg_todo.as_minutes();
                             if (todo == 0.0)
                                 std::cout << "DONE ";
                             else
@@ -100,6 +101,11 @@ namespace pit {
                         else
                             std::cout << "---- ";
                     }
+
+                    if (node.agg_first)
+                        std::cout << *node.agg_first << " " << *node.agg_last;
+                    else
+                        std::cout << "---------- ----------";
                 }
 
                 std::cout << "| ";
@@ -124,6 +130,8 @@ namespace pit {
                     }
                     else
                         std::cout << "---- ";
+
+                    std::cout << node.first << " " << node.last;
                 }
 
                 std::cout << "| ";
@@ -140,6 +148,7 @@ namespace pit {
                 return true;
             };
             MSS(model.traverse(start_node, lambda, show_xlinks_));
+
             MSS_END();
         }
 

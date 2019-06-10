@@ -42,22 +42,27 @@ namespace pit {
     struct Data
     {
         Tag tag;
+        std::optional<std::string> name;
         std::string note;
         std::optional<Moscow> moscow;
-        gubg::Army total_duration;
-        gubg::Army total_todo;
+        gubg::Army agg_duration;
+        gubg::Army agg_todo;
         std::optional<gubg::Army> duration;
         std::optional<gubg::Army> todo;
         std::optional<std::string> deadline;
         std::string story;
         std::list<std::string> deps;
+        std::list<std::string> belongs;
         std::optional<std::string> ui_required_skill;
         std::string required_skill;
+        std::optional<std::string> key;
         bool sequential = false;
 
         std::optional<std::string> worker;
         Day first;
         Day last;
+        std::optional<Day> agg_first;
+        std::optional<Day> agg_last;
 
         Data(){}
         Data(const std::string &tag): tag(tag) {}
