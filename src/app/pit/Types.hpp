@@ -44,8 +44,8 @@ namespace pit {
         bool sequential = false;
 
         std::optional<std::string> worker;
-        Day first;
-        Day last;
+        std::optional<Day> first;
+        std::optional<Day> last;
         std::optional<Day> agg_first;
         std::optional<Day> agg_last;
 

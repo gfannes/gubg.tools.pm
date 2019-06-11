@@ -65,7 +65,7 @@ namespace pit {
                 }
                 else
                 {
-                    MSS(false, std::cout << "Error: unknown argument " << arg << std::endl);
+                    MSS(false, std::cout << "Error: unknown argument \"" << arg << "\"\n");
                 }
             }
             MSS_END();

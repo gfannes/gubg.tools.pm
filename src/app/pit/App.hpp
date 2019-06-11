@@ -4,8 +4,8 @@
 #include <pit/Options.hpp>
 #include <pit/Config.hpp>
 #include <pit/Model.hpp>
-#include <pit/Reporter.hpp>
 #include <pit/ResourceMgr.hpp>
+#include <pit/report.hpp>
 #include <gubg/mss.hpp>
 #include <cstdlib>
 #include <set>
@@ -47,9 +47,7 @@ namespace pit {
 
             MSS(model_.aggregate());
 
-            Reporter reporter;
-            MSS(reporter.process(options_));
-            MSS(reporter.process(model_));
+            MSS(report(model_, options_));
 
             MSS_END();
         }

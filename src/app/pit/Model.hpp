@@ -38,35 +38,38 @@ namespace pit {
         Node &add_child(Node &parent, const Tag &tag);
 
         template <typename Ftor>
-        bool traverse(const Node_cptr &node, Ftor &&ftor, bool show_xlinks) const;
+        bool traverse(const Node_cptr &node, Ftor &&ftor, bool once) const;
         template <typename Ftor>
-        bool traverse(const Node_ptr &node, Ftor &&ftor, bool show_xlinks);
+        bool traverse(const Node_ptr &node, Ftor &&ftor, bool once);
 
         Node_ptr resolve(const std::string &dep, const Node &from, std::string *error = nullptr) const;
 
         std::string str() const;
+
+        const gubg::planning::Days &work_days() const {return work_days_;}
 
     private:
         bool parse_(Node &parent, gubg::naft::Range &range);
 
         XTree xtree_;
         std::map<TagPath, Node_ptr> tagpath__node_;
+        gubg::planning::Days work_days_;
     };
 
     template <typename Ftor>
-    bool Model::traverse(const Node_cptr &node, Ftor &&ftor, bool show_xlinks) const
+    bool Model::traverse(const Node_cptr &node, Ftor &&ftor, bool once) const
     {
         MSS_BEGIN(bool);
         MSS(!!node);
-        MSS(xtree_.traverse(ftor, show_xlinks, node));
+        MSS(xtree_.traverse(ftor, once, node));
         MSS_END();
     }
     template <typename Ftor>
-    bool Model::traverse(const Node_ptr &node, Ftor &&ftor, bool show_xlinks)
+    bool Model::traverse(const Node_ptr &node, Ftor &&ftor, bool once)
     {
         MSS_BEGIN(bool);
         MSS(!!node);
-        MSS(xtree_.traverse(ftor, show_xlinks, node));
+        MSS(xtree_.traverse(ftor, once, node));
         MSS_END();
     }
 

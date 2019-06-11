@@ -1,63 +1,27 @@
-#ifndef HEADER_pit_Reporter_hpp_ALREADY_INCLUDED
-#define HEADER_pit_Reporter_hpp_ALREADY_INCLUDED
+#ifndef HEADER_pit_reporter_Stdout_hpp_ALREADY_INCLUDED
+#define HEADER_pit_reporter_Stdout_hpp_ALREADY_INCLUDED
 
 #include <pit/Options.hpp>
 #include <pit/Model.hpp>
 #include <optional>
 #include <cmath>
 
-namespace pit { 
+namespace pit { namespace reporter { 
 
-    class Reporter
+    class Stdout
     {
     public:
         bool process(const Options &options)
         {
             MSS_BEGIN(bool);
-            uri_ = options.uri;
             depth_ = options.depth;
             show_xlinks_ = options.show_xlinks;
-            output_fn_ = options.output_fn;
             MSS_END();
         }
-        bool process(const Model &model)
+
+        bool process(const Model &model, const Model::Node_cptr &start_node)
         {
             MSS_BEGIN(bool);
-
-            if (output_fn_)
-            {
-                std::ofstream fo(*output_fn_);
-                MSS(fo.good());
-                MSS(report_to_tsv_(model, fo));
-            }
-            else
-            {
-                MSS(report_to_stdout_(model));
-            }
-
-            MSS_END();
-        }
-
-    private:
-        bool report_to_tsv_(const Model &model, const std::ostream &os)
-        {
-            MSS_BEGIN(bool);
-            MSS_END();
-        }
-
-        bool report_to_stdout_(const Model &model)
-            {
-            MSS_BEGIN(bool);
-
-            auto start_node = model.root();
-            if (uri_)
-            {
-                const auto &uri = *uri_;
-                std::string error;
-                auto ptr = model.resolve(uri, *start_node, &error);
-                MSS(!!ptr, std::cout << "Error: could not find node " << uri << ": " << error << std::endl);
-                start_node = ptr;
-            }
 
             std::cout << " Aggregated               | Node                     | Tree" << std::endl;
             std::cout << " Total     Todo      Prog | Total     Todo      Prog |" << std::endl;
@@ -128,7 +92,7 @@ namespace pit {
                             std::cout << "---- ";
                     }
 
-                    if (node.agg_first)
+                    if (node.agg_first && node.agg_last)
                         std::cout << *node.agg_first << " " << *node.agg_last;
                     else
                         std::cout << "---------- ----------";
@@ -157,7 +121,10 @@ namespace pit {
                     else
                         std::cout << "---- ";
 
-                    std::cout << node.first << " " << node.last;
+                    if (node.first && node.last)
+                        std::cout << *node.first << " " << *node.last;
+                    else
+                        std::cout << "---------- ----------";
                 }
 
                 std::cout << "| ";
@@ -173,17 +140,16 @@ namespace pit {
 
                 return true;
             };
-            MSS(model.traverse(start_node, lambda, show_xlinks_));
+            MSS(model.traverse(start_node, lambda, !show_xlinks_));
 
             MSS_END();
         }
 
-        std::optional<std::string> uri_;
+    private:
         std::optional<unsigned int> depth_;
         bool show_xlinks_ = false;
-        std::optional<std::string> output_fn_;
     };
 
-} 
+} } 
 
 #endif

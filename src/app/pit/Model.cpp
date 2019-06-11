@@ -137,6 +137,8 @@ namespace pit {
     {
         MSS_BEGIN(bool);
 
+        work_days_ = resource_mgr.work_days();
+
         int depth = 0;
 
         auto lambda = [&](Model::Node &node, bool oc){
@@ -157,11 +159,13 @@ namespace pit {
 
             auto start_day = Day::today();
             auto find_start_day = [&](const auto &n){
-                if (n.last >= start_day)
-                    start_day = n.last;
+                if (n.last)
+                    if (*n.last >= start_day)
+                        start_day = *n.last;
                 return true;
             };
             node.each_child(find_start_day);
+            node.each_sub(find_start_day);
 
             for (auto day = start_day; todo_minutes > 0; ++day)
             {
@@ -240,7 +244,7 @@ namespace pit {
         {
             auto aggregator = [](auto &dst, const auto &src)
             {
-                std::cout << "Aggregating " << src << " into " << dst << "\n";
+                /* std::cout << "Aggregating " << src << " into " << dst << "\n"; */
                 dst.agg_duration += src.agg_duration;
                 dst.agg_todo += src.agg_todo;
                 return true;
