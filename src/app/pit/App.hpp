@@ -36,18 +36,20 @@ namespace pit {
             if (options_.verbose && false)
                 std::cout << model_.str();
 
-            MSS(resource_mgr_.load(options_.resources_fn, options_.nr_work_days));
-
-            MSS(model_.plan(resource_mgr_));
+            if (options_.plan)
+            {
+                if (options_.resources_fn)
+                    MSS(resource_mgr_.load(*options_.resources_fn, options_.nr_work_days));
+                else
+                    MSS(resource_mgr_.single_worker(options_.nr_work_days));
+                MSS(model_.plan(resource_mgr_));
+            }
 
             MSS(model_.aggregate());
 
-            if (options_.mode == Mode::Report)
-            {
-                Reporter reporter;
-                MSS(reporter.process(options_));
-                MSS(reporter.process(model_));
-            }
+            Reporter reporter;
+            MSS(reporter.process(options_));
+            MSS(reporter.process(model_));
 
             MSS_END();
         }

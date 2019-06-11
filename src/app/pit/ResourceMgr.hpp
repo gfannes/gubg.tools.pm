@@ -20,7 +20,7 @@ namespace pit {
             std::string content;
             MSS(gubg::file::read(content, gubg::file::Name{filename}), std::cout << "Error: could not read from \"" << filename << "\"\n");
 
-            std::map<std::string, std::map<Day, Resource>> name__day__resource;
+            NameDayResource name__day__resource;
             for (gubg::naft::Range r0{content}; !r0.empty(); )
             {
                 std::string name;
@@ -47,21 +47,21 @@ namespace pit {
                 }
             }
 
-            const auto days = gubg::planning::work_days(nr_work_days);
-            for (const auto &p: name__day__resource)
-            {
-                const auto &name = p.first;
-                const auto &day__resource = p.second;
-                for (const auto &day: days)
-                {
-                    auto it = day__resource.upper_bound(day);
-                    day__resources_[day].push_back(
-                            it == day__resource.begin() ?
-                            Resource{name} :
-                            (--it, it->second)
-                            );
-                }
-            }
+            MSS(create_day_resources_(name__day__resource, nr_work_days));
+
+            MSS_END();
+        }
+
+        bool single_worker(unsigned int nr_work_days)
+        {
+            MSS_BEGIN(bool);
+
+            NameDayResource name__day__resource;
+            pit::Resource resource{"jefke"};
+            resource.skill__efficiency[""] = 1.0;
+            name__day__resource[resource.name][Day::today()] = resource;
+
+            MSS(create_day_resources_(name__day__resource, nr_work_days));
 
             MSS_END();
         }
@@ -93,6 +93,29 @@ namespace pit {
         }
 
     private:
+        using NameDayResource = std::map<std::string, std::map<Day, Resource>>;
+
+        bool create_day_resources_(const NameDayResource &name__day__resource, unsigned int nr_work_days)
+        {
+            MSS_BEGIN(bool);
+            const auto days = gubg::planning::work_days(nr_work_days);
+            for (const auto &p: name__day__resource)
+            {
+                const auto &name = p.first;
+                const auto &day__resource = p.second;
+                for (const auto &day: days)
+                {
+                    auto it = day__resource.upper_bound(day);
+                    day__resources_[day].push_back(
+                            it == day__resource.begin() ?
+                            Resource{name} :
+                            (--it, it->second)
+                            );
+                }
+            }
+            MSS_END();
+        }
+
         std::map<Day, Resources> day__resources_;
     };
 

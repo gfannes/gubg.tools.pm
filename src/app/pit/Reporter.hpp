@@ -17,10 +17,36 @@ namespace pit {
             uri_ = options.uri;
             depth_ = options.depth;
             show_xlinks_ = options.show_xlinks;
+            output_fn_ = options.output_fn;
             MSS_END();
         }
         bool process(const Model &model)
         {
+            MSS_BEGIN(bool);
+
+            if (output_fn_)
+            {
+                std::ofstream fo(*output_fn_);
+                MSS(fo.good());
+                MSS(report_to_tsv_(model, fo));
+            }
+            else
+            {
+                MSS(report_to_stdout_(model));
+            }
+
+            MSS_END();
+        }
+
+    private:
+        bool report_to_tsv_(const Model &model, const std::ostream &os)
+        {
+            MSS_BEGIN(bool);
+            MSS_END();
+        }
+
+        bool report_to_stdout_(const Model &model)
+            {
             MSS_BEGIN(bool);
 
             auto start_node = model.root();
@@ -152,10 +178,10 @@ namespace pit {
             MSS_END();
         }
 
-    private:
         std::optional<std::string> uri_;
         std::optional<unsigned int> depth_;
         bool show_xlinks_ = false;
+        std::optional<std::string> output_fn_;
     };
 
 } 

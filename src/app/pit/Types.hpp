@@ -15,21 +15,6 @@ namespace pit {
 
     using Tag = std::string;
 
-    enum class Mode
-    {
-        Report,
-        Plan,
-    };
-    inline std::ostream &operator<<(std::ostream &os, Mode m)
-    {
-        switch (m)
-        {
-            case Mode::Report: os << "report"; break;
-            case Mode::Plan: os << "plan"; break;
-        }
-        return os;
-    }
-
     struct InputFile
     {
         std::string ns;

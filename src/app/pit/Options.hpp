@@ -19,20 +19,21 @@ namespace pit {
         bool help = false;
 
         InputFiles input_files;
-        Mode mode = Mode::Report;
+        bool plan = false;
         bool show_xlinks = false;
-        std::string resources_fn;
+        std::optional<std::string> resources_fn;
         std::optional<std::string> uri;
         std::optional<unsigned int> depth;
         unsigned int nr_work_days = 20;
+        std::optional<std::string> output_fn;
 
         bool parse(int argc, const char **argv)
         {
             MSS_BEGIN(bool);
             MSS(argc > 0);
             exe_fn = argv[0];
-            std::set<std::string> switches = {"-v", "-h"};
-            std::set<std::string> options = {"-f", "-u", "-d", "-m", "-r", "-n"};
+            std::set<std::string> switches = {"-v", "-h", "-p"};
+            std::set<std::string> options = {"-f", "-u", "-d", "-r", "-n", "-o"};
             for (auto i = 1; i < argc;)
             {
                 std::string arg = argv[i++];
@@ -41,6 +42,8 @@ namespace pit {
                 {
                     if (arg == "-v") { verbose = true; }
                     if (arg == "-h") { help = true; }
+                    if (arg == "-p") { plan = true; }
+                    if (arg == "-x") { show_xlinks = true; }
                 }
                 else if (options.count(arg))
                 {
@@ -57,18 +60,8 @@ namespace pit {
                     if (arg == "-u") { uri = value; }
                     if (arg == "-d") { depth = std::stoi(value); }
                     if (arg == "-n") { nr_work_days = std::stol(value); }
-                    if (arg == "-m")
-                    {
-                        gubg::Strange strange(value);
-                        if (strange.pop_if("plan")) { mode = Mode::Plan; }
-                        else if (strange.pop_if("report"))
-                        {
-                            mode = Mode::Report;
-                            show_xlinks = strange.pop_if(".full");
-                        }
-                        MSS(strange.empty(), std::cout << "Error: unknown mode \"" << value << "\"" << std::endl);
-                    }
                     if (arg == "-r") { resources_fn = value; }
+                    if (arg == "-o") { output_fn = value; }
                 }
                 else
                 {
@@ -85,10 +78,13 @@ namespace pit {
                 os << "  input file: " << input_file.ns << " : " << input_file.fn << std::endl;
             os << "  verbose: " << verbose << std::endl;
             os << "  help: " << help << std::endl;
-            os << "  mode: " << mode << std::endl;
-            os << "  nr_work_days: " << nr_work_days << std::endl;
+            os << "  plan: " << plan << std::endl;
             os << "  show_xlinks: " << show_xlinks << std::endl;
-            os << "  resources_fn: " << resources_fn << std::endl;
+            os << "  nr_work_days: " << nr_work_days << std::endl;
+            if (resources_fn)
+                os << "  resources_fn: " << *resources_fn << std::endl;
+            if (output_fn)
+                os << "  output_fn: " << *output_fn << std::endl;
             if (uri)
                 os << "  uri: " << *uri << std::endl;
             if (depth)
@@ -97,11 +93,15 @@ namespace pit {
         void stream_help(std::ostream &os) const
         {
             os << exe_fn << " <options>* <command>? <arguments>*\n";
-            os << "  -f <name>   Input filename\n";
-            os << "  -v          Verbose\n";
-            os << "  -h          Print this help\n";
-            os << "  -u          URI\n";
-            os << "  -d          Depth\n";
+            os << "  -f [namespace:]filename Input filename\n";
+            os << "  -v                      Verbose\n";
+            os << "  -h                      Print this help\n";
+            os << "  -u uri                  URI\n";
+            os << "  -d depth                Depth\n";
+            os << "  -p                      Enable planning\n";
+            os << "  -r filename             Resource filename\n";
+            os << "  -n nr                   Nr work days to plan\n";
+            os << "  -o filename             Output to file\n";
         }
 
     private:
