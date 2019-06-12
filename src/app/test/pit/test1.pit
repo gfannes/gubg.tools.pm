@@ -1,0 +1,20 @@
+[s]{
+    [a](dep:product/core)
+    [d](dep:product/integration)
+    [c](dep:product/validation)
+    [d](dep:product/release)
+}
+[product]{
+    [core]{
+        [a](dep:c)(1d)
+        [b](1d)
+        [c](2d)
+    }
+    [integration]{
+        [a](dep:core/a)(2d)
+        [b](dep:core/b)(4h)
+        [c](dep:core/c)(4h)
+    }
+    [validation](dep:integration)(2d)
+    [release](dep:validation)(1d)
+}

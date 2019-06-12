@@ -3,6 +3,7 @@
 
 #include <pit/Model.hpp>
 #include <pit/Options.hpp>
+#include <gubg/xtree/Depth.hpp>
 #include <string>
 #include <fstream>
 
@@ -14,9 +15,14 @@ namespace pit { namespace reporter {
         bool process(const Options &options)
         {
             MSS_BEGIN(bool);
+
             MSS(!!options.output_fn);
             fo_.open(*options.output_fn);
             MSS(fo_.good());
+
+            before_depth_ = options.before_depth;
+            after_depth_ = options.after_depth;
+
             MSS_END();
         }
 
@@ -26,7 +32,6 @@ namespace pit { namespace reporter {
 
             const auto &work_days = model.work_days();
 
-            add_("tag");
             add_("path");
             add_("duration (days)");
             add_("todo (days)");
@@ -41,10 +46,18 @@ namespace pit { namespace reporter {
                 add_(day);
             newline_();
 
-            auto lambda = [&](auto &node, bool oc, bool as_child){
+            gubg::xtree::Depth depth;
+            auto lambda = [&](auto &node, bool oc, bool as_child)
+            {
+                gubg::xtree::Depth::Update update{depth, oc, as_child};
+                if (before_depth_ && depth.before_x > *before_depth_)
+                    return false;
+                if (after_depth_ && depth.after_x > *after_depth_)
+                    return false;
+
                 if (!oc)
                     return true;
-                add_(node.tag);
+
                 add_(TagPath{node});
                 auto as_hours = [](const auto &army){return double(army.as_minutes())/60.0/8.0;};
                 add_(node.duration ?  as_hours(*node.duration) : 0);
@@ -109,6 +122,9 @@ namespace pit { namespace reporter {
 
         bool is_new_line_ = true;
         std::ofstream fo_;
+
+        std::optional<unsigned int> before_depth_;
+        std::optional<unsigned int> after_depth_;
     };
 
 } } 

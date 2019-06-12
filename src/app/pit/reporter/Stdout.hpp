@@ -3,6 +3,7 @@
 
 #include <pit/Options.hpp>
 #include <pit/Model.hpp>
+#include <gubg/xtree/Depth.hpp>
 #include <optional>
 #include <cmath>
 
@@ -14,8 +15,8 @@ namespace pit { namespace reporter {
         bool process(const Options &options)
         {
             MSS_BEGIN(bool);
-            tree_depth_ = options.tree_depth;
-            x_depth_ = options.x_depth;
+            before_depth_ = options.before_depth;
+            after_depth_ = options.after_depth;
             MSS_END();
         }
 
@@ -27,14 +28,21 @@ namespace pit { namespace reporter {
             std::cout << " Total     Todo      Prog | Total     Todo      Prog |" << std::endl;
             std::cout << "--------------------------|--------------------------|---------------------------------" << std::endl;
 
-            unsigned int depth = 0;
             std::list<Model::Node_cptr> path = {start_node->parent()};
+            gubg::xtree::Depth depth;
             auto lambda = [&](const auto &node, bool oc, bool as_child)
             {
+                gubg::xtree::Depth::Update update{depth, oc, as_child};
+                if (before_depth_ && depth.before_x > *before_depth_)
+                    return false;
+                if (after_depth_ && depth.after_x > *after_depth_)
+                    return false;
+
+                const auto total_depth = depth.total();
+
                 bool is_child;
                 if (oc)
                 {
-                    ++depth;
                     is_child = !path.empty() && node.parent() == path.back();
                     path.push_back(node.shared_from_this());
                 }
@@ -42,13 +50,9 @@ namespace pit { namespace reporter {
                 {
                     path.pop_back();
                     is_child = !path.empty() && node.parent() == path.back();
-                    --depth;
                 }
 
                 if (!oc)
-                    return true;
-
-                if (tree_depth_ && depth > *tree_depth_+1)
                     return true;
 
                 std::cout << ' ';
@@ -123,9 +127,9 @@ namespace pit { namespace reporter {
                 {
                     const auto tag = (!node.parent()) ? "<ROOT>" : node.tag;
                     if (is_child)
-                        std::cout << std::string(depth*2, ' ') << tag << std::endl;
+                        std::cout << std::string(total_depth*2, ' ') << tag << std::endl;
                     else
-                        std::cout << std::string(depth*2, ' ') << TagPath(node) << std::endl;
+                        std::cout << std::string(total_depth*2, ' ') << TagPath(node) << std::endl;
                 }
 
                 return true;
@@ -136,8 +140,8 @@ namespace pit { namespace reporter {
         }
 
     private:
-        std::optional<unsigned int> tree_depth_;
-        std::optional<unsigned int> x_depth_;
+        std::optional<unsigned int> before_depth_;
+        std::optional<unsigned int> after_depth_;
     };
 
 } } 

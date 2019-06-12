@@ -141,21 +141,24 @@ namespace pit {
 
         int depth = 0;
 
+        std::map<Model::Node *, bool> node__planned;
+
         auto lambda = [&](Model::Node &node, bool oc, bool as_child){
-            std::cout << std::string(2*depth, ' ') << node.tag << std::endl;
-            depth += (oc ? 1 : -1);
+            auto &planned = node__planned[&node];
+            if (planned)
+                return false;
 
             if (oc)
-            {
                 return true;
-            }
+
+            planned = true;
 
             auto todo_minutes = node.todo.value_or(gubg::Army{}).as_minutes();
             if (todo_minutes == 0)
                 return true;
 
             const auto &required_skill = node.required_skill;
-            std::cout << "Planning \"" << node.tag << "\" for skill \"" << required_skill << "\" => " << todo_minutes << "min" << std::endl;
+            std::cout << "Planning \"" << TagPath{node} << "\" for skill \"" << required_skill << "\" => " << todo_minutes << "min" << std::endl;
 
             auto start_day = Day::today();
             auto find_start_day = [&](const auto &n){
@@ -190,7 +193,8 @@ namespace pit {
                         if (!ptr)
                             continue;
                         auto &resource = *ptr;
-                        std::cout << "  Assigning to " << resource.name << " on " << day << std::endl;
+                        std::cout << "  Assigning to " << resource.name << std::endl;
+                        std::cout << "   * first day on " << day << std::endl;
                         node.worker = resource.name;
                         node.first = day;
                         node.agg_first = day;
@@ -214,6 +218,7 @@ namespace pit {
                     //We can finish the task today
                     resource.occupancy += required;
                     todo_minutes = 0;
+                    std::cout << "   * last day on " << day << std::endl;
                     node.last = day;
                     node.agg_last = day;
                 }
