@@ -68,7 +68,7 @@ namespace pit { namespace reporter {
                         else if (day < *node.agg_first)
                             add_("");
                         else
-                            add_(1.0);
+                            add_("");
                     }
                     else if (node.agg_first && node.agg_last)
                     {
@@ -78,7 +78,7 @@ namespace pit { namespace reporter {
                         else if (day < *node.agg_first)
                             add_("");
                         else
-                            add_(1.0);
+                            add_("");
                     }
                     else
                         add_("");
