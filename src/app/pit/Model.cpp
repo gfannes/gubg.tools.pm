@@ -141,7 +141,7 @@ namespace pit {
 
         int depth = 0;
 
-        auto lambda = [&](Model::Node &node, bool oc){
+        auto lambda = [&](Model::Node &node, bool oc, bool as_child){
             std::cout << std::string(2*depth, ' ') << node.tag << std::endl;
             depth += (oc ? 1 : -1);
 
@@ -231,7 +231,7 @@ namespace pit {
 
             return true;
         };
-        MSS(traverse(root(), lambda, true));
+        xtree_.traverse(lambda, root());
 
         MSS_END();
     }
@@ -254,7 +254,7 @@ namespace pit {
 
         //Compute agg_first and agg_last
         {
-            auto lambda = [](auto &node, bool oc){
+            auto lambda = [](auto &node, bool oc, bool as_child){
                 if (oc)
                     return true;
                 auto lambda = [&](const auto &src){
@@ -273,7 +273,7 @@ namespace pit {
                 node.each_sub(lambda);
                 return true;
             };
-            MSS(xtree_.traverse(lambda));
+            xtree_.traverse(lambda);
         }
 
         MSS_END();

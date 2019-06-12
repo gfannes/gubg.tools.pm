@@ -38,9 +38,9 @@ namespace pit {
         Node &add_child(Node &parent, const Tag &tag);
 
         template <typename Ftor>
-        bool traverse(const Node_cptr &node, Ftor &&ftor, bool once) const;
+        void traverse(const Node_cptr &node, Ftor &&ftor) const { xtree_.traverse(ftor, node); }
         template <typename Ftor>
-        bool traverse(const Node_ptr &node, Ftor &&ftor, bool once);
+        void traverse(const Node_ptr &node, Ftor &&ftor) { xtree_.traverse(ftor, node); }
 
         Node_ptr resolve(const std::string &dep, const Node &from, std::string *error = nullptr) const;
 
@@ -55,23 +55,6 @@ namespace pit {
         std::map<TagPath, Node_ptr> tagpath__node_;
         gubg::planning::Days work_days_;
     };
-
-    template <typename Ftor>
-    bool Model::traverse(const Node_cptr &node, Ftor &&ftor, bool once) const
-    {
-        MSS_BEGIN(bool);
-        MSS(!!node);
-        MSS(xtree_.traverse(ftor, once, node));
-        MSS_END();
-    }
-    template <typename Ftor>
-    bool Model::traverse(const Node_ptr &node, Ftor &&ftor, bool once)
-    {
-        MSS_BEGIN(bool);
-        MSS(!!node);
-        MSS(xtree_.traverse(ftor, once, node));
-        MSS_END();
-    }
 
 } 
 

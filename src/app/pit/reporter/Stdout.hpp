@@ -14,8 +14,8 @@ namespace pit { namespace reporter {
         bool process(const Options &options)
         {
             MSS_BEGIN(bool);
-            depth_ = options.depth;
-            show_xlinks_ = options.show_xlinks;
+            tree_depth_ = options.tree_depth;
+            x_depth_ = options.x_depth;
             MSS_END();
         }
 
@@ -29,8 +29,7 @@ namespace pit { namespace reporter {
 
             unsigned int depth = 0;
             std::list<Model::Node_cptr> path = {start_node->parent()};
-            unsigned int xcount = 0;
-            auto lambda = [&](const auto &node, bool oc)
+            auto lambda = [&](const auto &node, bool oc, bool as_child)
             {
                 bool is_child;
                 if (oc)
@@ -38,27 +37,18 @@ namespace pit { namespace reporter {
                     ++depth;
                     is_child = !path.empty() && node.parent() == path.back();
                     path.push_back(node.shared_from_this());
-                    if (!is_child)
-                        ++xcount;
                 }
                 else
                 {
                     path.pop_back();
                     is_child = !path.empty() && node.parent() == path.back();
-                    if (!is_child)
-                        --xcount;
                     --depth;
                 }
-
-                /* std::cout << TagPath{node} << " " << C(oc)C(path.size())C(is_child)C(xcount) << std::endl; */
 
                 if (!oc)
                     return true;
 
-                if (depth_ && depth > *depth_+1)
-                    return true;
-
-                if (!show_xlinks_ && xcount > 0)
+                if (tree_depth_ && depth > *tree_depth_+1)
                     return true;
 
                 std::cout << ' ';
@@ -140,14 +130,14 @@ namespace pit { namespace reporter {
 
                 return true;
             };
-            MSS(model.traverse(start_node, lambda, !show_xlinks_));
+            model.traverse(start_node, lambda);
 
             MSS_END();
         }
 
     private:
-        std::optional<unsigned int> depth_;
-        bool show_xlinks_ = false;
+        std::optional<unsigned int> tree_depth_;
+        std::optional<unsigned int> x_depth_;
     };
 
 } } 

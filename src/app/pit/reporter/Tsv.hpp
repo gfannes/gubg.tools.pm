@@ -41,7 +41,7 @@ namespace pit { namespace reporter {
                 add_(day);
             newline_();
 
-            auto lambda = [&](auto &node, bool oc){
+            auto lambda = [&](auto &node, bool oc, bool as_child){
                 if (!oc)
                     return true;
                 add_(node.tag);
@@ -58,45 +58,26 @@ namespace pit { namespace reporter {
                 add_(node.worker, "");
                 for (const auto &day: work_days)
                 {
-                    if (node.first && node.last)
+                    if (node.agg_first && node.agg_last)
                     {
-                        if (false) {}
-                        else if (*node.first <= day && day <= *node.last)
-                            add_(0.5);
+                        if ((node.first && node.last) && (*node.first <= day && day <= *node.last))
+                            //Work on the task itself
+                            add_(1);
                         else if (*node.agg_first <= day && day <= *node.agg_last)
-                            add_(0.0);
-                        else if (day < *node.agg_first)
-                            add_("");
+                            //Work on subtasks
+                            add_(0);
                         else
-                            add_("");
-                    }
-                    else if (node.agg_first && node.agg_last)
-                    {
-                        if (false) {}
-                        else if (*node.agg_first <= day && day <= *node.agg_last)
-                            add_(0.0);
-                        else if (day < *node.agg_first)
-                            add_("");
-                        else
+                            //Before start or after completion
                             add_("");
                     }
                     else
+                        //Not planned
                         add_("");
-                    /* if (node.agg_first && day < *node.agg_first) */
-                    /*     add_(""); */
-                    /* else if (node.first && day < *node.first) */
-                    /*     add_(0.0); */
-                    /* else if (node.last && day < *node.last) */
-                    /*     add_(0.5); */
-                    /* else if (node.agg_last && day < *node.agg_last) */
-                    /*     add_(0.0); */
-                    /* else */
-                    /*     add_(1.0); */
                 }
                 newline_();
                 return true;
             };
-            MSS(model.traverse(start_node, lambda, true));
+            model.traverse(start_node, lambda);
 
             MSS_END();
         }

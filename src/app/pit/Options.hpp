@@ -23,7 +23,8 @@ namespace pit {
         bool show_xlinks = false;
         std::optional<std::string> resources_fn;
         std::optional<std::string> uri;
-        std::optional<unsigned int> depth;
+        std::optional<unsigned int> tree_depth;
+        std::optional<unsigned int> x_depth;
         unsigned int nr_work_days = 20;
         std::optional<std::string> output_fn;
 
@@ -58,7 +59,15 @@ namespace pit {
                         input_files.push_back(input_file);
                     }
                     if (arg == "-u") { uri = value; }
-                    if (arg == "-d") { depth = std::stoi(value); }
+                    if (arg == "-d")
+                    {
+                        gubg::Strange strange{value};
+                        std::string str;
+                        if ((strange.pop_until(str, '.') || strange.pop_all(str)) && !str.empty())
+                            tree_depth = std::stol(str);
+                        if (strange.pop_all(str) && !str.empty())
+                            x_depth = std::stol(str);
+                    }
                     if (arg == "-n") { nr_work_days = std::stol(value); }
                     if (arg == "-r") { resources_fn = value; }
                     if (arg == "-o") { output_fn = value; }
@@ -87,8 +96,10 @@ namespace pit {
                 os << "  output_fn: " << *output_fn << std::endl;
             if (uri)
                 os << "  uri: " << *uri << std::endl;
-            if (depth)
-                os << "  depth: " << *depth << std::endl;
+            if (tree_depth)
+                os << "  tree_depth: " << *tree_depth << std::endl;
+            if (x_depth)
+                os << "  x_depth: " << *x_depth << std::endl;
         }
         void stream_help(std::ostream &os) const
         {
@@ -97,7 +108,7 @@ namespace pit {
             os << "  -v                      Verbose\n";
             os << "  -h                      Print this help\n";
             os << "  -u uri                  URI\n";
-            os << "  -d depth                Depth\n";
+            os << "  -d tree.x               Depth for tree and x\n";
             os << "  -p                      Enable planning\n";
             os << "  -r filename             Resource filename\n";
             os << "  -n nr                   Nr work days to plan\n";
