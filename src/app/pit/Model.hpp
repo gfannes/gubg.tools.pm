@@ -46,14 +46,14 @@ namespace pit {
 
         std::string str() const;
 
-        const gubg::planning::Days &work_days() const {return work_days_;}
+        const Days &work_days() const {return work_days_;}
 
     private:
         bool parse_(Node &parent, gubg::naft::Range &range);
 
         XTree xtree_;
         std::map<TagPath, Node_ptr> tagpath__node_;
-        gubg::planning::Days work_days_;
+        Days work_days_;
     };
 
 } 

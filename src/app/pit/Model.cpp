@@ -3,6 +3,9 @@
 namespace pit { 
 
     namespace  { 
+
+        constexpr const char *ns = nullptr;
+
         std::string position(const gubg::naft::Range &range)
         {
             std::ostringstream oss;
@@ -47,7 +50,7 @@ namespace pit {
 
     bool Model::load(const InputFiles &input_files)
     {
-        MSS_BEGIN(bool);
+        MSS_BEGIN(bool, ns);
 
         xtree_.clear();
 
@@ -55,24 +58,24 @@ namespace pit {
         for (const auto &input_file: input_files)
         {
             const std::filesystem::path filename = input_file.fn;
-            std::cout << "Loading " << input_file.fn << " and " << input_file.ns << "\n";
+            log(Verbose) << "Loading " << input_file.fn << " and " << input_file.ns << "\n";
 
-            MSS(std::filesystem::is_regular_file(filename), std::cout << "Error: file " << filename << " does not exist" << std::endl);
+            MSS(std::filesystem::is_regular_file(filename), log(Error) << "Error: file " << filename << " does not exist" << std::endl);
             std::string content;
             MSS(gubg::file::read(content, filename));
             gubg::naft::Range range(content);
 
             //Recursive parsing of content
             Node *root = &xtree_.root();
-            root->each_child([](const auto &ch){std::cout << ch << std::endl; return true;});
+            root->each_child([](const auto &ch){log(Debug) << ch << std::endl; return true;});
             const auto &ns = input_file.ns;
             if (!ns.empty())
             {
-                MSS(root->each_child([&](const auto &child){return child.tag != ns;}), std::cout << "Error: namespace \"" << ns << "\" is already in use" << std::endl);
+                MSS(root->each_child([&](const auto &child){return child.tag != ns;}), log(Error) << "Error: namespace \"" << ns << "\" is already in use" << std::endl);
                 root = &add_child(*root, ns);
             }
-            MSS(parse_(*root, range), std::cout << "Error: parsing failed" << std::endl);
-            MSS(range.empty(), std::cout << "Error: could not understand part \"" << range.str().substr(0, 10) << "\"" << std::endl);
+            MSS(parse_(*root, range), log(Error) << "Error: parsing failed" << std::endl);
+            MSS(range.empty(), log(Error) << "Error: could not understand part \"" << range.str().substr(0, 10) << "\"" << std::endl);
         }
 
         //Setup x-links
@@ -85,14 +88,14 @@ namespace pit {
                 {
                     std::string error;
                     auto to = resolve(dep, node, &error);
-                    MSS(!!to, std::cout << error << std::endl);
+                    MSS(!!to, log(Error) << error << std::endl);
                     node.add_link(*to);
                 }
                 for (const auto &bel: node.belongs)
                 {
                     std::string error;
                     auto from = resolve(bel, node, &error);
-                    MSS(!!from, std::cout << error << std::endl);
+                    MSS(!!from, log(Error) << error << std::endl);
                     from->add_link(node);
                 }
                 if (node.sequential)
@@ -101,7 +104,10 @@ namespace pit {
                     auto lambda = [&](auto &child)
                     {
                         if (prev)
+                        {
+                            log(Verbose) << "Adding link from " << child << " to " << *prev << std::endl;
                             child.add_link(*prev);
+                        }
                         prev = &child;
                         return true;
                     };
@@ -110,24 +116,37 @@ namespace pit {
                 MSS_END();
             };
             MSS(xtree_.accumulate(true, insert_links));
-            auto propagate = [](bool ok, auto &node)
+
+            auto propagate_attributes = [](bool ok, auto &node)
             {
                 MSS_BEGIN(bool);
                 MSS(ok);
+
+                const auto &parent_ptr = node.parent();
+                if (parent_ptr)
+                {
+                    const auto &parent = *parent_ptr;
+                    if (parent.done)
+                        node.done = parent.done;
+                }
+
+                if (node.done)
+                    node.todo.emplace();
+
                 if (node.ui_required_skill)
                 {
                     node.required_skill = *node.ui_required_skill;
                 }
                 else
                 {
-                    const auto &parent = node.parent();
-                    if (parent)
-                        node.required_skill = parent->required_skill;
+                    if (parent_ptr)
+                        node.required_skill = parent_ptr->required_skill;
                 }
                 MSS_END();
             };
-            MSS(xtree_.accumulate(true, propagate));
-            MSS(xtree_.process_xlinks([](const auto &cycle){std::cout << "Error: cycle detected of size " << cycle.size() << "\n"; for (const auto &ptr: cycle) {std::cout << *ptr << std::endl;}}));
+            MSS(xtree_.accumulate(true, propagate_attributes));
+
+            MSS(xtree_.process_xlinks([](const auto &cycle){log(Error) << "Error: cycle detected of size " << cycle.size() << "\n"; for (const auto &ptr: cycle) {log(Error) << *ptr << std::endl;}}));
         }
 
         MSS_END();
@@ -135,7 +154,7 @@ namespace pit {
 
     bool Model::plan(ResourceMgr &resource_mgr)
     {
-        MSS_BEGIN(bool);
+        MSS_BEGIN(bool, ns);
 
         work_days_ = resource_mgr.work_days();
 
@@ -143,43 +162,77 @@ namespace pit {
 
         std::map<Model::Node *, bool> node__planned;
 
+        std::list<std::string> errors;
         auto lambda = [&](Model::Node &node, bool oc, bool as_child){
             auto &planned = node__planned[&node];
             if (planned)
                 return false;
 
+            auto parent = node.parent();
+
             if (oc)
+            {
+                log(Verbose) << "Entering \"" << TagPath{node} << "\"\n";
+                //Aggregate the "not_before" day from the parent
+                if (parent)
+                {
+                    node.not_before = max(node.not_before, parent->not_before);
+                    if (node.not_before)
+                        log(Verbose) << "  * not_before: " << *node.not_before << "\n";
+                }
                 return true;
+            }
 
             planned = true;
 
             auto todo_minutes = node.todo.value_or(gubg::Army{}).as_minutes();
-            if (todo_minutes == 0)
-                return true;
 
             const auto &required_skill = node.required_skill;
-            std::cout << "Planning \"" << TagPath{node} << "\" for skill \"" << required_skill << "\" => " << todo_minutes << "min" << std::endl;
+            log(Verbose) << "Planning \"" << TagPath{node} << "\" for skill \"" << required_skill << "\" => " << todo_minutes << "min" << std::endl;
 
-            auto start_day = Day::today();
-            auto find_start_day = [&](const auto &n){
-                if (n.last)
-                    if (*n.last >= start_day)
-                        start_day = *n.last;
+            auto aggregate_agg_last = [&](const auto &n){
+                node.agg_last = max(node.agg_last, n.agg_last);
                 return true;
             };
-            node.each_child(find_start_day);
-            node.each_sub(find_start_day);
+            node.each_child(aggregate_agg_last);
+            node.each_sub(aggregate_agg_last);
+            if (node.agg_last)
+                log(Verbose) << "  * agg_last: " << *node.agg_last << std::endl;
+
+            auto aggregate_into_parent = [&]()
+            {
+                if (parent)
+                {
+                    parent->agg_last = max(parent->agg_last, node.agg_last);
+                    if (parent->sequential)
+                        parent->not_before = max(parent->not_before, parent->agg_last);
+                }
+            };
+
+            if (todo_minutes == 0)
+            {
+                aggregate_into_parent();
+                return true;
+            }
+
+            auto start_day = Day::today();
+            start_day = max(start_day, node.not_before);
+            start_day = max(start_day, node.agg_last);
+            log(Verbose) << "  * starting on " << start_day << std::endl;
 
             for (auto day = start_day; todo_minutes > 0; ++day)
             {
                 if (!resource_mgr.is_in_range(day))
                 {
-                    std::cout << "Error: could not plan task \"" << node.tag << "\" requiring skill \"" << required_skill << "\", out of days" << std::endl;
+                    std::ostringstream oss;
+                    oss << "Error: could not plan task \"" << TagPath{node} << "\" requiring skill \"" << required_skill << "\": out of days." << std::endl;
+                    errors.push_back(oss.str());
                     return false;
                 }
+                if (day.occupancy >= 0.9999)
+                    continue;
 
-                if (false)
-                    std::cout << "  " << day << " " << todo_minutes << "min left" << std::endl;
+                log(Debug) << "  " << day << " " << todo_minutes << "min left" << std::endl;
                 Resources *resources = resource_mgr.get(day);
                 if (!resources)
                     continue;
@@ -193,8 +246,8 @@ namespace pit {
                         if (!ptr)
                             continue;
                         auto &resource = *ptr;
-                        std::cout << "  Assigning to " << resource.name << std::endl;
-                        std::cout << "   * first day on " << day << std::endl;
+                        log(Verbose) << "  * assigning to " << resource.name << std::endl;
+                        log(Verbose) << "  * first day on " << day << std::endl;
                         node.worker = resource.name;
                         node.first = day;
                         node.agg_first = day;
@@ -212,31 +265,43 @@ namespace pit {
                 const auto minutes_per_day = 8*60;
                 const auto efficiency = resource.efficiency(required_skill);
                 const auto required = todo_minutes/efficiency/minutes_per_day;
-                const auto available = 1.0-resource.occupancy;
-                if (required <= available)
+                const auto available = std::min(1.0-resource.occupancy, 1.0-day.occupancy);
+                if (available >= 0.0001)
                 {
-                    //We can finish the task today
-                    resource.occupancy += required;
-                    todo_minutes = 0;
-                    std::cout << "   * last day on " << day << std::endl;
-                    node.last = day;
-                    node.agg_last = day;
-                }
-                else
-                {
-                    //We cannot finish the task today
-                    resource.occupancy = 1.0;
-                    int done_minutes = efficiency*minutes_per_day*available;
-                    if (done_minutes == 0)
-                        //Make sure we do not get stuck in the float-int conversions: keep making progress
-                        done_minutes = 1;
-                    todo_minutes -= done_minutes;
+                    if (required <= available)
+                    {
+                        //We can finish the task today
+                        resource.occupancy += required;
+                        day.occupancy += required;
+                        todo_minutes = 0;
+                        log(Verbose) << "  * last day on " << day << std::endl;
+                        node.last = day;
+                        node.agg_last = day;
+                        aggregate_into_parent();
+                    }
+                    else
+                    {
+                        //We cannot finish the task today
+                        resource.occupancy += available;
+                        int done_minutes = efficiency*minutes_per_day*available;
+                        if (done_minutes == 0)
+                            //Make sure we do not get stuck in the float-int conversions: keep making progress
+                            done_minutes = 1;
+                        todo_minutes -= done_minutes;
+                    }
                 }
             }
 
             return true;
         };
         xtree_.traverse(lambda, root());
+
+        if (!errors.empty())
+        {
+            for (const auto &error: errors)
+                log(Error) << error;
+            MSS(false, log(Error) << errors.size() << " errors occured" << std::endl);
+        }
 
         MSS_END();
     }
@@ -249,7 +314,6 @@ namespace pit {
         {
             auto aggregator = [](auto &dst, const auto &src)
             {
-                /* std::cout << "Aggregating " << src << " into " << dst << "\n"; */
                 dst.agg_duration += src.agg_duration;
                 dst.agg_todo += src.agg_todo;
                 return true;
@@ -362,9 +426,9 @@ namespace pit {
                 {
                     node.todo.emplace();
                     const auto ok = is_hours(*node.todo, value) || is_days(*node.todo, value) || is_army(*node.todo, value);
-                    MSS(ok, std::cout << "Error: \"todo\" should have a duration at " << position(range) << std::endl);
+                    MSS(ok, log(Error) << "Error: \"todo\" should have a duration at " << position(range) << std::endl);
                 }
-                else if (key == "done") {node.todo.emplace();}
+                else if (key == "done") {node.done = true;}
                 else if (key == "deadline") {node.deadline = value;}
                 else if (key == "must") {node.moscow = Moscow::Must;}
                 else if (key == "should") {node.moscow = Moscow::Should;}
@@ -397,7 +461,7 @@ namespace pit {
                 else if (key.empty()) { }
                 else
                 {
-                    MSS(false, std::cout << "Error: unknown attribute key \"" << key << "\" at " << position(range) << std::endl);
+                    MSS(false, log(Error) << "Error: unknown attribute key \"" << key << "\" at " << position(range) << std::endl);
                 }
             }
             if (!node.todo)

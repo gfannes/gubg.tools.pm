@@ -27,14 +27,14 @@ namespace pit {
                 MSS(config_.load(config_path), std::cout << "Error: could not load config" << std::endl);
             }
 
-            if (options_.verbose)
-                std::cout << options_;
+            configure_log(options_);
+            log(Verbose) << options_;
+
             if (options_.help)
                 options_.stream_help(std::cout);
 
             MSS(model_.load(options_.input_files));
-            if (options_.verbose && false)
-                std::cout << model_.str();
+            log(Debug) << model_.str();
 
             if (options_.plan)
             {

@@ -12,13 +12,16 @@ namespace pit {
 
     class ResourceMgr
     {
+    private:
+        static constexpr const char * ns_ = nullptr;
+
     public:
         bool load(const std::string &filename, unsigned int nr_work_days)
         {
-            MSS_BEGIN(bool);
+            MSS_BEGIN(bool, ns_);
 
             std::string content;
-            MSS(gubg::file::read(content, gubg::file::Name{filename}), std::cout << "Error: could not read from \"" << filename << "\"\n");
+            MSS(gubg::file::read(content, gubg::file::Name{filename}), log(Error) << "Error: could not read from \"" << filename << "\"\n");
 
             NameDayResource name__day__resource;
             for (gubg::naft::Range r0{content}; !r0.empty(); )
@@ -54,7 +57,7 @@ namespace pit {
 
         bool single_worker(unsigned int nr_work_days)
         {
-            MSS_BEGIN(bool);
+            MSS_BEGIN(bool, ns_);
 
             NameDayResource name__day__resource;
             pit::Resource resource{"jefke"};
@@ -80,7 +83,7 @@ namespace pit {
 
         Resources * get(const Day &day)
         {
-            auto it = day__resources_.find(day);
+            auto it = day__resources_.find(day.day);
             if (it == day__resources_.end())
                 return nullptr;
             return &it->second;
@@ -88,19 +91,21 @@ namespace pit {
 
         bool is_in_range(const Day &day) const
         {
-            auto it = day__resources_.lower_bound(day);
+            auto it = day__resources_.lower_bound(day.day);
             return it != day__resources_.end();
         }
 
-        const gubg::planning::Days &work_days() const {return work_days_;}
+        const Days &work_days() const {return work_days_;}
 
     private:
         using NameDayResource = std::map<std::string, std::map<Day, Resource>>;
 
         bool create_day_resources_(const NameDayResource &name__day__resource, unsigned int nr_work_days)
         {
-            MSS_BEGIN(bool);
-            work_days_ = gubg::planning::work_days(nr_work_days);
+            MSS_BEGIN(bool, ns_);
+
+            work_days_ = Day::work_days(nr_work_days);
+
             for (const auto &p: name__day__resource)
             {
                 const auto &name = p.first;
@@ -108,18 +113,19 @@ namespace pit {
                 for (const auto &day: work_days_)
                 {
                     auto it = day__resource.upper_bound(day);
-                    day__resources_[day].push_back(
+                    day__resources_[day.day].push_back(
                             it == day__resource.begin() ?
                             Resource{name} :
                             (--it, it->second)
                             );
                 }
             }
+
             MSS_END();
         }
 
-        gubg::planning::Days work_days_;
-        std::map<Day, Resources> day__resources_;
+        Days work_days_;
+        std::map<Day::Base, Resources> day__resources_;
     };
 
 } 

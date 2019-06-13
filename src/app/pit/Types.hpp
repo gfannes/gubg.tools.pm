@@ -1,8 +1,9 @@
 #ifndef HEADER_pit_Types_hpp_ALREADY_INCLUDED
 #define HEADER_pit_Types_hpp_ALREADY_INCLUDED
 
+#include <pit/Log.hpp>
+#include <pit/Day.hpp>
 #include <gubg/Army.hpp>
-#include <gubg/planning/Day.hpp>
 #include <string>
 #include <vector>
 #include <list>
@@ -10,8 +11,6 @@
 #include <optional>
 
 namespace pit { 
-
-    using Day = gubg::planning::Day;
 
     using Tag = std::string;
 
@@ -33,6 +32,7 @@ namespace pit {
         gubg::Army agg_duration;
         gubg::Army agg_todo;
         std::optional<gubg::Army> duration;
+        bool done = false;
         std::optional<gubg::Army> todo;
         std::optional<std::string> deadline;
         std::string story;
@@ -44,17 +44,27 @@ namespace pit {
         bool sequential = false;
 
         std::optional<std::string> worker;
-        std::optional<Day> first;
-        std::optional<Day> last;
-        std::optional<Day> agg_first;
-        std::optional<Day> agg_last;
+        Day_opt not_before;
+        Day_opt first;
+        Day_opt last;
+        Day_opt agg_first;
+        Day_opt agg_last;
 
         Data(){}
         Data(const std::string &tag): tag(tag) {}
+
+        void stream(std::ostream &os) const
+        {
+            os << "[data](tag:" << tag << ")";
+            if (agg_last)
+                os << "(agg_last:" << *agg_last << ")";
+            if (not_before)
+                os << "(not_before:" << *not_before << ")";
+        }
     };
     inline std::ostream &operator<<(std::ostream &os, const Data &data)
     {
-        os << "[data](tag:" << data.tag << ")";
+        data.stream(os);
         return os;
     }
 
