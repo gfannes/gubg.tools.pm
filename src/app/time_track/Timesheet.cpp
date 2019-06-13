@@ -301,6 +301,8 @@ namespace time_track {
             }
 
             os << endl << "\tTOTAL  =>" << "\t" << as_hours(total_worked) << msg << endl;
+
+            if (false)
             {
                 const DayTime progressive_start{9,0,0};
                 const DayTime progressive_lunch_start{13,0,0};

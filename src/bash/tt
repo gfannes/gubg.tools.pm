@@ -4,5 +4,5 @@ input_fn = "#{ENV["HOME"]}/nontech/auro.naft"
 if ARGV.empty?
     system("time_track -i #{input_fn}")
 else
-    system("time_track -i #{input_fn} -f #{ARGV[0]}")
+    system("time_track -i #{input_fn} -t -f #{ARGV[0]}")
 end
