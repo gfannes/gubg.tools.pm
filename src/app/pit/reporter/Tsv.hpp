@@ -43,20 +43,29 @@ namespace pit { namespace reporter {
             add_("agg_last");
             add_("worker");
             for (const auto &day: work_days)
-                add_(day);
+                add_(day.day);
             newline_();
 
             gubg::xtree::Depth depth;
+            std::map<const Model::Node *, bool> node__seen;
             auto lambda = [&](auto &node, bool oc, bool as_child)
             {
+                auto &seen = node__seen[&node];
+
                 gubg::xtree::Depth::Update update{depth, oc, as_child};
                 if (before_depth_ && depth.before_x > *before_depth_)
                     return false;
                 if (after_depth_ && depth.after_x > *after_depth_)
                     return false;
+                if (node.agg_duration.as_minutes() == 0)
+                    return false;
 
                 if (!oc)
                     return true;
+
+                if (seen)
+                    return false;
+                seen = true;
 
                 add_(TagPath{node});
                 auto as_hours = [](const auto &army){return double(army.as_minutes())/60.0/8.0;};
