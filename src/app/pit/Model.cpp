@@ -80,6 +80,7 @@ namespace pit {
 
         //Setup x-links
         {
+            //Bring dependencies, belongs and sequential order into the system
             auto insert_links = [&](bool ok, auto &node)
             {
                 MSS_BEGIN(bool);
@@ -130,8 +131,15 @@ namespace pit {
                         node.done = parent.done;
                 }
 
+                if (node.duration)
+                    node.agg_duration = *node.duration;
+
                 if (node.done)
                     node.todo.emplace();
+                if (!node.todo)
+                    node.todo = node.duration;
+                if (node.todo)
+                    node.agg_todo = *node.todo;
 
                 if (node.ui_required_skill)
                 {
@@ -464,15 +472,6 @@ namespace pit {
                     MSS(false, log(Error) << "Error: unknown attribute key \"" << key << "\" at " << position(range) << std::endl);
                 }
             }
-            if (!node.todo)
-                node.todo = node.duration;
-
-            if (node.duration)
-                node.agg_duration = *node.duration;
-            if (node.todo)
-                node.agg_todo = *node.todo;
-            else if (node.duration)
-                node.agg_todo = *node.duration;
 
             gubg::naft::Range block;
             if (range.pop_block(block))
