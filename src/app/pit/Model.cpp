@@ -403,7 +403,10 @@ namespace pit {
     Model::Node &Model::add_child(Node &parent, const Tag &tag)
     {
         auto &node = parent.emplace_back(tag);
-        tagpath__node_[TagPath{node}] = node.shared_from_this();
+        const TagPath tp{node};
+        if (tagpath__node_.count(tp) > 0)
+            std::cout << "Warning: node \"" << tp << "\" already exists" << std::endl;
+        tagpath__node_[tp] = node.shared_from_this();
         return node;
     }
 
