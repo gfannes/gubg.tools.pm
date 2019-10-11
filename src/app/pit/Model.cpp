@@ -322,8 +322,17 @@ namespace pit {
         {
             auto aggregator = [](auto &dst, const auto &src)
             {
-                dst.agg_duration += src.agg_duration;
-                dst.agg_todo += src.agg_todo;
+                switch (src.moscow.value_or(Moscow::Must))
+                {
+                    case Moscow::Must:
+                    case Moscow::Should:
+                        dst.agg_duration += src.agg_duration;
+                        dst.agg_todo += src.agg_todo;
+                        break;
+                    case Moscow::Could:
+                    case Moscow::Wont:
+                        break;
+                }
                 return true;
             };
             MSS(xtree_.aggregate(aggregator));
