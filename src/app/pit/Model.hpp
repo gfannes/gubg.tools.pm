@@ -7,7 +7,7 @@
 #include <gubg/xtree/Model.hpp>
 #include <gubg/mss.hpp>
 #include <gubg/std/filesystem.hpp>
-#include <gubg/file/System.hpp>
+#include <gubg/file/system.hpp>
 #include <gubg/std/optional.hpp>
 #include <gubg/naft/Range.hpp>
 #include <string>

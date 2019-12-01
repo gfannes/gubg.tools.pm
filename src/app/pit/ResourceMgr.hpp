@@ -3,7 +3,7 @@
 
 #include <pit/Types.hpp>
 #include <pit/Resource.hpp>
-#include <gubg/file/System.hpp>
+#include <gubg/file/system.hpp>
 #include <gubg/naft/Range.hpp>
 #include <gubg/mss.hpp>
 #include <gubg/map.hpp>
