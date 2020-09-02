@@ -191,7 +191,7 @@ namespace time_track {
                             //Before pause: no problem
                             info.duration_per_task_per_story[story][task] += current_stop - previous_stop;
                         }
-                        else if (current_stop <= pause_end_)
+                        else if (current_stop < pause_end_)
                         {
                             L("Ends in the middle of the pause: we take a break now");
                             info.duration_per_task_per_story[story][task] += current_stop - previous_stop;
