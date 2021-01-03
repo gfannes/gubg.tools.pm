@@ -345,6 +345,7 @@ namespace time_track {
         using DetailsPerStory = std::map<std::string, std::map<Day, std::pair<Duration, std::list<std::string>>>>;
         DetailsPerStory details_per_story;
 
+        Duration total_worked(0);
         for (const auto &di: info_per_day_)
         {
             const auto &day = di.first;
@@ -353,7 +354,7 @@ namespace time_track {
             if (filter_from_day_ && day < *filter_from_day_)
                 continue;
 
-            Duration total_worked(0);
+            Duration total_worked_day(0);
             for (const auto &p: info.duration_per_task_per_story)
             {
                 const auto &story = p.first;
@@ -371,13 +372,16 @@ namespace time_track {
                         }
                         sub_total_worked += duration;
                     }
-                    total_worked += sub_total_worked;
+                    total_worked_day += sub_total_worked;
                 }
             }
 
-            if (total_worked != Duration::zero())
-                os << "\\hourrow{" << day << "}{" << as_hours(total_worked) << "}{93.5}" << std::endl;
+            if (total_worked_day != Duration::zero())
+                os << "\\hourrow{" << day << "}{" << as_hours(total_worked_day) << "}{93.5}" << std::endl;
+
+            total_worked += total_worked_day;
         }
+        os << "TOTAL: " << as_hours(total_worked) << std::endl;
     }
 
     //Timesheet::Info
