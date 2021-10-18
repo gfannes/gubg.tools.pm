@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 ENV["gubg"] = "#{ENV["HOME"]}/gubg" unless ENV.has_key?("gubg")
 input_fn = "#{ENV["HOME"]}/nontech/auro.naft"
-if ARGV.empty?
-    system("time_track -i #{input_fn}")
-else
-    system("time_track -i #{input_fn} -t -f #{ARGV[0]}")
+case ARGV.size()
+when 0 then system("time_track -i #{input_fn}")
+when 1 then system("time_track -i #{input_fn} -t -f #{ARGV[0]}")
+when 2 then system("time_track -i #{input_fn} -t -f #{ARGV[0]} -u #{ARGV[1]}")
 end

@@ -4,6 +4,7 @@
 #include "gubg/OptionParser.hpp"
 #include "gubg/macro/capture.hpp"
 #include <iostream>
+#include <functional>
 using namespace std;
 
 namespace time_track { 
@@ -17,27 +18,29 @@ namespace time_track {
         parser.add_switch('h', "--help", "Print this help", [&](){options.print_help = true;});
         parser.add_switch('t', "--totals", "Print totals", [&](){options.print_totals = true;});
         parser.add_mandatory('i', "--input", "Time naft", [&](const std::string &str){options.input_fn = str;});
-        auto parse_filter = [&](const std::string &str)
+        auto parse_filter = [&](std::optional<Options::YYYYMMDD> &dst_opt, const std::string &str)
         {
+            auto &dst = dst_opt.emplace();
             const auto v = std::stoi(str);
             switch (str.size())
             {
                 case 6:
-                    options.year = v/100;
-                    options.month = v%100;
-                    options.day = 1;
+                    dst.year = v/100;
+                    dst.month = v%100;
+                    dst.day = 1;
                     break;
                 case 8:
-                    options.year = v/10000;
-                    options.month = (v/100)%100;
-                    options.day = v%100;
+                    dst.year = v/10000;
+                    dst.month = (v/100)%100;
+                    dst.day = v%100;
                     break;
                 default:
                     std::cout << "Could not parse filter " << str << std::endl;
                     break;
             }
         };
-        parser.add_mandatory('f', "--filter", "Filter everything before YYYYMM[DD]", parse_filter);
+        parser.add_mandatory('f', "--from", "Remove info strictly before YYYYMM[DD]", std::bind(parse_filter, std::ref(options.from),  std::placeholders::_1));
+        parser.add_mandatory('u', "--until", "Remove info after and including YYYYMM[DD]", std::bind(parse_filter, std::ref(options.until), std::placeholders::_1));
 
         auto args = gubg::OptionParser::create_args(argc, argv);
         MSS(parser.parse(args));
@@ -53,8 +56,10 @@ namespace time_track {
         else
         {
             Timesheet timesheet;
-            if (options.year >= 0 && options.month >= 0)
-                timesheet.filter(options.year, options.month, options.day);
+            if (options.from && options.from->year >= 0 && options.from->month >= 0)
+                timesheet.filter_from(options.from->year, options.from->month, options.from->day);
+            if (options.until && options.until->year >= 0 && options.until->month >= 0)
+                timesheet.filter_until(options.until->year, options.until->month, options.until->day);
             MSS(timesheet.parse(options.input_fn));
             cout << timesheet;
             if (options.print_totals)

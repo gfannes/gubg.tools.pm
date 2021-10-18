@@ -17,10 +17,16 @@ namespace  {
 } 
 
 namespace time_track { 
-    ReturnCode Timesheet::filter(unsigned int year, unsigned int month, unsigned int day)
+    ReturnCode Timesheet::filter_from(unsigned int year, unsigned int month, unsigned int day)
     {
         MSS_BEGIN(ReturnCode);
         filter_from_day_.reset(new Day(year, month, day));
+        MSS_END();
+    }
+    ReturnCode Timesheet::filter_until(unsigned int year, unsigned int month, unsigned int day)
+    {
+        MSS_BEGIN(ReturnCode);
+        filter_until_day_.reset(new Day(year, month, day));
         MSS_END();
     }
 
@@ -250,6 +256,8 @@ namespace time_track {
 
             if (filter_from_day_ && day < *filter_from_day_)
                 continue;
+            if (filter_until_day_ && day >= *filter_until_day_)
+                continue;
 
             if (day == today)
                 os << std::endl << "***********************************************************" << std::endl;
@@ -318,7 +326,7 @@ namespace time_track {
                 os << "***********************************************************" << std::endl << std::endl;
         }
 
-        if (filter_from_day_)
+        if (filter_from_day_ || filter_until_day_)
         {
             for (const auto &p: details_per_story)
             {
@@ -354,6 +362,8 @@ namespace time_track {
             const auto &info = di.second;
 
             if (filter_from_day_ && day < *filter_from_day_)
+                continue;
+            if (filter_until_day_ && day >= *filter_until_day_)
                 continue;
 
             Duration total_worked_day(0);

@@ -22,7 +22,8 @@ namespace time_track {
     class Timesheet: public gubg::parse::naft::Parser_crtp<Timesheet>
     {
         public:
-            ReturnCode filter(unsigned int year, unsigned int month, unsigned int day = 1);
+            ReturnCode filter_from(unsigned int year, unsigned int month, unsigned int day = 1);
+            ReturnCode filter_until(unsigned int year, unsigned int month, unsigned int day = 1);
 
             ReturnCode parse(const std::string &filename);
 
@@ -62,6 +63,7 @@ namespace time_track {
             InfoPerDay info_per_day_;
 
             std::unique_ptr<Day> filter_from_day_;
+            std::unique_ptr<Day> filter_until_day_;
 
             const DayTime pause_begin_{12,45,0};
             const DayTime pause_end_{13,15,0};
