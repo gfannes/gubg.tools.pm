@@ -323,6 +323,7 @@ namespace time_track {
             for (const auto &p: details_per_story)
             {
                 const auto &story = p.first;
+                Duration total_worked(0);
                 for (const auto &pp: p.second)
                 {
                     const auto &day = pp.first;
@@ -332,8 +333,9 @@ namespace time_track {
                     for (const auto &task: tasks)
                         os << task << "; ";
                     os << endl;
+                    total_worked += duration;
                 }
-                os << endl;
+                os << "TOTAL: " << as_hours(total_worked) << std::endl << endl;
             }
         }
     }
