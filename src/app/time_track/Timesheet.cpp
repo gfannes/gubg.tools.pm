@@ -86,7 +86,7 @@ namespace time_track {
             const auto d = day();
             L("Day is known: " << d);
 
-            auto &info = info_per_day_[d];
+            auto &info = day__info_[d];
 
             MSS(story_stack_.size() == level_+1);
             auto &story = story_stack_[level_];
@@ -103,7 +103,7 @@ namespace time_track {
                     {
                         if (!info.start)
                         {
-                            MSS(info.duration_per_task_per_story.empty(), L("There are durations present: you cannot start using a start time anymore"));
+                            MSS(info.story__task__duration.empty(), L("There are durations present: you cannot start using a start time anymore"));
                             DayTime dt;
                             MSS(DayTime::from_armin(dt, value));
                             info.start.reset(new DayTime(dt));
@@ -131,7 +131,7 @@ namespace time_track {
                     {
                         DayTime dt;
                         MSS(DayTime::from_armin(dt, value));
-                        info.duration_per_task_per_story[story][task] += dt.duration();
+                        info.story__task__duration[story][task] += dt.duration();
                     }
                 }
             }
@@ -195,12 +195,12 @@ namespace time_track {
                         if (current_stop <= pause_begin_)
                         {
                             //Before pause: no problem
-                            info.duration_per_task_per_story[story][task] += current_stop - previous_stop;
+                            info.story__task__duration[story][task] += current_stop - previous_stop;
                         }
                         else if (current_stop < pause_end_)
                         {
                             L("Ends in the middle of the pause: we take a break now");
-                            info.duration_per_task_per_story[story][task] += current_stop - previous_stop;
+                            info.story__task__duration[story][task] += current_stop - previous_stop;
                             info.pause += minimal_pause_();
                             current_stop += minimal_pause_();
                             assert(pause_end_ <= current_stop);
@@ -208,15 +208,15 @@ namespace time_track {
                         else
                         {
                             L("Skips the pause: we split this work and assume we paused in-between");
-                            info.duration_per_task_per_story[story][task] += pause_begin_ - previous_stop;
-                            info.duration_per_task_per_story[story][task] += current_stop - pause_end_;
+                            info.story__task__duration[story][task] += pause_begin_ - previous_stop;
+                            info.story__task__duration[story][task] += current_stop - pause_end_;
                             info.pause += minimal_pause_();
                         }
                     }
                     else
                     {
                         //We assume pause is already taken
-                        info.duration_per_task_per_story[story][task] += current_stop - previous_stop;
+                        info.story__task__duration[story][task] += current_stop - previous_stop;
                     }
                 }
             }
@@ -246,10 +246,10 @@ namespace time_track {
     {
         const auto today = gubg::planning::Day::today();
 
-        using DetailsPerStory = std::map<std::string, std::map<Day, std::pair<Duration, std::list<std::string>>>>;
-        DetailsPerStory details_per_story;
+        using Story__Day__Details = std::map<std::string, std::map<Day, std::pair<Duration, std::list<std::string>>>>;
+        Story__Day__Details story__day__details;
 
-        for (const auto &di: info_per_day_)
+        for (const auto &di: day__info_)
         {
             const auto &day = di.first;
             const auto &info = di.second;
@@ -265,7 +265,7 @@ namespace time_track {
             os << day << ": ";
             info.stream(os);
             Duration total_worked(0);
-            for (const auto &p: info.duration_per_task_per_story)
+            for (const auto &p: info.story__task__duration)
             {
                 const auto &story = p.first;
                 if (story != "pause")
@@ -276,7 +276,7 @@ namespace time_track {
                         const auto &task = pp.first;
                         const auto &duration = pp.second;
                         {
-                            auto &details = details_per_story[story][day];
+                            auto &details = story__day__details[story][day];
                             details.first += duration;
                             details.second.push_back(task);
                         }
@@ -328,7 +328,7 @@ namespace time_track {
 
         if (filter_from_day_ || filter_until_day_)
         {
-            for (const auto &p: details_per_story)
+            for (const auto &p: story__day__details)
             {
                 const auto &story = p.first;
                 Duration total_worked(0);
@@ -352,11 +352,11 @@ namespace time_track {
     {
         const auto today = gubg::planning::Day::today();
 
-        using DetailsPerStory = std::map<std::string, std::map<Day, std::pair<Duration, std::list<std::string>>>>;
-        DetailsPerStory details_per_story;
+        using Story__Day__Details = std::map<std::string, std::map<Day, std::pair<Duration, std::list<std::string>>>>;
+        Story__Day__Details story__day__details;
 
         Duration total_worked(0);
-        for (const auto &di: info_per_day_)
+        for (const auto &di: day__info_)
         {
             const auto &day = di.first;
             const auto &info = di.second;
@@ -367,7 +367,7 @@ namespace time_track {
                 continue;
 
             Duration total_worked_day(0);
-            for (const auto &p: info.duration_per_task_per_story)
+            for (const auto &p: info.story__task__duration)
             {
                 const auto &story = p.first;
                 if (story != "pause")
@@ -378,7 +378,7 @@ namespace time_track {
                         const auto &task = pp.first;
                         const auto &duration = pp.second;
                         {
-                            auto &details = details_per_story[story][day];
+                            auto &details = story__day__details[story][day];
                             details.first += duration;
                             details.second.push_back(task);
                         }

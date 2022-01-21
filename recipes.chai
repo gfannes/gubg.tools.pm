@@ -2,6 +2,7 @@ root.book("time_track", fun(b){
     b.recipe("exe", "executable", fun(r){
         r.add("src/app", "time_track/**.cpp")
         r.add("src/app", "time_track/**.hpp")
+        r.depends_on("termcolor")
 
         for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
     })

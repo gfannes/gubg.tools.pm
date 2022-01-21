@@ -1,10 +1,12 @@
 #ifndef HEADER_time_track_Timesheet_hpp_ALREADY_INCLUDED
 #define HEADER_time_track_Timesheet_hpp_ALREADY_INCLUDED
 
-#include "time_track/ReturnCode.hpp"
-#include "gubg/parse/naft/Parser.hpp"
-#include "gubg/planning/Day.hpp"
-#include "gubg/time/DayTime.hpp"
+#include <time_track/ReturnCode.hpp>
+
+#include <gubg/parse/naft/Parser.hpp>
+#include <gubg/planning/Day.hpp>
+#include <gubg/time/DayTime.hpp>
+
 #include <string>
 #include <map>
 #include <array>
@@ -54,13 +56,13 @@ namespace time_track {
             {
                 std::unique_ptr<DayTime> start;
                 std::unique_ptr<DayTime> stop;
-                std::map<std::string, std::map<std::string, Duration>> duration_per_task_per_story;
+                std::map<std::string, std::map<std::string, Duration>> story__task__duration;
                 Duration pause{0};
                 void stream(std::ostream &) const;
                 void update();
             };
-            using InfoPerDay = std::map<Day, Info>;
-            InfoPerDay info_per_day_;
+            using Day__Info = std::map<Day, Info>;
+            Day__Info day__info_;
 
             std::unique_ptr<Day> filter_from_day_;
             std::unique_ptr<Day> filter_until_day_;
