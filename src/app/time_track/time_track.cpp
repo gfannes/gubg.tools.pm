@@ -26,7 +26,7 @@ namespace time_track {
 
         MSS(!options.input_fn.empty(), log.error() << "No input file given" << std::endl);
 
-        Timesheet timesheet;
+        Timesheet timesheet{log};
         if (options.from && options.from->year >= 0 && options.from->month >= 0)
             timesheet.filter_from(options.from->year, options.from->month, options.from->day);
         if (options.until && options.until->year >= 0 && options.until->month >= 0)

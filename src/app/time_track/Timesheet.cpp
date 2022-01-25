@@ -1,22 +1,71 @@
-#include "time_track/Timesheet.hpp"
-#include "gubg/file/Filesystem.hpp"
-#include "gubg/Strange.hpp"
-#include "gubg/mss.hpp"
+#include <time_track/Timesheet.hpp>
+
+#include <gubg/file/Filesystem.hpp>
+#include <gubg/Strange.hpp>
+#include <gubg/mss.hpp>
+
 #include <list>
-using namespace std;
+#include <sstream>
+#include <cmath>
+
 using namespace gubg;
 
 namespace  { 
     const char *ns = "Timesheet";
-    std::string as_hours(time_track::Duration duration)
+
+    struct AsHours
     {
-        std::ostringstream oss;
-        oss << std::fixed << double(duration.count())/3600.0;
-        return oss.str();
+        const time_track::Duration duration;
+        AsHours(time_track::Duration duration): duration(duration) {}
+    };
+    inline std::ostream &operator<<(std::ostream &os, const AsHours &v)
+    {
+        return os << std::fixed << std::setprecision(2) << double(v.duration.count())/3600.0;
+    }
+
+    struct AsPct
+    {
+        const time_track::Duration part;
+        const time_track::Duration total;
+        AsPct(time_track::Duration part, time_track::Duration total): part(part), total(total) {}
+    };
+    inline std::ostream &operator<<(std::ostream &os, const AsPct &v)
+    {
+        const double part_count = double(v.part.count());
+        const double total_count = double(v.total.count());
+        if (total_count == 0)
+            os << "-";
+        else
+            os << std::fixed << std::setprecision(1) << std::lround(1000.0*(part_count/total_count))/10.0 << '%';
+        return os;
+    }
+
+    inline bool yesno(const std::string &str)
+    {
+        return str.empty() || str == "true" || str == "y" || str == "yes" || str == "1";
     }
 } 
 
 namespace time_track { 
+
+    //WorkDeepFocus
+    WorkDeepFocus &WorkDeepFocus::operator+=(const WorkDeepFocus &rhs)
+    {
+        work += rhs.work;
+        deep += rhs.deep;
+        focus += rhs.focus;
+        return *this;
+    }
+    std::ostream &operator<<(std::ostream &os, const WorkDeepFocus &wdf)
+    {
+        os << AsHours{wdf.work};
+        if (wdf.deep != Duration::zero() || wdf.focus != Duration::zero())
+            os << " (deep " << AsPct{wdf.deep, wdf.work} << ", focus " << AsPct{wdf.focus, wdf.work} << ")";
+        return os;
+    }
+
+
+    //Timesheet
     ReturnCode Timesheet::filter_from(unsigned int year, unsigned int month, unsigned int day)
     {
         MSS_BEGIN(ReturnCode);
@@ -30,10 +79,10 @@ namespace time_track {
         MSS_END();
     }
 
-    ReturnCode Timesheet::parse(const string &filename)
+    ReturnCode Timesheet::parse(const std::string &filename)
     {
         MSS_BEGIN(ReturnCode);
-        string content;
+        std::string content;
         MSS(file::read(content, filename));
         MSS(process(content));
         MSS_END();
@@ -61,8 +110,12 @@ namespace time_track {
         ++level_;
 
         //We start with the story from the previous level, if any
-        story_stack_.push_back(!story_stack_.empty() ? story_stack_.back() : "");
-        MSS(story_stack_.size() == level_+1);
+        if (storyinfo_stack_.empty())
+            storyinfo_stack_.push_back(StoryInfo{});
+        else
+            storyinfo_stack_.push_back(storyinfo_stack_.back());
+
+        MSS(storyinfo_stack_.size() == level_+1);
 
         if (ymd_it_ != ymd_.end())
         {
@@ -86,10 +139,10 @@ namespace time_track {
             const auto d = day();
             L("Day is known: " << d);
 
-            auto &info = day__info_[d];
+            auto &dayinfo = day__dayinfo_[d];
 
-            MSS(story_stack_.size() == level_+1);
-            auto &story = story_stack_[level_];
+            MSS(storyinfo_stack_.size() == level_+1);
+            auto &storyinfo = storyinfo_stack_[level_];
             const auto &task = name_;
 
             //We check for the begin time before anything else
@@ -101,23 +154,31 @@ namespace time_track {
                     if (false) {}
                     else if (key == "b")
                     {
-                        if (!info.start)
+                        if (!dayinfo.start)
                         {
-                            MSS(info.story__task__duration.empty(), L("There are durations present: you cannot start using a start time anymore"));
+                            MSS(dayinfo.story__task__wdf.empty(), L("There are durations present: you cannot start using a start time anymore"));
                             DayTime dt;
                             MSS(DayTime::from_armin(dt, value));
-                            info.start.reset(new DayTime(dt));
-                            info.update();
+                            dayinfo.start.reset(new DayTime(dt));
+                            dayinfo.update();
                         }
                     }
                     else if (key == "s")
                     {
-                        story = value;
+                        storyinfo.story = value;
+                    }
+                    else if (key == "deep")
+                    {
+                        storyinfo.deep = yesno(value);
+                    }
+                    else if (key == "focus")
+                    {
+                        storyinfo.focus = yesno(value);
                     }
                 }
             }
 
-            if (!info.start)
+            if (!dayinfo.start)
             {
                 //Using durations directly
                 for (const auto &attr: attrs_)
@@ -131,17 +192,20 @@ namespace time_track {
                     {
                         DayTime dt;
                         MSS(DayTime::from_armin(dt, value));
-                        info.story__task__duration[story][task] += dt.duration();
+                        auto &wdf = dayinfo.story__task__wdf[storyinfo.story][task];
+                        wdf.work += dt.duration();
+                        if (storyinfo.deep) wdf.deep += dt.duration();
+                        if (storyinfo.focus) wdf.focus += dt.duration();
                     }
                 }
             }
             else
             {
                 //Using a start time
-                MSS(!!info.stop);
+                MSS(!!dayinfo.stop);
 
-                const auto previous_stop = *info.stop;
-                auto &stop = *info.stop;
+                const auto previous_stop = *dayinfo.stop;
+                auto &stop = *dayinfo.stop;
 
                 for (const auto &attr: attrs_)
                 {
@@ -159,7 +223,7 @@ namespace time_track {
                         if (dt > stop)
                         {
                             stop = dt;
-                            info.update();
+                            dayinfo.update();
                         }
                     }
                     else if (key == "d")
@@ -184,40 +248,46 @@ namespace time_track {
                     }
                 }
 
-                auto &current_stop = *info.stop;
+                auto &current_stop = *dayinfo.stop;
 
                 if (previous_stop != current_stop)
                 {
-                    L(C(story)C(previous_stop)C(current_stop));
+                    L(C(storyinfo.story)C(previous_stop)C(current_stop));
 
+                    Duration work{};
                     if (previous_stop <= pause_begin_)
                     {
                         if (current_stop <= pause_begin_)
                         {
                             //Before pause: no problem
-                            info.story__task__duration[story][task] += current_stop - previous_stop;
+                            work += current_stop - previous_stop;
                         }
                         else if (current_stop < pause_end_)
                         {
                             L("Ends in the middle of the pause: we take a break now");
-                            info.story__task__duration[story][task] += current_stop - previous_stop;
-                            info.pause += minimal_pause_();
+                            work += current_stop - previous_stop;
+                            dayinfo.pause += minimal_pause_();
                             current_stop += minimal_pause_();
                             assert(pause_end_ <= current_stop);
                         }
                         else
                         {
                             L("Skips the pause: we split this work and assume we paused in-between");
-                            info.story__task__duration[story][task] += pause_begin_ - previous_stop;
-                            info.story__task__duration[story][task] += current_stop - pause_end_;
-                            info.pause += minimal_pause_();
+                            work += pause_begin_ - previous_stop;
+                            work += current_stop - pause_end_;
+                            dayinfo.pause += minimal_pause_();
                         }
                     }
                     else
                     {
                         //We assume pause is already taken
-                        info.story__task__duration[story][task] += current_stop - previous_stop;
+                        work += current_stop - previous_stop;
                     }
+
+                    auto &wdf = dayinfo.story__task__wdf[storyinfo.story][task];
+                    wdf.work += work;
+                    if (storyinfo.deep) wdf.deep += work;
+                    if (storyinfo.focus) wdf.focus += work;
                 }
             }
         }
@@ -230,7 +300,7 @@ namespace time_track {
         if ((ymd_it_-ymd_.begin()) == (level_+1))
             --ymd_it_;
         --level_;
-        story_stack_.pop_back();
+        storyinfo_stack_.pop_back();
         MSS_END();
     }
 
@@ -246,13 +316,13 @@ namespace time_track {
     {
         const auto today = gubg::planning::Day::today();
 
-        using Story__Day__Details = std::map<std::string, std::map<Day, std::pair<Duration, std::list<std::string>>>>;
+        using Story__Day__Details = std::map<std::string, std::map<Day, std::pair<WorkDeepFocus, std::list<std::string>>>>;
         Story__Day__Details story__day__details;
 
-        for (const auto &di: day__info_)
+        for (const auto &ddi: day__dayinfo_)
         {
-            const auto &day = di.first;
-            const auto &info = di.second;
+            const auto &day = ddi.first;
+            const auto &dayinfo = ddi.second;
 
             if (filter_from_day_ && day < *filter_from_day_)
                 continue;
@@ -263,44 +333,43 @@ namespace time_track {
                 os << std::endl << "***********************************************************" << std::endl;
 
             os << day << ": ";
-            info.stream(os);
-            Duration total_worked(0);
-            for (const auto &p: info.story__task__duration)
+            dayinfo.stream(os);
+            WorkDeepFocus total_wdf;
+            for (const auto &stw: dayinfo.story__task__wdf)
             {
-                const auto &story = p.first;
+                const auto &story = stw.first;
                 if (story != "pause")
                 {
-                    Duration sub_total_worked(0);
-                    for (const auto &pp: p.second)
+                    WorkDeepFocus subtotal_wdf;
+                    for (const auto &tw: stw.second)
                     {
-                        const auto &task = pp.first;
-                        const auto &duration = pp.second;
+                        const auto &task = tw.first;
+                        const auto &wdf = tw.second;
                         {
                             auto &details = story__day__details[story][day];
-                            details.first += duration;
+                            details.first += wdf;
                             details.second.push_back(task);
                         }
-                        sub_total_worked += duration;
-                        os << endl << "\t * " << story << "\t" << as_hours(duration) << "\t" << task;
-                        if (story.empty())
-                            os << "                                 !!! This task has not story yet !!!";
+                        subtotal_wdf += wdf;
+                        os << std::endl << "\t * " << story << "\t" << wdf;
+                        os << "\t" << task;
                     }
-                    os << endl << "\t       => \t" << as_hours(sub_total_worked);
-                    total_worked += sub_total_worked;
+                    os << std::endl << "\t       => \t" << subtotal_wdf;
+                    total_wdf += subtotal_wdf;
                 }
             }
 
             std::string msg;
             {
                 const DayTime eight_hours(8,0,0);
-                if (total_worked < eight_hours.duration())
+                if (total_wdf.work < eight_hours.duration())
                 {
-                    if (!!info.stop)
+                    if (!!dayinfo.stop)
                     {
-                        auto eight_hour_end = *info.stop;
-                        eight_hour_end += (eight_hours.duration()-total_worked);
-                        if (info.pause < minimal_pause_())
-                            eight_hour_end += (minimal_pause_()-info.pause);
+                        auto eight_hour_end = *dayinfo.stop;
+                        eight_hour_end += (eight_hours.duration()-total_wdf.work);
+                        if (dayinfo.pause < minimal_pause_())
+                            eight_hour_end += (minimal_pause_()-dayinfo.pause);
                         std::ostringstream oss;
                         oss << "\tYou have to work until " << eight_hour_end;
                         msg = oss.str();
@@ -308,19 +377,7 @@ namespace time_track {
                 }
             }
 
-            os << endl << "\tTOTAL  =>" << "\t" << as_hours(total_worked) << msg << endl;
-
-            if (false)
-            {
-                const DayTime progressive_start{9,0,0};
-                const DayTime progressive_lunch_start{13,0,0};
-                const DayTime progressive_lunch_end{14,0,0};
-                DayTime dt = progressive_start;
-                dt += total_worked;
-                if (dt > progressive_lunch_start)
-                    dt += (progressive_lunch_end-progressive_lunch_start);
-                os << "\tProgressive  =>" << "\t" << dt << "\t" << endl;
-            }
+            os << std::endl << "\tTOTAL  =>" << "\t" << total_wdf << msg << std::endl;
 
             if (day == today)
                 os << "***********************************************************" << std::endl << std::endl;
@@ -328,22 +385,22 @@ namespace time_track {
 
         if (filter_from_day_ || filter_until_day_)
         {
-            for (const auto &p: story__day__details)
+            for (const auto &sdd: story__day__details)
             {
-                const auto &story = p.first;
-                Duration total_worked(0);
-                for (const auto &pp: p.second)
+                const auto &story = sdd.first;
+                WorkDeepFocus total_wdf;
+                for (const auto &dd: sdd.second)
                 {
-                    const auto &day = pp.first;
-                    const auto &duration = pp.second.first;
-                    const auto &tasks = pp.second.second;
-                    os << story << ": " << day << ": " << as_hours(duration) << endl;
+                    const auto &day = dd.first;
+                    const auto &wdf = dd.second.first;
+                    const auto &tasks = dd.second.second;
+                    os << story << ": " << day << ": " << wdf << std::endl;
                     for (const auto &task: tasks)
                         os << task << "; ";
-                    os << endl;
-                    total_worked += duration;
+                    os << std::endl;
+                    total_wdf += wdf;
                 }
-                os << "TOTAL: " << as_hours(total_worked) << std::endl << endl;
+                os << "TOTAL: " << total_wdf << std::endl << std::endl;
             }
         }
     }
@@ -352,57 +409,57 @@ namespace time_track {
     {
         const auto today = gubg::planning::Day::today();
 
-        using Story__Day__Details = std::map<std::string, std::map<Day, std::pair<Duration, std::list<std::string>>>>;
+        using Story__Day__Details = std::map<std::string, std::map<Day, std::pair<WorkDeepFocus, std::list<std::string>>>>;
         Story__Day__Details story__day__details;
 
-        Duration total_worked(0);
-        for (const auto &di: day__info_)
+        WorkDeepFocus total_wdf;
+        for (const auto &ddi: day__dayinfo_)
         {
-            const auto &day = di.first;
-            const auto &info = di.second;
+            const auto &day = ddi.first;
+            const auto &dayinfo = ddi.second;
 
             if (filter_from_day_ && day < *filter_from_day_)
                 continue;
             if (filter_until_day_ && day >= *filter_until_day_)
                 continue;
 
-            Duration total_worked_day(0);
-            for (const auto &p: info.story__task__duration)
+            WorkDeepFocus total_wdf_day;
+            for (const auto &stw: dayinfo.story__task__wdf)
             {
-                const auto &story = p.first;
+                const auto &story = stw.first;
                 if (story != "pause")
                 {
-                    Duration sub_total_worked(0);
-                    for (const auto &pp: p.second)
+                    WorkDeepFocus subtotal_wdf;
+                    for (const auto &tw: stw.second)
                     {
-                        const auto &task = pp.first;
-                        const auto &duration = pp.second;
+                        const auto &task = tw.first;
+                        const auto &wdf = tw.second;
                         {
                             auto &details = story__day__details[story][day];
-                            details.first += duration;
+                            details.first += wdf;
                             details.second.push_back(task);
                         }
-                        sub_total_worked += duration;
+                        subtotal_wdf += wdf;
                     }
-                    total_worked_day += sub_total_worked;
+                    total_wdf_day += subtotal_wdf;
                 }
             }
 
-            if (total_worked_day != Duration::zero())
-                os << "\\hourrow{" << day << "}{" << as_hours(total_worked_day) << "}{93.5}" << std::endl;
+            if (total_wdf_day.work != Duration::zero())
+                os << "\\hourrow{" << day << "}{" << AsHours{total_wdf_day.work} << "}{93.5}" << std::endl;
 
-            total_worked += total_worked_day;
+            total_wdf += total_wdf_day;
         }
-        os << "TOTAL: " << as_hours(total_worked) << std::endl;
+        os << "TOTAL: " << total_wdf << std::endl;
     }
 
-    //Timesheet::Info
-    void Timesheet::Info::stream(std::ostream &os) const
+    //Timesheet::DayInfo
+    void Timesheet::DayInfo::stream(std::ostream &os) const
     {
         if (!!start && !!stop)
             os << "[" << *start << " - " << *stop << "]";
     }
-    void Timesheet::Info::update()
+    void Timesheet::DayInfo::update()
     {
         if (!!start)
         {

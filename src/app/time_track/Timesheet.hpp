@@ -6,6 +6,7 @@
 #include <gubg/parse/naft/Parser.hpp>
 #include <gubg/planning/Day.hpp>
 #include <gubg/time/DayTime.hpp>
+#include <gubg/Logger.hpp>
 
 #include <string>
 #include <map>
@@ -20,10 +21,21 @@ namespace time_track {
     using Day = gubg::planning::Day;
     using DayTime = gubg::time::DayTime;
     using Duration = std::chrono::seconds;
+    struct WorkDeepFocus
+    {
+        time_track::Duration work{};
+        time_track::Duration deep{};
+        time_track::Duration focus{};
+
+        WorkDeepFocus &operator+=(const WorkDeepFocus &rhs);
+    };
 
     class Timesheet: public gubg::parse::naft::Parser_crtp<Timesheet>
     {
         public:
+            gubg::Logger &log;
+            Timesheet(gubg::Logger &log): log(log) {}
+
             ReturnCode filter_from(unsigned int year, unsigned int month, unsigned int day = 1);
             ReturnCode filter_until(unsigned int year, unsigned int month, unsigned int day = 1);
 
@@ -50,19 +62,26 @@ namespace time_track {
             using YMD = std::array<unsigned int, 3>;
             YMD ymd_;
             YMD::iterator ymd_it_ = ymd_.begin();
-            std::vector<std::string> story_stack_;
 
-            struct Info
+            struct StoryInfo
+            {
+                std::string story;
+                bool deep = false;
+                bool focus = false;
+            };
+            std::vector<StoryInfo> storyinfo_stack_;
+
+            struct DayInfo
             {
                 std::unique_ptr<DayTime> start;
                 std::unique_ptr<DayTime> stop;
-                std::map<std::string, std::map<std::string, Duration>> story__task__duration;
+                std::map<std::string, std::map<std::string, WorkDeepFocus>> story__task__wdf;
                 Duration pause{0};
                 void stream(std::ostream &) const;
                 void update();
             };
-            using Day__Info = std::map<Day, Info>;
-            Day__Info day__info_;
+            using Day__DayInfo = std::map<Day, DayInfo>;
+            Day__DayInfo day__dayinfo_;
 
             std::unique_ptr<Day> filter_from_day_;
             std::unique_ptr<Day> filter_until_day_;
