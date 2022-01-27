@@ -41,6 +41,7 @@ namespace time_track {
 
             ReturnCode parse(const std::string &filename);
 
+            //naft::Parser_crtp callbacks
             bool naft_text(const Text &){return true;}
             bool naft_node_open(const Tag &);
             bool naft_attr(const Key &, const Value &);

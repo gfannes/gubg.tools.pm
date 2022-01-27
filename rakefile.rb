@@ -5,7 +5,7 @@ include GUBG
 task :prepare do
 	case os
 	when :linux, :macos
-		publish('src/bash', dst: 'bin', mode: 0755)
+		publish('src/sh', dst: 'bin', mode: 0755)
 	when :windows
 		publish('src/bat', dst: 'bin')
 	else raise("Unknown os #{os}") end

@@ -60,7 +60,7 @@ namespace time_track {
     {
         os << AsHours{wdf.work};
         if (wdf.deep != Duration::zero() || wdf.focus != Duration::zero())
-            os << " (deep " << AsPct{wdf.deep, wdf.work} << ", focus " << AsPct{wdf.focus, wdf.work} << ")";
+            os << " (deep " << AsPct{wdf.deep, wdf.work} << ", focus " << AsPct{wdf.focus, wdf.work} << ", waste " << AsHours{wdf.work-std::max(wdf.deep, wdf.focus)} << ")";
         return os;
     }
 
