@@ -2,5 +2,6 @@
 require("open3")
 
 input_fp = "#{ENV["HOME"]}/decode-it/auro/todo.md"
+Open3.capture2e("dpn", "Update", "-i", input_fp)
 output, status = Open3.capture2e("dpn", "list", "-i", input_fp, "-V", "0")
 puts output
