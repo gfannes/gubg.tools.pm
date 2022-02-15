@@ -413,6 +413,9 @@ namespace time_track {
         Story__Day__Details story__day__details;
 
         WorkDeepFocus total_wdf;
+        std::ostringstream latex, tmp;
+        std::list<std::vector<std::string>> table;
+        table.push_back({"Day", "Work-day", "Focus-day", "Pct-day", "Work-cumul", "Focus-cumul", "Pct-cumul"});
         for (const auto &ddi: day__dayinfo_)
         {
             const auto &day = ddi.first;
@@ -445,12 +448,39 @@ namespace time_track {
                 }
             }
 
-            if (total_wdf_day.work != Duration::zero())
-                os << "\\hourrow{" << day << "}{" << AsHours{total_wdf_day.work} << "}{93.5}" << std::endl;
-
             total_wdf += total_wdf_day;
+
+            if (total_wdf_day.work != Duration::zero())
+            {
+                latex << "\\hourrow{" << day << "}{" << AsHours{total_wdf_day.work} << "}{93.5}" << std::endl;
+
+                auto &row = table.emplace_back();
+                auto add = [&](const auto &v){
+                    tmp.str("");
+                    tmp << v;
+                    row.push_back(tmp.str());
+                };
+                add(day);
+                add(AsHours{total_wdf_day.work});
+                add(AsHours{total_wdf_day.focus});
+                add(AsPct{total_wdf_day.focus, total_wdf_day.work});
+                add(AsHours{total_wdf.work});
+                add(AsHours{total_wdf.focus});
+                add(AsPct{total_wdf.focus, total_wdf.work});
+            }
         }
-        os << "TOTAL: " << total_wdf << std::endl;
+        os << latex.str();
+
+        std::map<unsigned int, std::size_t> sizes;
+        for (const auto &row: table)
+            for (auto ix = 0u; ix < row.size(); ++ix)
+                sizes[ix] = std::max(sizes[ix], row[ix].size());
+        for (const auto &row: table)
+        {
+            for (auto ix = 0u; ix < row.size(); ++ix)
+                os << row[ix] << std::string(sizes[ix]-row[ix].size()+3, ' ');
+            os << std::endl;
+        }
     }
 
     //Timesheet::DayInfo
