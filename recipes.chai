@@ -1,37 +1,32 @@
-root.book("time_track", fun(b){
-    b.recipe("exe", "executable", fun(r){
-        r.add("src/app", "time_track/**.cpp")
-        r.add("src/app", "time_track/**.hpp")
-        r.depends_on("termcolor")
+root.recipe("time_track", TargetType.Executable, fun(r){
+    r.add("src/app", "time_track/**.cpp")
+    r.add("src/app", "time_track/**.hpp")
+    r.depends_on("termcolor")
 
-        for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
+    for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
     })
-})
 
-root.book("pa", fun(b){
-    b.recipe("exe", "executable", fun(r){
+root.recipe("pa", TargetType.Executable, fun(r){
+    r.add("src/app", "pa/**.cpp")
+    r.add("src/app", "pa/**.hpp")
 
-        r.add("src/app", "pa/**.cpp")
-        r.add("src/app", "pa/**.hpp")
+    for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
+    r.depends_on("chai/func")
 
-        for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
-        r.depends_on("chai/func")
-
-        if (my(OS) == OS.Linux){
-            r.library("dl")
-            r.library("pthread")
-        }
+    if (my(OS) == OS.Linux){
+        r.library("dl")
+        r.library("pthread")
+    }
     })
-})
 
-cook["pit"].recipe("exe", "executable", fun(r){
+root.recipe("pit", TargetType.Executable, fun(r){
     r.add("src/app", "pit/**.cpp")
     r.add("src/app", "pit/**.hpp")
     for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
-})
+    })
 
-cook["pigr"].recipe("exe", "executable", fun(r){
+root.recipe("pigr", TargetType.Executable, fun(r){
     r.add("src/app", "pigr/**.cpp")
     r.add("src/app", "pigr/**.hpp")
     for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
-})
+    })
