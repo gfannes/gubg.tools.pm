@@ -16,7 +16,7 @@ namespace :"tools.pm" do
 	
 	task :install do
 		require("gubg/build/Cooker")
-		cooker = Build::Cooker.new().option("c++.std", 17).output("bin")
+		cooker = Build::Cooker.new().option("c++.std", 17).option("release").output("bin")
 
 		recipes = %w[time_track pa pit pigr]
 		cooker.generate(:ninja, *recipes).ninja()
