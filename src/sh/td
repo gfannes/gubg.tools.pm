@@ -1,11 +1,18 @@
 #!/usr/bin/env ruby
 require("open3")
 
+detail_level = (ARGV[0] || 0).to_i()
+
 input_fp = "#{ENV["HOME"]}/decode-it/auro/todo.md"
 
 Open3.capture2e("dpn", "Update", "-i", input_fp)
 
 args = ["dpn", "list", "-i", input_fp, "-V", "0"]
-args << "-d" if ARGV.include?("d")
+args << "-d" if detail_level == 2
 output, status = Open3.capture2e(*args)
-puts output
+lines = output.split("\n")
+lines = lines[0,20] if detail_level == 0
+
+lines.each do |line|
+	puts(line)
+end
