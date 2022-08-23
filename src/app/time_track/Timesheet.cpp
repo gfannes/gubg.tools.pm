@@ -414,6 +414,11 @@ namespace time_track {
 
         WorkDeepFocus total_wdf;
         std::ostringstream latex, tmp;
+        latex << "\\textbf{Research \\& Development} \\\\" << std::endl;
+
+        double total_hours = 0.0, total_cost = 0.0;
+        auto round_2d = [](double v){return std::round(100.0*v)/100.0;};
+
         std::list<std::vector<std::string>> table;
         table.push_back({"Day", "Work-day", "Focus-day", "Pct-day", "Work-cumul", "Focus-cumul", "Pct-cumul"});
         for (const auto &ddi: day__dayinfo_)
@@ -452,7 +457,13 @@ namespace time_track {
 
             if (total_wdf_day.work != Duration::zero())
             {
-                latex << "\\hourrow{" << day << "}{" << AsHours{total_wdf_day.work} << "}{93.5}" << std::endl;
+                const double hours = round_2d(double(total_wdf_day.work.count())/3600.0);
+                total_hours += hours;
+
+                const double hour_rate = round_2d(93.5);
+                total_cost += round_2d(hour_rate*hours);
+
+                latex << day << " & " << AsHours{total_wdf_day.work} << " & " << hour_rate << " \\\\" << std::endl;
 
                 auto &row = table.emplace_back();
                 auto add = [&](const auto &v){
@@ -469,6 +480,19 @@ namespace time_track {
                 add(AsPct{total_wdf.focus, total_wdf.work});
             }
         }
+        total_hours = round_2d(total_hours);
+        total_cost = round_2d(total_cost);
+        const auto vat = round_2d(total_cost*0.21);
+        const auto total_cost_vat = total_cost+vat;
+
+        latex << std::fixed << std::setprecision(2);
+        latex << "\\hline" << std::endl;
+        latex << "{\\bf Subtotaal} & {\\bf " << total_hours << " uren} & {\\bf \\euro " << total_cost << "} \\\\*[1.5ex]" << std::endl;
+        latex << "\\hline\\hline\\hline" << std::endl;
+        latex << "{\\bf Saldo} & & {\\bf \\euro " << total_cost << "} \\\\" << std::endl;
+        latex << "{\\bf BTW} & & {\\euro " << vat << "} \\\\" << std::endl;
+        latex << "{\\bf Saldo met BTW} & & {\\bf \\euro " << total_cost_vat << "} \\\\" << std::endl;
+        latex << std::endl;
         os << latex.str();
 
         std::map<unsigned int, std::size_t> sizes;
