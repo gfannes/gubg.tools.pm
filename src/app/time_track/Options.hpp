@@ -21,6 +21,8 @@ namespace time_track {
         std::optional<YYYYMMDD> from;
         std::optional<YYYYMMDD> until;
 
+        double hour_rate = 0.0;
+
         bool parse(int argc, const char **argv, gubg::Logger &);
 
         std::string help() const;

@@ -460,7 +460,7 @@ namespace time_track {
                 const double hours = round_2d(double(total_wdf_day.work.count())/3600.0);
                 total_hours += hours;
 
-                const double hour_rate = round_2d(93.5);
+                const double hour_rate = round_2d(options.hour_rate);
                 total_cost += round_2d(hour_rate*hours);
 
                 latex << day << " & " << AsHours{total_wdf_day.work} << " & " << hour_rate << " \\\\" << std::endl;

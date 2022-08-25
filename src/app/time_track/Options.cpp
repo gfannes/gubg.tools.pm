@@ -70,6 +70,11 @@ namespace time_track {
                 MSS(pop_arg(tmp), log.error() << "Expected YYYYMMDD for --until" << std::endl);
                 MSS(parse_yyyymmdd(until.emplace(), tmp), log.error() << "Could not interpret YYYYMMDD for --until" << std::endl);
             }
+            else if (is("-r", "--hour-rate"))
+            {
+                MSS(pop_arg(tmp), log.error() << "Expected hour rate to be set" << std::endl);
+                hour_rate = std::stod(tmp);
+            }
             else MSS(false, log.error() << "Unknown argument " << arg << std::endl);
         }
 
@@ -98,6 +103,7 @@ namespace time_track {
         option("-f", "--from", "<YYYYMM(DD)?>", "Start timestamp");
         option("-u", "--until", "<YYYYMM(DD)?>", "End timestamp, non-inclusive");
         option("-t", "--totals", "", "Print totals");
+        option("-r", "--hour-rate", "PRICE", "Hour rate");
         oss << "Written by Geert Fannes" << std::endl;
         return oss.str();
     }

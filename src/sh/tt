@@ -3,16 +3,17 @@
 ENV["gubg"] ||= "#{ENV["HOME"]}/gubg"
 
 input_fn = "#{ENV["HOME"]}/nontech/auro.naft"
+hour_rate = ENV["HOUR_RATE"]
 
 case ARGV.size()
 when 0 then system("time_track -i #{input_fn}")
-when 1 then system("time_track -i #{input_fn} -t -f #{ARGV[0]}")
+when 1 then system("time_track -i #{input_fn} -r #{hour_rate} -t -f #{ARGV[0]}")
 when 2
     case ARGV[0]
     when 'day'
         from = ARGV[1].to_i
         unti = from+1
-        system("time_track -i #{input_fn} -t -f #{from} -u #{unti}")
-    else system("time_track -i #{input_fn} -t -f #{ARGV[0]} -u #{ARGV[1]}")
+        system("time_track -i #{input_fn} -r #{hour_rate} -t -f #{from} -u #{unti}")
+    else system("time_track -i #{input_fn} -r #{hour_rate} -t -f #{ARGV[0]} -u #{ARGV[1]}")
     end
 end

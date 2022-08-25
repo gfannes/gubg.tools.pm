@@ -1,6 +1,7 @@
 #ifndef HEADER_time_track_Timesheet_hpp_ALREADY_INCLUDED
 #define HEADER_time_track_Timesheet_hpp_ALREADY_INCLUDED
 
+#include <time_track/Options.hpp>
 #include <time_track/ReturnCode.hpp>
 
 #include <gubg/parse/naft/Parser.hpp>
@@ -33,8 +34,9 @@ namespace time_track {
     class Timesheet: public gubg::parse::naft::Parser_crtp<Timesheet>
     {
         public:
+            const Options &options;
             gubg::Logger &log;
-            Timesheet(gubg::Logger &log): log(log) {}
+            Timesheet(const Options &options, gubg::Logger &log): options(options), log(log) {}
 
             ReturnCode filter_from(unsigned int year, unsigned int month, unsigned int day = 1);
             ReturnCode filter_until(unsigned int year, unsigned int month, unsigned int day = 1);
