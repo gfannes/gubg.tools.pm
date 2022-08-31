@@ -83,8 +83,8 @@ namespace time_track {
     {
         MSS_BEGIN(ReturnCode);
         std::string content;
-        MSS(file::read(content, filename));
-        MSS(process(content));
+        MSS(file::read(content, filename), log.error() << "Could not read content from '" << filename << "'" << std::endl);
+        MSS(process(content), log.error() << "Failed to parse content from '" << filename << "'" << std::endl);
         MSS_END();
     }
 
@@ -156,9 +156,9 @@ namespace time_track {
                     {
                         if (!dayinfo.start)
                         {
-                            MSS(dayinfo.story__task__wdf.empty(), L("There are durations present: you cannot start using a start time anymore"));
+                            MSS(dayinfo.story__task__wdf.empty(), log.error() << "There are durations present: you cannot start using a start time anymore" << std::endl);
                             DayTime dt;
-                            MSS(DayTime::from_armin(dt, value));
+                            MSS(DayTime::from_armin(dt, value), log.error() << "Could not interpret DayTime from '" << value << "'" << std::endl);
                             dayinfo.start.reset(new DayTime(dt));
                             dayinfo.update();
                         }
@@ -186,12 +186,12 @@ namespace time_track {
                     const auto &key = attr.first;
                     const auto &value = attr.second;
                     if (false) {}
-                    else if (key == "b") { MSS(false); }
-                    else if (key == "e") { MSS(false); }
+                    else if (key == "b") { MSS(false, log.error() << "Unexpected begin found" << std::endl); }
+                    else if (key == "e") { MSS(false, log.error() << "Cannot have an end before a begin" << std::endl); }
                     else if (key == "d")
                     {
                         DayTime dt;
-                        MSS(DayTime::from_armin(dt, value));
+                        MSS(DayTime::from_armin(dt, value), log.error() << "Could not interpret DayTime from '" << value << "'" << std::endl);
                         auto &wdf = dayinfo.story__task__wdf[storyinfo.story][task];
                         wdf.work += dt.duration();
                         if (storyinfo.deep) wdf.deep += dt.duration();
@@ -219,7 +219,7 @@ namespace time_track {
                     else if (key == "e")
                     {
                         DayTime dt;
-                        MSS(DayTime::from_armin(dt, value));
+                        MSS(DayTime::from_armin(dt, value), log.error() << "Could not interpret DayTime from '" << value << "'" << std::endl);
                         if (dt > stop)
                         {
                             stop = dt;
@@ -229,7 +229,7 @@ namespace time_track {
                     else if (key == "d")
                     {
                         DayTime dt;
-                        MSS(DayTime::from_armin(dt, value));
+                        MSS(DayTime::from_armin(dt, value), log.error() << "Could not interpret DayTime from '" << value << "'" << std::endl);
                         stop += dt.duration();
                         if (previous_stop <= pause_begin_)
                         {
