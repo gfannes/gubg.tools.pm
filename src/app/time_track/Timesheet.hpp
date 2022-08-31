@@ -16,6 +16,7 @@
 #include <memory>
 #include <chrono>
 #include <ostream>
+#include <optional>
 
 namespace time_track { 
 
@@ -80,6 +81,7 @@ namespace time_track {
                 std::unique_ptr<DayTime> stop;
                 std::map<std::string, std::map<std::string, WorkDeepFocus>> story__task__wdf;
                 Duration pause{0};
+                std::optional<double> power;
                 void stream(std::ostream &) const;
                 void update();
             };

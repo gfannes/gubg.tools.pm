@@ -175,6 +175,10 @@ namespace time_track {
                     {
                         storyinfo.focus = yesno(value);
                     }
+                    else if (key == "power")
+                    {
+                        dayinfo.power = std::stod(value);
+                    }
                 }
             }
 
@@ -413,23 +417,53 @@ namespace time_track {
         Story__Day__Details story__day__details;
 
         WorkDeepFocus total_wdf;
-        std::ostringstream latex, tmp;
-        latex << "\\textbf{Research \\& Development} \\\\" << std::endl;
+        std::ostringstream latex, latex_rnd, latex_power, tmp;
+        latex << "\\begin{longtable}{@{\\extracolsep{\\fill}\\hspace{\\tabcolsep}} l r r }" << std::endl;
+        latex << "\\hline" << std::endl;
+        latex << "{\\bf Omschrijving} & \\multicolumn{1}{c}{\\bf Aantal} & \\multicolumn{1}{c}{\\bf Eenheidsprijs (\\euro)} \\\\*" << std::endl;
+        latex << "\\hline\\hline" << std::endl;
+        latex << "\\endhead" << std::endl;
 
-        double total_hours = 0.0, total_cost = 0.0;
+        latex_rnd << "\\textbf{Research \\& Development} \\\\" << std::endl;
+
+        latex_power << "\\textbf{Stroomverbruik buildservers} \\\\" << std::endl;
+        const double price_per_kWh = 0.75;
+
+        double total_hours = 0.0, total_rnd_cost = 0.0, total_power_cost = 0.0;
         auto round_2d = [](double v){return std::round(100.0*v)/100.0;};
 
         std::list<std::vector<std::string>> table;
         table.push_back({"Day", "Work-day", "Focus-day", "Pct-day", "Work-cumul", "Focus-cumul", "Pct-cumul"});
+        std::optional<double> prev_power;
+        std::vector<double> powers;
+        bool is_first = true;
         for (const auto &ddi: day__dayinfo_)
         {
             const auto &day = ddi.first;
             const auto &dayinfo = ddi.second;
 
+            if (dayinfo.power)
+                prev_power = dayinfo.power;
+
             if (filter_from_day_ && day < *filter_from_day_)
                 continue;
             if (filter_until_day_ && day >= *filter_until_day_)
                 continue;
+
+            std::optional<double> power_opt = dayinfo.power;
+            if (is_first)
+            {
+                if (!power_opt)
+                    power_opt = prev_power;
+                is_first = false;
+            }
+            if (power_opt)
+            {
+                const auto power = round_2d(*power_opt);
+                powers.push_back(power);
+                latex_power << std::fixed << std::setprecision(2);
+                latex_power << day << " & " << power << " kWh & " << price_per_kWh << " \\\\" << std::endl;
+            }
 
             WorkDeepFocus total_wdf_day;
             for (const auto &stw: dayinfo.story__task__wdf)
@@ -461,9 +495,10 @@ namespace time_track {
                 total_hours += hours;
 
                 const double hour_rate = round_2d(options.hour_rate);
-                total_cost += round_2d(hour_rate*hours);
+                total_rnd_cost += round_2d(hour_rate*hours);
 
-                latex << day << " & " << AsHours{total_wdf_day.work} << " & " << hour_rate << " \\\\" << std::endl;
+                latex_rnd << std::fixed << std::setprecision(2);
+                latex_rnd << day << " & " << AsHours{total_wdf_day.work} << " uur & " << hour_rate << " \\\\" << std::endl;
 
                 auto &row = table.emplace_back();
                 auto add = [&](const auto &v){
@@ -481,18 +516,40 @@ namespace time_track {
             }
         }
         total_hours = round_2d(total_hours);
-        total_cost = round_2d(total_cost);
+        total_rnd_cost = round_2d(total_rnd_cost);
+        total_power_cost = round_2d(total_power_cost);
+
+        double total_cost = 0;
+
+        latex_rnd << std::fixed << std::setprecision(2);
+        latex_rnd << "{\\bf Subtotaal} & {\\bf " << total_hours << " uur} & {\\bf \\euro " << total_rnd_cost << "} \\\\*[1.5ex]" << std::endl;
+        latex_rnd << "\\hline" << std::endl;
+        latex << latex_rnd.str();
+        total_cost += total_rnd_cost;
+
+        if (powers.size() > 0)
+        {
+            double total_power = powers.back();
+            if (powers.size() > 1)
+                total_power -= powers.front();
+            const double total_power_cost = total_power*price_per_kWh;
+            latex_power << std::fixed << std::setprecision(2);
+            latex_power << "{\\bf Subtotaal} & {\\bf " << total_power << " kWh} & {\\bf \\euro " << total_power_cost << "} \\\\*[1.5ex]" << std::endl;
+            latex_power << "\\hline" << std::endl;
+            latex << latex_power.str();
+            total_cost += total_power_cost;
+        }
+
         const auto vat = round_2d(total_cost*0.21);
         const auto total_cost_vat = total_cost+vat;
 
-        latex << std::fixed << std::setprecision(2);
-        latex << "\\hline" << std::endl;
-        latex << "{\\bf Subtotaal} & {\\bf " << total_hours << " uren} & {\\bf \\euro " << total_cost << "} \\\\*[1.5ex]" << std::endl;
-        latex << "\\hline\\hline\\hline" << std::endl;
+        latex << "\\hline\\hline" << std::endl;
         latex << "{\\bf Saldo} & & {\\bf \\euro " << total_cost << "} \\\\" << std::endl;
         latex << "{\\bf BTW} & & {\\euro " << vat << "} \\\\" << std::endl;
         latex << "{\\bf Saldo met BTW} & & {\\bf \\euro " << total_cost_vat << "} \\\\" << std::endl;
+        latex << "\\end{longtable}" << std::endl;
         latex << std::endl;
+
         os << latex.str();
 
         std::map<unsigned int, std::size_t> sizes;
