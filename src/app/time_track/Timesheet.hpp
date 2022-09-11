@@ -91,8 +91,8 @@ namespace time_track {
             std::unique_ptr<Day> filter_from_day_;
             std::unique_ptr<Day> filter_until_day_;
 
-            const DayTime pause_begin_{12,45,0};
-            const DayTime pause_end_{13,15,0};
+            const DayTime pause_begin_{12,40,0};
+            const DayTime pause_end_{13,25,0};
             const Duration minimal_pause_() const {return pause_end_ - pause_begin_;}
     };
     inline std::ostream &operator<<(std::ostream &os, const Timesheet &ts)
