@@ -73,7 +73,14 @@ namespace time_track {
             else if (is("-r", "--hour-rate"))
             {
                 MSS(pop_arg(tmp), log.error() << "Expected hour rate to be set" << std::endl);
-                hour_rate = std::stod(tmp);
+                try
+                {
+                    hour_rate = std::stod(tmp);
+                }
+                catch (...)
+                {
+                    MSS(false, log.error() << "Could not interpret hour rate from '" << tmp << "'" << std::endl);
+                }
             }
             else MSS(false, log.error() << "Unknown argument " << arg << std::endl);
         }
