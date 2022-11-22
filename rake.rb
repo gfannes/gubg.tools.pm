@@ -1,5 +1,5 @@
 require("gubg/shared")
-include GUBG
+include Gubg
 
 here = File.dirname(__FILE__)
 

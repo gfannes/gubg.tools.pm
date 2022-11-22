@@ -1,6 +1,6 @@
 require_relative("../gubg.build/bootstrap.rb")
 require("gubg/shared")
-include GUBG
+include Gubg
 
 task :prepare do
 	case os
