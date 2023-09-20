@@ -16,9 +16,13 @@ namespace :"tools.pm" do
 	
 	task :install do |t, args|
 		require("gubg/build/Cooker")
-		cooker = Build::Cooker.new().option("c++.std", 17).option("release").output("bin")
 
-		recipes = filter_recipes(args, %w[time_track pit pigr])
+		mode = :release
+		mode = :debug
+		
+		cooker = Build::Cooker.new().option("c++.std", 20).option(mode).output("bin")
+
+		recipes = filter_recipes(args, %w[time_track pit pigr org])
 
 		cooker.generate(:ninja, *recipes).ninja()
 	end

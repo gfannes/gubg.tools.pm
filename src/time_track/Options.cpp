@@ -2,6 +2,7 @@
 
 #include <gubg/mss.hpp>
 
+#include <cstdint>
 #include <termcolor/termcolor.hpp>
 
 #include <sstream>

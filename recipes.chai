@@ -1,14 +1,14 @@
 root.recipe("time_track", TargetType.Executable, fun(r){
-    r.add("src/app", "time_track/**.cpp")
-    r.add("src/app", "time_track/**.hpp")
+    r.add("src", "time_track/**.cpp")
+    r.add("src", "time_track/**.hpp")
     r.depends_on("termcolor")
 
     for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
     })
 
 root.recipe("pa", TargetType.Executable, fun(r){
-    r.add("src/app", "pa/**.cpp")
-    r.add("src/app", "pa/**.hpp")
+    r.add("src", "pa/**.cpp")
+    r.add("src", "pa/**.hpp")
 
     for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
     r.depends_on("chai/func")
@@ -20,13 +20,19 @@ root.recipe("pa", TargetType.Executable, fun(r){
     })
 
 root.recipe("pit", TargetType.Executable, fun(r){
-    r.add("src/app", "pit/**.cpp")
-    r.add("src/app", "pit/**.hpp")
+    r.add("src", "pit/**.cpp")
+    r.add("src", "pit/**.hpp")
+    for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
+    })
+
+root.recipe("org", TargetType.Executable, fun(r){
+    r.add("src", "org/**.cpp")
+    r.add("src", "org/**.hpp")
     for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
     })
 
 root.recipe("pigr", TargetType.Executable, fun(r){
-    r.add("src/app", "pigr/**.cpp")
-    r.add("src/app", "pigr/**.hpp")
+    r.add("src", "pigr/**.cpp")
+    r.add("src", "pigr/**.hpp")
     for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
     })
