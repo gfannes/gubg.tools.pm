@@ -8,7 +8,7 @@ namespace org {
     {
         MSS_BEGIN(bool);
 
-        MSS(!!options_.filepath, log_.error() << "Expected filepath to be set" << std::endl);
+        MSS(!options_.filepath.empty(), log_.error() << "Expected filepath to be set" << std::endl);
 
         MSS_END();
     }

@@ -1,7 +1,9 @@
 #include <org/Options.hpp>
 
+#include <gubg/Strange.hpp>
 #include <gubg/cli/Range.hpp>
 #include <gubg/mss.hpp>
+#include <gubg/string/concat.hpp>
 
 namespace org {
 
@@ -20,7 +22,18 @@ namespace org {
             };
             if (false) {}
             else if (is("-i", "--input"))
-                MSS(argr.pop(filepath.emplace()));
+                MSS(argr.pop(filepath));
+            else if (is("-r", "--range"))
+            {
+                MSS(argr.pop(arg));
+                gubg::Strange strange{arg};
+                auto &range = ranges.emplace_back();
+                MSS(strange.pop_decimal(range.begin));
+                MSS(strange.pop_if(':'));
+                MSS(strange.pop_decimal(range.size));
+            }
+            else if (is("-p", "--primary"))
+                MSS(argr.pop(primary));
             else
                 MSS(false, log_.error() << "Unknown argument '" << arg << "'" << std::endl);
         }
@@ -32,17 +45,36 @@ namespace org {
     {
         MSS_BEGIN(bool);
 
-        auto getenv = [](const std::string &name, auto &&cb) {
-            if (auto cstr = std::getenv(name.c_str()); !!cstr)
-                cb(cstr);
+        auto getenv = [](std::string &dst, const std::string &name) {
+            MSS_BEGIN(bool);
+            auto cstr = std::getenv(name.c_str());
+            MSS(!!cstr);
+            dst = cstr;
+            MSS_END();
         };
 
         switch (env_vars)
         {
             case EnvVars::Helix:
             {
-                if (!filepath)
-                    getenv("helix_filepath", [&](auto value) { filepath = value; });
+                if (filepath.empty())
+                    MSS(getenv(filepath, "helix_filepath"));
+                if (ranges.empty())
+                {
+                    std::string str;
+                    MSS(getenv(str, "helix_range_count"));
+                    const Count range_count = std::stoul(str);
+
+                    for (auto i = 0; i < range_count; ++i)
+                    {
+                        MSS(getenv(str, gubg::string::concat("helix_range_", i)));
+                        gubg::Strange strange{str};
+                        auto &range = ranges.emplace_back();
+                        MSS(strange.pop_decimal(range.begin));
+                        MSS(strange.pop_if(':'));
+                        MSS(strange.pop_decimal(range.size));
+                    }
+                }
             }
             break;
         }
@@ -53,8 +85,12 @@ namespace org {
     void Options::write(gubg::naft::Node &p) const
     {
         auto n = p.node("Options");
-        if (filepath)
-            n.attr("filepath", *filepath);
+        n.attr("filepath", filepath);
+        for (const auto &range : ranges)
+        {
+            auto nn = n.node("Range");
+            nn.attr("begin", range.begin).attr("size", range.size);
+        }
     }
 
 } // namespace org

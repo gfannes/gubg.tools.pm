@@ -1,13 +1,15 @@
 #ifndef HEADER_org_Options_hpp_ALREAD_INCLUDED
 #define HEADER_org_Options_hpp_ALREAD_INCLUDED
 
+#include <org/types.hpp>
+
+#include <gubg/Logger.hpp>
 #include <gubg/naft/Node.hpp>
 #include <gubg/naft/stream.hpp>
-#include <gubg/Logger.hpp>
 
 #include <cstdlib>
-#include <optional>
 #include <string>
+#include <vector>
 
 namespace org {
 
@@ -16,12 +18,20 @@ namespace org {
         Helix,
     };
 
+    struct Range
+    {
+        Ix begin = 0;
+        Size size = 0;
+    };
+
     class Options
     {
     public:
         std::string exe_name;
 
-        std::optional<std::string> filepath;
+        std::string filepath;
+        std::vector<Range> ranges;
+        Ix primary = 0;
 
         bool init(int argc, const char **argv);
         bool init(EnvVars);
