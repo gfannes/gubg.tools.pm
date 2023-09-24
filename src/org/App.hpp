@@ -2,6 +2,7 @@
 #define HEADER_org_App_hpp_ALREAD_INCLUDED
 
 #include <org/Options.hpp>
+#include <org/tree/Node.hpp>
 
 #include <gubg/Logger.hpp>
 
@@ -23,6 +24,8 @@ namespace org {
         const Options &options_;
 
         gubg::Logger log_;
+
+        tree::Node root_;
     };
 
 } // namespace org
