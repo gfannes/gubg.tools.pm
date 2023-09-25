@@ -13,9 +13,15 @@ namespace org {
         MSS(options.init(EnvVars::Helix));
         std::cout << options << std::endl;
 
-        App app{options};
-
-        MSS(app.run());
+        if (options.print_help)
+        {
+            std::cout << options.help();
+        }
+        else
+        {
+            App app{options};
+            MSS(app.run());
+        }
 
         MSS_END();
     }

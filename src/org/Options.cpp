@@ -5,6 +5,8 @@
 #include <gubg/mss.hpp>
 #include <gubg/string/concat.hpp>
 
+#include <sstream>
+
 namespace org {
 
     bool Options::init(int argc, const char **argv)
@@ -21,6 +23,8 @@ namespace org {
                 return arg == sh || arg == lh;
             };
             if (false) {}
+            else if (is("-h", "--help"))
+                print_help = true;
             else if (is("-i", "--input"))
                 MSS(argr.pop(filepath));
             else if (is("-r", "--range"))
@@ -48,7 +52,7 @@ namespace org {
         auto getenv = [](std::string &dst, const std::string &name) {
             MSS_BEGIN(bool);
             auto cstr = std::getenv(name.c_str());
-            MSS(!!cstr);
+            MSS_Q(!!cstr);
             dst = cstr;
             MSS_END();
         };
@@ -58,21 +62,23 @@ namespace org {
             case EnvVars::Helix:
             {
                 if (filepath.empty())
-                    MSS(getenv(filepath, "helix_filepath"));
+                    getenv(filepath, "helix_filepath");
                 if (ranges.empty())
                 {
                     std::string str;
-                    MSS(getenv(str, "helix_range_count"));
-                    const Count range_count = std::stoul(str);
-
-                    for (auto i = 0; i < range_count; ++i)
+                    if (getenv(str, "helix_range_count"))
                     {
-                        MSS(getenv(str, gubg::string::concat("helix_range_", i)));
-                        gubg::Strange strange{str};
-                        auto &range = ranges.emplace_back();
-                        MSS(strange.pop_decimal(range.begin));
-                        MSS(strange.pop_if(':'));
-                        MSS(strange.pop_decimal(range.size));
+                        const Count range_count = std::stoul(str);
+
+                        for (auto i = 0; i < range_count; ++i)
+                        {
+                            MSS(getenv(str, gubg::string::concat("helix_range_", i)));
+                            gubg::Strange strange{str};
+                            auto &range = ranges.emplace_back();
+                            MSS(strange.pop_decimal(range.begin));
+                            MSS(strange.pop_if(':'));
+                            MSS(strange.pop_decimal(range.size));
+                        }
                     }
                 }
             }
@@ -80,6 +86,14 @@ namespace org {
         }
 
         MSS_END();
+    }
+
+    std::string Options::help() const
+    {
+        std::ostringstream oss;
+        oss << "Help for " << exe_name << std::endl;
+        oss << "Created by Geert Fannes" << std::endl;
+        return oss.str();
     }
 
     void Options::write(gubg::naft::Node &p) const

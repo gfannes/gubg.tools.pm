@@ -25,10 +25,22 @@ root.recipe("pit", TargetType.Executable, fun(r){
     for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
     })
 
-root.recipe("org", TargetType.Executable, fun(r){
-    r.add("src", "org/**.cpp")
-    r.add("src", "org/**.hpp")
-    for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
+root.book("org", fun(b){
+    b.recipe("func", fun(r){
+        r.add("src", "org/**.[hc]pp")
+        r.remove("src", "org/main.cpp")
+        for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
+        })
+    b.recipe("app", TargetType.Executable, fun(r){
+        r.name = "org";
+        r.depends_on("func");
+        r.add("src", "org/main.cpp")
+        })
+    b.recipe("ut", TargetType.Executable, fun(rcp){
+        rcp.add("test/src", "org/**.cpp")
+        rcp.depends_on("func")
+        rcp.depends_on("catch/main")
+        })
     })
 
 root.recipe("pigr", TargetType.Executable, fun(r){

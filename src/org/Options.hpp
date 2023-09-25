@@ -29,12 +29,15 @@ namespace org {
     public:
         std::string exe_name;
 
+        bool print_help = false;
         std::string filepath;
         std::vector<Range> ranges;
         Ix primary = 0;
 
         bool init(int argc, const char **argv);
         bool init(EnvVars);
+
+        std::string help() const;
 
         void write(gubg::naft::Node &) const;
 
