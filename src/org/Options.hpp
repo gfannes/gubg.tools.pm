@@ -3,6 +3,7 @@
 
 #include <org/types.hpp>
 
+#include <gubg/ix/Range.hpp>
 #include <gubg/Logger.hpp>
 #include <gubg/naft/Node.hpp>
 #include <gubg/naft/stream.hpp>
@@ -18,12 +19,6 @@ namespace org {
         Helix,
     };
 
-    struct Range
-    {
-        Ix begin = 0;
-        Size size = 0;
-    };
-
     class Options
     {
     public:
@@ -31,8 +26,10 @@ namespace org {
 
         bool print_help = false;
         std::string filepath;
-        std::vector<Range> ranges;
+        std::vector<gubg::ix::Range> ranges;
         Ix primary = 0;
+
+        std::string state;
 
         bool init(int argc, const char **argv);
         bool init(EnvVars);

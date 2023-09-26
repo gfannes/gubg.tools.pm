@@ -49,4 +49,25 @@ namespace org { namespace tree {
         }
     }
 
+    Node *Node::find(Ix ix)
+    {
+        return find_recursive_(ix, *this);
+    }
+
+    // Privates
+    Node *Node::find_recursive_(Ix ix, Node &node)
+    {
+        if (node.ix_range.contains(ix))
+        {
+            Nodes *childs = std::get_if<Nodes>(&node.data);
+            if (!childs)
+                return &node;
+
+            for (auto &child : *childs)
+                if (child.ix_range.contains(ix))
+                    return find_recursive_(ix, child);
+        }
+        return nullptr;
+    }
+
 }} // namespace org::tree

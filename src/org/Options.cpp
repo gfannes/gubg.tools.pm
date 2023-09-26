@@ -1,8 +1,8 @@
 #include <org/Options.hpp>
 
-#include <gubg/Strange.hpp>
 #include <gubg/cli/Range.hpp>
 #include <gubg/mss.hpp>
+#include <gubg/Strange.hpp>
 #include <gubg/string/concat.hpp>
 
 #include <sstream>
@@ -22,7 +22,9 @@ namespace org {
             auto is = [&](const char *sh, const char *lh) {
                 return arg == sh || arg == lh;
             };
-            if (false) {}
+            if (false)
+            {
+            }
             else if (is("-h", "--help"))
                 print_help = true;
             else if (is("-i", "--input"))
@@ -31,13 +33,17 @@ namespace org {
             {
                 MSS(argr.pop(arg));
                 gubg::Strange strange{arg};
-                auto &range = ranges.emplace_back();
-                MSS(strange.pop_decimal(range.begin));
+                std::size_t begin, size;
+                MSS(strange.pop_decimal(begin));
                 MSS(strange.pop_if(':'));
-                MSS(strange.pop_decimal(range.size));
+                MSS(strange.pop_decimal(size));
+
+                ranges.emplace_back(begin, size);
             }
             else if (is("-p", "--primary"))
                 MSS(argr.pop(primary));
+            else if (is("-s", "--state"))
+                MSS(argr.pop(state));
             else
                 MSS(false, log_.error() << "Unknown argument '" << arg << "'" << std::endl);
         }
@@ -74,10 +80,11 @@ namespace org {
                         {
                             MSS(getenv(str, gubg::string::concat("helix_range_", i)));
                             gubg::Strange strange{str};
-                            auto &range = ranges.emplace_back();
-                            MSS(strange.pop_decimal(range.begin));
+                            std::size_t begin, size;
+                            MSS(strange.pop_decimal(begin));
                             MSS(strange.pop_if(':'));
-                            MSS(strange.pop_decimal(range.size));
+                            MSS(strange.pop_decimal(size));
+                            ranges.emplace_back(begin, size);
                         }
                     }
                 }
@@ -92,6 +99,11 @@ namespace org {
     {
         std::ostringstream oss;
         oss << "Help for " << exe_name << std::endl;
+        oss << "    -h --help    Print this help" << std::endl;
+        oss << "    -i --input   Input filepath" << std::endl;
+        oss << "    -r --range   Range in format 'index:size'" << std::endl;
+        oss << "    -p --primary Primary range" << std::endl;
+        oss << "    -s --state   New state for primary range" << std::endl;
         oss << "Created by Geert Fannes" << std::endl;
         return oss.str();
     }
@@ -103,7 +115,7 @@ namespace org {
         for (const auto &range : ranges)
         {
             auto nn = n.node("Range");
-            nn.attr("begin", range.begin).attr("size", range.size);
+            nn.attr("start", range.start()).attr("size", range.size());
         }
     }
 

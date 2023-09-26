@@ -1,8 +1,13 @@
 #include <org/App.hpp>
+
 #include <org/tree/Parser.hpp>
+#include <org/tree/Prefix.hpp>
+#include <org/tree/Writer.hpp>
 
 #include <gubg/file/Filesystem.hpp>
 #include <gubg/mss.hpp>
+
+#include <fstream>
 
 namespace org {
 
@@ -18,6 +23,34 @@ namespace org {
         tree::Parser parser;
         MSS(parser.parse(content));
         std::cout << parser.root << std::endl;
+
+        tree::Node &root = parser.root;
+
+        if (!options_.state.empty())
+        {
+            MSS(options_.primary < options_.ranges.size());
+            const gubg::ix::Range &range = options_.ranges[options_.primary];
+            tree::Node *node = root.find(range.start());
+            MSS(!!node);
+            std::cout << "Found node " << *node << std::endl;
+
+            {
+                tree::Content *content = std::get_if<tree::Content>(&node->data);
+                MSS(!!content);
+                tree::Prefix prefix;
+                MSS(prefix.parse(content->content));
+                prefix.state = options_.state;
+                std::string tmp;
+                MSS(prefix.serialize(tmp));
+                content->content = tmp;
+            }
+
+            tree::Writer writer;
+            content.resize(0);
+            MSS(writer.write(content, parser.root));
+
+            MSS(gubg::file::write(content, options_.filepath));
+        }
 
         MSS_END();
     }

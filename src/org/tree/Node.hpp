@@ -3,6 +3,7 @@
 
 #include <org/tree/Content.hpp>
 #include <org/tree/Type.hpp>
+#include <org/types.hpp>
 
 #include <gubg/ix/Range.hpp>
 #include <gubg/naft/stream.hpp>
@@ -33,9 +34,12 @@ namespace org { namespace tree {
         Content &content() { return std::get<Content>(data); }
         const Content &content() const { return std::get<Content>(data); }
 
+        Node *find(Ix);
+
         void write(gubg::naft::Node &parent) const;
 
     private:
+        static Node *find_recursive_(Ix, Node &);
     };
 
 }} // namespace org::tree

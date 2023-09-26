@@ -18,7 +18,7 @@ namespace :"tools.pm" do
 		require("gubg/build/Cooker")
 
 		mode = :release
-		# mode = :debug
+		mode = :debug
 		
 		cooker = Build::Cooker.new().option("c++.std", 20).option(mode).output("bin")
 
