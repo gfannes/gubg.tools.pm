@@ -2,6 +2,7 @@
 #define HEADER_org_types_hpp_ALREAD_INCLUDED
 
 #include <cstdint>
+#include <cstddef>
 
 namespace org {
     using Ix = std::size_t;
