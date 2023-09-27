@@ -20,7 +20,7 @@ namespace org { namespace tree {
 
         strange.strip_left(' ');
 
-        for (auto some_state : {"TODO", "NEXT"})
+        for (auto some_state : {"TODO", "QUESTION", "ACTIVE", "NEXT", "FOCUS", "CHECK", "REWORK", "WAITING", "BLOCKED", "CANCELED", "DONE"})
             if (strange.pop_if(some_state) && strange.pop_if(' '))
                 state = some_state;
 
@@ -35,8 +35,9 @@ namespace org { namespace tree {
         auto append = [&](const std::optional<std::string> &str_opt) {
             if (str_opt)
             {
+                if (!dst.empty() && dst[dst.size() - 1] != ' ')
+                    dst.push_back(' ');
                 dst += *str_opt;
-                dst.push_back(' ');
             }
         };
         append(indent);
