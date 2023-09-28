@@ -18,6 +18,8 @@ namespace org { namespace tree {
 
         bool serialize(std::string &) const;
 
+        void reset();
+
     private:
     };
 

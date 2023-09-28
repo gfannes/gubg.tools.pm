@@ -39,7 +39,17 @@ namespace org {
                 MSS(!!content);
                 tree::Prefix prefix;
                 MSS(prefix.parse(content->content));
-                prefix.state = options_.state;
+                const bool is_bullet = prefix.indent && prefix.indent->back() == '-';
+                if (options_.state == "-")
+                    prefix.state.reset();
+                else if (is_bullet && options_.state == "TODO")
+                    prefix.state = "[ ]";
+                else if (is_bullet && options_.state == "DONE")
+                    prefix.state = "[X]";
+                else if (is_bullet && options_.state == "QUESTION")
+                    prefix.state = "[?]";
+                else
+                    prefix.state = options_.state;
                 std::string tmp;
                 MSS(prefix.serialize(tmp));
                 content->content = tmp;
