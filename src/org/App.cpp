@@ -50,6 +50,8 @@ namespace org {
                     prefix.state = "[?]";
                 else
                     prefix.state = options_.state;
+                if (options_.tag)
+                    prefix.tags = *options_.tag;
                 std::string tmp;
                 MSS(prefix.serialize(tmp));
                 content->content = tmp;

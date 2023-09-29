@@ -3,8 +3,8 @@
 
 #include <org/types.hpp>
 
-#include <gubg/ix/Range.hpp>
 #include <gubg/Logger.hpp>
+#include <gubg/ix/Range.hpp>
 #include <gubg/naft/Node.hpp>
 #include <gubg/naft/stream.hpp>
 
@@ -30,6 +30,7 @@ namespace org {
         Ix primary = 0;
 
         std::string state;
+        std::optional<std::string> tag;
 
         bool init(int argc, const char **argv);
         bool init(EnvVars);

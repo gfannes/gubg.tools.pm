@@ -1,8 +1,8 @@
 #include <org/Options.hpp>
 
+#include <gubg/Strange.hpp>
 #include <gubg/cli/Range.hpp>
 #include <gubg/mss.hpp>
-#include <gubg/Strange.hpp>
 #include <gubg/string/concat.hpp>
 
 #include <sstream>
@@ -22,9 +22,7 @@ namespace org {
             auto is = [&](const char *sh, const char *lh) {
                 return arg == sh || arg == lh;
             };
-            if (false)
-            {
-            }
+            if (false) {}
             else if (is("-h", "--help"))
                 print_help = true;
             else if (is("-i", "--input"))
@@ -44,6 +42,8 @@ namespace org {
                 MSS(argr.pop(primary));
             else if (is("-s", "--state"))
                 MSS(argr.pop(state));
+            else if (is("-t", "--tag"))
+                MSS(argr.pop(tag.emplace()));
             else
                 MSS(false, log_.error() << "Unknown argument '" << arg << "'" << std::endl);
         }
@@ -104,6 +104,7 @@ namespace org {
         oss << "    -r --range   Range in format 'index:size'" << std::endl;
         oss << "    -p --primary Primary range" << std::endl;
         oss << "    -s --state   New state for primary range" << std::endl;
+        oss << "    -t --tag     New tag for primary range" << std::endl;
         oss << "Created by Geert Fannes" << std::endl;
         return oss.str();
     }

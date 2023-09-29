@@ -16,46 +16,82 @@ namespace org { namespace tree {
 
         reset();
 
-        auto strip_and_append = [&](char ch) {
-            if (const auto count = strange.strip_left(ch); count > 0)
+        // Indent
+        {
+            const auto sp = strange;
+
+            auto strip_and_append = [&](char ch) {
+                if (const auto count = strange.strip_left(ch); count > 0)
+                {
+                    if (!indent)
+                        indent.emplace();
+                    indent->append(count, ch);
+                    return true;
+                }
+                return false;
+            };
+
+            strip_and_append(' ');
+
+            for (auto ch : {'#', '*', '-'})
+                if (strip_and_append(ch))
+                    break;
+
+            if (!strange.pop_if(' '))
             {
-                if (!indent)
-                    indent.emplace();
-                indent->append(count, ch);
-                return true;
+                indent.reset();
+                strange = sp;
             }
-            return false;
-        };
+        }
 
-        strip_and_append(' ');
+        // State
+        {
+            for (auto some_state : {"TODO", "QUESTION", "ACTIVE", "NEXT", "FOCUS", "CHECK", "REWORK", "WAITING", "BLOCKED", "CANCELED", "DONE"})
+                if (!state)
+                {
+                    const auto sp = strange;
+                    if (strange.pop_if(some_state) && strange.pop_if(' '))
+                        state = some_state;
+                    else
+                        strange = sp;
+                }
 
-        for (auto ch : {'#', '*', '-'})
-            if (strip_and_append(ch))
-                break;
-
-        strange.strip_left(' ');
-
-        for (auto some_state : {"TODO", "QUESTION", "ACTIVE", "NEXT", "FOCUS", "CHECK", "REWORK", "WAITING", "BLOCKED", "CANCELED", "DONE"})
+            gubg::Strange tmp;
             if (!state)
             {
                 const auto sp = strange;
-                if (strange.pop_if(some_state) && strange.pop_if(' '))
-                    state = some_state;
+                if (strange.pop_bracket(tmp, "[]") && tmp.size() <= 1 && strange.pop_if(' '))
+                    state = gubg::string::concat('[', tmp.str(), ']');
                 else
                     strange = sp;
             }
-
-        gubg::Strange tmp;
-        if (!state)
-        {
-            const auto sp = strange;
-            if (strange.pop_bracket(tmp, "[]") && tmp.size() <= 1 && strange.pop_if(' '))
-                state = gubg::string::concat('[', tmp.str(), ']');
-            else
-                strange = sp;
         }
 
-        rest = strange.str();
+        // Rest and Tags
+        {
+            std::optional<std::size_t> start_ix;
+            if (!strange.empty() && strange.back() == ':')
+            {
+                for (auto ix : gubg::ix::make_range(strange.size() - 1).reverse())
+                {
+                    const char ch = strange[ix];
+                    if (ch == ':')
+                        start_ix = ix;
+                    else if (ch == ' ')
+                        break;
+                }
+            }
+
+            if (start_ix)
+            {
+                MSS(strange.pop_count(rest.emplace(), *start_ix));
+                tags = strange.str();
+            }
+            else
+            {
+                rest = strange.str();
+            }
+        }
 
         MSS_END();
     }
@@ -74,6 +110,7 @@ namespace org { namespace tree {
         append(indent);
         append(state);
         append(rest);
+        append(tags);
         MSS_END();
     }
 

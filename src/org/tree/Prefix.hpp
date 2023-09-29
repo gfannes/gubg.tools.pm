@@ -13,6 +13,7 @@ namespace org { namespace tree {
         std::optional<std::string> indent;
         std::optional<std::string> state;
         std::optional<std::string> rest;
+        std::optional<std::string> tags;
 
         bool parse(gubg::Strange);
 
