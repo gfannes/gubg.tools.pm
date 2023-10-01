@@ -4,6 +4,7 @@
 #include <org/tree/Prefix.hpp>
 #include <org/tree/Writer.hpp>
 
+#include <gubg/Signaled.hpp>
 #include <gubg/Strange.hpp>
 #include <gubg/file/Filesystem.hpp>
 #include <gubg/map.hpp>
@@ -112,9 +113,11 @@ namespace org {
     {
         MSS_BEGIN(bool);
 
+        nlohmann::json request;
+        gubg::Signaled<nlohmann::json> response;
+
         for (bool do_continue = true; do_continue;)
         {
-            nlohmann::json request;
             log_.os(0) << std::endl;
             MSS(read_json_message_(request));
             log_.os(0) << C(request) << std::endl;
@@ -130,11 +133,11 @@ namespace org {
             if (request.count("id"))
                 MSS(read_(id.emplace(), "id", request));
 
-            std::optional<nlohmann::json> response;
+            response.set(false);
             if (method == "initialize")
             {
                 MSS(!!id);
-                response.emplace() = {
+                response.set(true).ref() = {
                     {"jsonrpc", jsonrpc},
                     {"id", *id},
                     {"result", {{"capabilities", {{"definitionProvider", true}}}, {"serverInfo", {{"name", "org"}, {"version", "v1"}}}}},
@@ -147,7 +150,7 @@ namespace org {
             else if (method == "shutdown")
             {
                 MSS(!!id);
-                response.emplace() = {
+                response.set(true).ref() = {
                     {"jsonrpc", jsonrpc},
                     {"id", *id},
                     {"result", nullptr},
@@ -161,7 +164,7 @@ namespace org {
             else if (method == "textDocument/definition")
             {
                 MSS(!!id);
-                response.emplace() = {
+                response.set(true).ref() = {
                     {"jsonrpc", jsonrpc},
                     {"id", *id},
                     {"result", {{{"range", {{"start", {{"character", 0}, {"line", 0}}}, {"end", {{"character", 0}, {"line", 0}}}}}, {"uri", "file:///home/geertf/tmp/a.txt"}}}},
