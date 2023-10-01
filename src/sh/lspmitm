@@ -77,7 +77,7 @@ File.open('/tmp/lspmitm.log', 'w') do |log_fo|
     log_fo.puts("Startup #{Time.now()}")
     log_fo.puts("ARGV: #{ARGV}")
 
-    Open3.popen2('clangd', '--log=verbose') do |clangd_input, clangd_output, thr|
+    Open3.popen2('clangd') do |clangd_input, clangd_output, thr|
 
         c2s = Forwarder.new(editor_output, clangd_input, "C2S", log: log_fo)
         s2c = Forwarder.new(clangd_output, editor_input, "S2C", log: log_fo)
