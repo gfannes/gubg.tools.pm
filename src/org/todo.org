@@ -6,13 +6,13 @@
 
 * DONE Integrate json library into gubg
 
-* Add LSP mode to org
+* DONE Add LSP mode to org
 
-* Parse request in org
+* DONE Parse request in org
 
-* Generate response in org
+* DONE Generate response in org
 
-* Create flow in org
+* DONE Create flow in org
 
 * Parse a line on .md or .org and check for file links
   - Support definition LSP command
