@@ -4,6 +4,7 @@
 #include <org/tree/Prefix.hpp>
 #include <org/tree/Writer.hpp>
 
+#include <gubg/Strange.hpp>
 #include <gubg/file/Filesystem.hpp>
 #include <gubg/mss.hpp>
 
@@ -12,6 +13,21 @@
 namespace org {
 
     bool App::run()
+    {
+        MSS_BEGIN(bool);
+
+        switch (options_.mode)
+        {
+            case Mode::Normal: MSS(run_normal_()); break;
+            case Mode::LSP: MSS(run_lsp_()); break;
+            default: MSS(false, log_.error() << "Unknown mode '" << (int)options_.mode << "'"); break;
+        }
+
+        MSS_END();
+    }
+
+    // Privates
+    bool App::run_normal_()
     {
         MSS_BEGIN(bool);
 
@@ -63,6 +79,35 @@ namespace org {
 
             MSS(gubg::file::write(content, options_.filepath));
         }
+
+        MSS_END();
+    }
+
+    bool App::run_lsp_()
+    {
+        MSS_BEGIN(bool);
+
+        std::string msg;
+        MSS(read_json_message_(msg));
+        log_.os(0) << C(msg) << std::endl;
+
+        MSS_END();
+    }
+
+    bool App::read_json_message_(std::string &msg) const
+    {
+        MSS_BEGIN(bool);
+
+        std::getline(std::cin, msg);
+        gubg::Strange strange{msg};
+        MSS(strange.pop_if("Content-Length: "));
+
+        std::size_t size;
+        MSS(strange.pop_decimal(size));
+
+        std::getline(std::cin, msg);
+        msg.resize(size);
+        std::cin.read(msg.data(), size);
 
         MSS_END();
     }

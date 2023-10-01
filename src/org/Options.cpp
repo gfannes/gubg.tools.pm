@@ -25,6 +25,19 @@ namespace org {
             if (false) {}
             else if (is("-h", "--help"))
                 print_help = true;
+            else if (is("-m", "--mode"))
+            {
+                std::string mode_str;
+                MSS(argr.pop(mode_str));
+                if (mode_str == "normal")
+                    mode = Mode::Normal;
+                else if (mode_str == "lsp")
+                    mode = Mode::LSP;
+                else
+                    MSS(false, log_.error() << "Unknown mode '" << mode_str << "'" << std::endl);
+            }
+            else if (is("-l", "--log"))
+                MSS(argr.pop(log_filepath));
             else if (is("-i", "--input"))
                 MSS(argr.pop(filepath));
             else if (is("-r", "--range"))
@@ -100,6 +113,8 @@ namespace org {
         std::ostringstream oss;
         oss << "Help for " << exe_name << std::endl;
         oss << "    -h --help    Print this help" << std::endl;
+        oss << "    -m --mode    Mode: normal|lsp [default is normal]" << std::endl;
+        oss << "    -l --log     Filepath used for logging" << std::endl;
         oss << "    -i --input   Input filepath" << std::endl;
         oss << "    -r --range   Range in format 'index:size'" << std::endl;
         oss << "    -p --primary Primary range" << std::endl;

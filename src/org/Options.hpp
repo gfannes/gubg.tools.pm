@@ -19,12 +19,23 @@ namespace org {
         Helix,
     };
 
+    enum class Mode
+    {
+        Normal,
+        LSP,
+    };
+
     class Options
     {
     public:
         std::string exe_name;
 
         bool print_help = false;
+
+        Mode mode = Mode::Normal;
+
+        std::string log_filepath;
+
         std::string filepath;
         std::vector<gubg::ix::Range> ranges;
         Ix primary = 0;

@@ -14,12 +14,15 @@ namespace org {
     {
     public:
         App(const Options &options)
-            : options_(options) {}
+            : options_(options), log_({.filename = options.log_filepath}) {}
 
         bool run();
 
     private:
         bool load_env_vars_();
+        bool run_normal_();
+        bool run_lsp_();
+        bool read_json_message_(std::string &msg) const;
 
         const Options &options_;
 
