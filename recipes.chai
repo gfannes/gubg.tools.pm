@@ -30,6 +30,7 @@ root.book("org", fun(b){
         r.add("src", "org/**.[hc]pp")
         r.remove("src", "org/main.cpp")
         for (e: ["std", "io", "algo"]) { r.depends_on("gubg/${e}/func") }
+        r.depends_on("nlohmann/json")
         })
     b.recipe("app", TargetType.Executable, fun(r){
         r.name = "org";

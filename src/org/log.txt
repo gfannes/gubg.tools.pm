@@ -1,0 +1,41 @@
+Startup 2023-10-01 13:57:00 +0200
+ARGV: ["--header-insertion=never"]
+C2S-0: 2023-10-01 13:57:00 +0200
+C2S-0: {"jsonrpc":"2.0","method":"initialize","params":{"capabilities":{"general":{"positionEncodings":["utf-8","utf-32","utf-16"]},"textDocument":{"codeAction":{"codeActionLiteralSupport":{"codeActionKind":{"valueSet":["","quickfix","refactor","refactor.extract","refactor.inline","refactor.rewrite","source","source.organizeImports"]}},"dataSupport":true,"disabledSupport":true,"isPreferredSupport":true,"resolveSupport":{"properties":["edit","command"]}},"completion":{"completionItem":{"deprecatedSupport":true,"insertReplaceSupport":true,"resolveSupport":{"properties":["documentation","detail","additionalTextEdits"]},"snippetSupport":true,"tagSupport":{"valueSet":[1]}},"completionItemKind":{}},"hover":{"contentFormat":["markdown"]},"inlayHint":{"dynamicRegistration":false},"publishDiagnostics":{"versionSupport":true},"rename":{"dynamicRegistration":false,"honorsChangeAnnotations":false,"prepareSupport":true},"signatureHelp":{"signatureInformation":{"activeParameterSupport":true,"documentationFormat":["markdown"],"parameterInformation":{"labelOffsetSupport":true}}}},"window":{"workDoneProgress":true},"workspace":{"applyEdit":true,"configuration":true,"didChangeConfiguration":{"dynamicRegistration":false},"didChangeWatchedFiles":{"dynamicRegistration":true,"relativePatternSupport":false},"executeCommand":{"dynamicRegistration":false},"inlayHint":{"refreshSupport":false},"symbol":{"dynamicRegistration":false},"workspaceEdit":{"documentChanges":true,"failureHandling":"abort","normalizesLineEndings":false,"resourceOperations":["create","rename","delete"]},"workspaceFolders":true}},"clientInfo":{"name":"helix","version":"23.05 (941dc6c6)"},"processId":277871,"rootPath":"/home/geertf/tmp","rootUri":"file:///home/geertf/tmp","workspaceFolders":[{"name":"tmp","uri":"file:///home/geertf/tmp"}]},"id":0}
+
+S2C-0: 2023-10-01 13:57:00 +0200
+S2C-0: {"id":0,"jsonrpc":"2.0","result":{"capabilities":{"astProvider":true,"callHierarchyProvider":true,"clangdInlayHintsProvider":true,"codeActionProvider":{"codeActionKinds":["quickfix","refactor","info"]},"compilationDatabase":{"automaticReload":true},"completionProvider":{"resolveProvider":false,"triggerCharacters":[".","<",">",":","\"","/","*"]},"declarationProvider":true,"definitionProvider":true,"documentFormattingProvider":true,"documentHighlightProvider":true,"documentLinkProvider":{"resolveProvider":false},"documentOnTypeFormattingProvider":{"firstTriggerCharacter":"\n","moreTriggerCharacter":[]},"documentRangeFormattingProvider":true,"documentSymbolProvider":true,"executeCommandProvider":{"commands":["clangd.applyFix","clangd.applyTweak"]},"foldingRangeProvider":true,"hoverProvider":true,"implementationProvider":true,"inlayHintProvider":true,"memoryUsageProvider":true,"referencesProvider":true,"renameProvider":{"prepareProvider":true},"selectionRangeProvider":true,"semanticTokensProvider":{"full":{"delta":true},"legend":{"tokenModifiers":["declaration","definition","deprecated","deduced","readonly","static","abstract","virtual","dependentName","defaultLibrary","usedAsMutableReference","usedAsMutablePointer","constructorOrDestructor","userDefined","functionScope","classScope","fileScope","globalScope"],"tokenTypes":["variable","variable","parameter","function","method","function","property","variable","class","interface","enum","enumMember","type","type","unknown","namespace","typeParameter","concept","type","macro","modifier","operator","comment"]},"range":false},"signatureHelpProvider":{"triggerCharacters":["(",")","{","}","<",">",","]},"standardTypeHierarchyProvider":true,"textDocumentSync":{"change":2,"openClose":true,"save":true},"typeDefinitionProvider":true,"typeHierarchyProvider":true,"workspaceSymbolProvider":true},"serverInfo":{"name":"clangd","version":"clangd version 16.0.6 linux x86_64-pc-linux-gnu"}}}
+
+C2S-1: 2023-10-01 13:57:00 +0200
+C2S-1: {"jsonrpc":"2.0","method":"initialized","params":{}}
+
+C2S-2: 2023-10-01 13:57:00 +0200
+C2S-2: {"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"languageId":"cpp","text":"#include <concepts>\n#include <cstddef>\n#include <iostream>\n#include <vector>\n\nstruct A\n{\n    void f() const\n    {\n        std::cout << \"f()\" << std::endl;\n    }\n};\n\ntemplate<typename T>\nconcept HasF = requires {\n    {\n        std::declval<T>().f()\n    } -> std::same_as<void>;\n};\n\ntemplate<HasF T>\nstd::ostream &operator<<(std::ostream &os, const T &v)\n{\n    v.f();\n    return os;\n}\n\nint main(int argc, char *argv[])\n{\n    A a;\n    std::cout << a << std::endl;\n    return 0;\n}\n","uri":"file:///home/geertf/tmp/test.cpp","version":0}}}
+
+S2C-1: 2023-10-01 13:57:00 +0200
+S2C-1: {"jsonrpc":"2.0","method":"textDocument/publishDiagnostics","params":{"diagnostics":[],"uri":"file:///home/geertf/tmp/.clangd"}}
+
+C2S-3: 2023-10-01 13:57:00 +0200
+C2S-3: {"jsonrpc":"2.0","method":"textDocument/inlayHint","params":{"range":{"end":{"character":0,"line":33},"start":{"character":0,"line":0}},"textDocument":{"uri":"file:///home/geertf/tmp/test.cpp"}},"id":1}
+
+S2C-2: 2023-10-01 13:57:00 +0200
+S2C-2: {"jsonrpc":"2.0","method":"textDocument/publishDiagnostics","params":{"diagnostics":[],"uri":"file:///home/geertf/tmp/test.cpp","version":0}}
+
+S2C-3: 2023-10-01 13:57:00 +0200
+S2C-3: {"id":1,"jsonrpc":"2.0","result":[]}
+
+C2S-4: 2023-10-01 13:57:01 +0200
+C2S-4: {"jsonrpc":"2.0","method":"textDocument/definition","params":{"position":{"character":0,"line":0},"textDocument":{"uri":"file:///home/geertf/tmp/test.cpp"}},"id":2}
+
+S2C-4: 2023-10-01 13:57:01 +0200
+S2C-4: {"id":2,"jsonrpc":"2.0","result":[{"range":{"end":{"character":0,"line":0},"start":{"character":0,"line":0}},"uri":"file:///usr/include/c%2B%2B/13.2.1/concepts"}]}
+
+C2S-5: 2023-10-01 13:57:21 +0200
+C2S-5: {"jsonrpc":"2.0","method":"shutdown","id":3}
+
+S2C-5: 2023-10-01 13:57:21 +0200
+S2C-5: {"id":3,"jsonrpc":"2.0","result":null}
+
+C2S-6: 2023-10-01 13:57:21 +0200
+C2S-6: {"jsonrpc":"2.0","method":"exit"}
+

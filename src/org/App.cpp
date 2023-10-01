@@ -6,6 +6,7 @@
 
 #include <gubg/Strange.hpp>
 #include <gubg/file/Filesystem.hpp>
+#include <gubg/map.hpp>
 #include <gubg/mss.hpp>
 
 #include <fstream>
@@ -83,31 +84,86 @@ namespace org {
         MSS_END();
     }
 
+    bool App::read_(std::string &value, const std::string &name, const nlohmann::json &jobj)
+    {
+        MSS_BEGIN(bool);
+        auto it = jobj.find(name);
+        MSS(it != jobj.end(), log_.error() << "Could not find '" << name << "'" << std::endl);
+        MSS(it.value().is_string());
+        value = it.value();
+        log_.os(0) << C(name) C(value) << std::endl;
+        MSS_END();
+    }
+
+    bool App::read_(int &value, const std::string &name, const nlohmann::json &jobj)
+    {
+        MSS_BEGIN(bool);
+        auto it = jobj.find(name);
+        MSS(it != jobj.end(), log_.error() << "Could not find '" << name << "'" << std::endl);
+        MSS(it.value().is_number_integer());
+        value = it.value();
+        log_.os(0) << C(name) C(value) << std::endl;
+        MSS_END();
+    }
+
     bool App::run_lsp_()
     {
         MSS_BEGIN(bool);
 
-        std::string msg;
-        MSS(read_json_message_(msg));
-        log_.os(0) << C(msg) << std::endl;
+        for (nlohmann::json request, response; true;)
+        {
+            MSS(read_json_message_(request));
+            log_.os(0) << C(request) << std::endl;
+
+            std::string jsonrpc;
+            MSS(read_(jsonrpc, "jsonrpc", request));
+            MSS(jsonrpc == "2.0");
+
+            std::string method;
+            MSS(read_(method, "method", request));
+
+            int id;
+            MSS(read_(id, "id", request));
+
+            if (method == "initialize")
+            {
+                response = {
+                    {"jsonrpc", jsonrpc},
+                    {"id", id},
+                    {"result", {{"capabilities", {{"astProvider", "true"}, {"serverInfo", {{"name", "org"}, {"version", "v1"}}}}}}},
+                };
+                std::string msg = response.dump();
+                std::cout << "Content-Length: " << msg.size() << "\r\n\r\n"
+                          << msg << std::flush;
+            }
+            else if (method == "initialized")
+            {
+            }
+            else
+            {
+                MSS(false, log_.error() << "Unsupported method '" << method << "'" << std::endl);
+            }
+        }
 
         MSS_END();
     }
 
-    bool App::read_json_message_(std::string &msg) const
+    bool App::read_json_message_(nlohmann::json &msg) const
     {
         MSS_BEGIN(bool);
 
-        std::getline(std::cin, msg);
-        gubg::Strange strange{msg};
+        std::getline(std::cin, tmp_str_);
+        gubg::Strange strange{tmp_str_};
         MSS(strange.pop_if("Content-Length: "));
 
         std::size_t size;
         MSS(strange.pop_decimal(size));
 
-        std::getline(std::cin, msg);
-        msg.resize(size);
-        std::cin.read(msg.data(), size);
+        std::getline(std::cin, tmp_str_);
+        tmp_str_.resize(size);
+        std::cin.read(tmp_str_.data(), size);
+
+        msg = nlohmann::json::parse(tmp_str_);
 
         MSS_END();
     }

@@ -6,6 +6,8 @@
 
 #include <gubg/Logger.hpp>
 
+#include <nlohmann/json.hpp>
+
 #include <string>
 
 namespace org {
@@ -22,13 +24,17 @@ namespace org {
         bool load_env_vars_();
         bool run_normal_();
         bool run_lsp_();
-        bool read_json_message_(std::string &msg) const;
+        bool read_json_message_(nlohmann::json &) const;
+        bool read_(std::string &, const std::string &, const nlohmann::json &);
+        bool read_(int &, const std::string &, const nlohmann::json &);
 
         const Options &options_;
 
         gubg::Logger log_;
 
         tree::Node root_;
+
+        mutable std::string tmp_str_;
     };
 
 } // namespace org
