@@ -24,6 +24,8 @@ namespace org {
             default: MSS(false, log_.error() << "Unknown mode '" << (int)options_.mode << "'"); break;
         }
 
+        log_.os(0) << "App.run() is done" << std::endl;
+
         MSS_END();
     }
 
@@ -110,8 +112,10 @@ namespace org {
     {
         MSS_BEGIN(bool);
 
-        for (nlohmann::json request, response; true;)
+        for (bool do_continue = true; do_continue;)
         {
+            nlohmann::json request;
+            log_.os(0) << std::endl;
             MSS(read_json_message_(request));
             log_.os(0) << C(request) << std::endl;
 
@@ -122,26 +126,61 @@ namespace org {
             std::string method;
             MSS(read_(method, "method", request));
 
-            int id;
-            MSS(read_(id, "id", request));
+            std::optional<int> id;
+            if (request.count("id"))
+                MSS(read_(id.emplace(), "id", request));
 
+            std::optional<nlohmann::json> response;
             if (method == "initialize")
             {
-                response = {
+                MSS(!!id);
+                response.emplace() = {
                     {"jsonrpc", jsonrpc},
-                    {"id", id},
-                    {"result", {{"capabilities", {{"astProvider", "true"}, {"serverInfo", {{"name", "org"}, {"version", "v1"}}}}}}},
+                    {"id", *id},
+                    {"result", {{"capabilities", {{"definitionProvider", true}}}, {"serverInfo", {{"name", "org"}, {"version", "v1"}}}}},
                 };
-                std::string msg = response.dump();
-                std::cout << "Content-Length: " << msg.size() << "\r\n\r\n"
-                          << msg << std::flush;
             }
             else if (method == "initialized")
+            {
+                log_.os(0) << "We are initialized" << std::endl;
+            }
+            else if (method == "shutdown")
+            {
+                MSS(!!id);
+                response.emplace() = {
+                    {"jsonrpc", jsonrpc},
+                    {"id", *id},
+                    {"result", nullptr},
+                };
+            }
+            else if (method == "exit")
+            {
+                log_.os(0) << "Exit" << std::endl;
+                do_continue = false;
+            }
+            else if (method == "textDocument/definition")
+            {
+                MSS(!!id);
+                response.emplace() = {
+                    {"jsonrpc", jsonrpc},
+                    {"id", *id},
+                    {"result", {{{"range", {{"start", {{"character", 0}, {"line", 0}}}, {"end", {{"character", 0}, {"line", 0}}}}}, {"uri", "file:///home/geertf/tmp/a.txt"}}}},
+                };
+            }
+            else if (method == "textDocument/didOpen")
             {
             }
             else
             {
                 MSS(false, log_.error() << "Unsupported method '" << method << "'" << std::endl);
+            }
+
+            if (response)
+            {
+                log_.os(0) << C(*response) << std::endl;
+                const std::string msg = response->dump();
+                std::cout << "Content-Length: " << msg.size() << "\r\n\r\n"
+                          << msg << std::flush;
             }
         }
 
