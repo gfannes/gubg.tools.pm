@@ -1,0 +1,18 @@
+* Log communication between helix and clangd
+  - This can be done with lspmitm
+  - Uncomment =command = "lspmitm"= in helix/languages.toml in gubg
+
+* Select json library
+
+* Integrate json library into gubg
+
+* Add LSP mode to org
+
+* Parse request in org
+
+* Generate response in org
+
+* Create flow in org
+
+* Parse a line on .md or .org and check for file links
+  - Support definition LSP command
