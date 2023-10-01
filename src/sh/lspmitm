@@ -1,0 +1,91 @@
+#!/usr/bin/env ruby
+
+# An LSP man-in-the-middle script that logs the Client2Server and Server2Client
+# messages in /tmp/lspmitm.log
+
+require 'open3'
+
+class Message
+    attr_accessor(:descr)
+    def initialize(log: nil)
+        @log = log
+
+        @descr = ''
+
+        @re_content_length = /Content-Length: (\d+)/
+    end
+    def read(input)
+        line = input.gets()
+        if md = @re_content_length.match(line)
+            content_length = md[1].to_i()
+        else
+            log_("Could not parse content length from '#{line}'")
+            return false
+        end
+
+        input.gets()
+
+        @data = input.read(content_length)
+        log_(Time.now())
+        log_("#{@data}\n\n")
+
+        true
+    end
+    def write(output)
+        output.write("Content-Length: #{@data.size()}\r\n\r\n")
+        output.write(@data)
+        output.flush()
+        true
+    end
+
+    private
+    def log_(msg)
+        return unless @log
+        @log.puts("#{@descr}: #{msg}")
+        @log.flush()
+    end
+end
+
+class Forwarder
+    def initialize(input, output, descr, log: nil)
+        @input, @output = input, output
+        @descr = descr
+
+        @msg = Message.new(log: log)
+
+        @thread = Thread.new() do
+            iteration = -1
+            loop do
+                iteration += 1
+                @msg.descr = "#{@descr}-#{iteration}"
+
+                raise "Could not read request" unless @msg.read(@input)
+                @msg.write(@output)
+            end
+        end
+
+        def join()
+            @thread.join()
+        end
+    end
+end
+
+editor_output = STDIN
+editor_input = STDOUT
+
+File.open('/tmp/lspmitm.log', 'w') do |log_fo|
+    log_fo.puts("Startup #{Time.now()}")
+    log_fo.puts("ARGV: #{ARGV}")
+
+    Open3.popen2('clangd', '--log=verbose') do |clangd_input, clangd_output, thr|
+
+        c2s = Forwarder.new(editor_output, clangd_input, "C2S", log: log_fo)
+        s2c = Forwarder.new(clangd_output, editor_input, "S2C", log: log_fo)
+
+        c2s.join()
+        s2c.join()
+
+    end
+
+    log_fo.puts("End")
+end
