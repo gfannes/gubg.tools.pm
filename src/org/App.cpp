@@ -9,6 +9,7 @@
 #include <gubg/file/Filesystem.hpp>
 #include <gubg/map.hpp>
 #include <gubg/mss.hpp>
+#include <gubg/string/concat.hpp>
 
 #include <fstream>
 
@@ -46,7 +47,7 @@ namespace org {
 
         tree::Node &root = parser.root;
 
-        if (!options_.state.empty())
+        if (options_.state || options_.tag)
         {
             MSS(options_.primary < options_.ranges.size());
             const gubg::ix::Range &range = options_.ranges[options_.primary];
@@ -57,24 +58,34 @@ namespace org {
             {
                 tree::Content *content = std::get_if<tree::Content>(&node->data);
                 MSS(!!content);
+
                 tree::Prefix prefix;
                 MSS(prefix.parse(content->content));
+
                 const bool is_bullet = prefix.indent && prefix.indent->back() == '-';
-                if (options_.state == "-")
-                    prefix.state.reset();
-                else if (is_bullet && options_.state == "TODO")
-                    prefix.state = "[ ]";
-                else if (is_bullet && options_.state == "DONE")
-                    prefix.state = "[X]";
-                else if (is_bullet && options_.state == "QUESTION")
-                    prefix.state = "[?]";
-                else
-                    prefix.state = options_.state;
+                if (options_.state)
+                {
+                    if (options_.state == "-")
+                        prefix.state.reset();
+                    else if (is_bullet && options_.state == "TODO")
+                        prefix.state = "[ ]";
+                    else if (is_bullet && options_.state == "DONE")
+                        prefix.state = "[X]";
+                    else if (is_bullet && options_.state == "QUESTION")
+                        prefix.state = "[?]";
+                    else
+                        prefix.state = options_.state;
+                }
                 if (options_.tag)
-                    prefix.tags = *options_.tag;
-                std::string tmp;
-                MSS(prefix.serialize(tmp));
-                content->content = tmp;
+                {
+                    prefix.tags = gubg::string::concat(':', *options_.tag, ':');
+                }
+
+                {
+                    std::string tmp;
+                    MSS(prefix.serialize(tmp));
+                    content->content = tmp;
+                }
             }
 
             tree::Writer writer;
