@@ -38,25 +38,22 @@ namespace org {
 
         MSS(!options_.filepath.empty(), log_.error() << "Expected filepath to be set" << std::endl);
 
-        std::string content;
-        MSS(gubg::file::read(content, options_.filepath));
-
-        tree::Parser parser;
-        MSS(parser.parse(content));
-        std::cout << parser.root << std::endl;
-
-        tree::Node &root = parser.root;
+        MSS(parse_(options_.filepath));
 
         if (options_.state || options_.tag)
         {
-            MSS(options_.primary < options_.ranges.size());
-            const gubg::ix::Range &range = options_.ranges[options_.primary];
-            tree::Node *node = root.find(range.start());
-            MSS(!!node);
-            std::cout << "Found node " << *node << std::endl;
+            // Find node that corresponds with start of the primary range
+            tree::Node *node = nullptr;
+            {
+                MSS(options_.primary < options_.ranges.size());
+                const gubg::ix::Range &range = options_.ranges[options_.primary];
+                node = root_.find(range.start());
+                MSS(!!node);
+                std::cout << "Found node " << *node << std::endl;
+            }
 
             {
-                tree::Content *content = std::get_if<tree::Content>(&node->data);
+                tree::Line *content = std::get_if<tree::Line>(&node->data);
                 MSS(!!content);
 
                 tree::Prefix prefix;
@@ -82,17 +79,12 @@ namespace org {
                 }
 
                 {
-                    std::string tmp;
-                    MSS(prefix.serialize(tmp));
-                    content->content = tmp;
+                    MSS(prefix.serialize(tmp_str_));
+                    content->content = tmp_str_;
                 }
             }
 
-            tree::Writer writer;
-            content.resize(0);
-            MSS(writer.write(content, parser.root));
-
-            MSS(gubg::file::write(content, options_.filepath));
+            MSS(write_(options_.filepath));
         }
 
         MSS_END();
@@ -217,6 +209,36 @@ namespace org {
         std::cin.read(tmp_str_.data(), size);
 
         msg = nlohmann::json::parse(tmp_str_);
+
+        MSS_END();
+    }
+
+    bool App::parse_(const std::string &fp)
+    {
+        MSS_BEGIN(bool);
+
+        MSS(gubg::file::read(tmp_str_, options_.filepath));
+
+        auto markup_type = markup::guess_from_filepath(options_.filepath);
+        MSS(!!markup_type, log_.error() << "Could not guess markup type for '" << options_.filepath << "'" << std::endl);
+
+        tree::Parser parser{*markup_type};
+        MSS(parser.parse(tmp_str_));
+
+        std::swap(parser.root, root_);
+
+        MSS_END();
+    }
+
+    bool App::write_(const std::string &fp)
+    {
+        MSS_BEGIN(bool);
+
+        tree::Writer writer;
+        tmp_str_.resize(0);
+        MSS(writer.write(tmp_str_, root_));
+
+        MSS(gubg::file::write(tmp_str_, options_.filepath));
 
         MSS_END();
     }

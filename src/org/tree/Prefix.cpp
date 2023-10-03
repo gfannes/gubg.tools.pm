@@ -99,6 +99,7 @@ namespace org { namespace tree {
     bool Prefix::serialize(std::string &dst) const
     {
         MSS_BEGIN(bool);
+        dst.resize(0);
         auto append = [&](const std::optional<std::string> &str_opt) {
             if (str_opt)
             {

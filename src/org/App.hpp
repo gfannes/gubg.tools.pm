@@ -28,6 +28,9 @@ namespace org {
         bool read_(std::string &, const std::string &, const nlohmann::json &);
         bool read_(int &, const std::string &, const nlohmann::json &);
 
+        bool parse_(const std::string &fp);
+        bool write_(const std::string &fp);
+
         const Options &options_;
 
         gubg::Logger log_;

@@ -14,7 +14,7 @@ namespace org { namespace tree {
                 MSS(write(dst, child));
             }
         }
-        else if (const Content *content = std::get_if<Content>(&node.data))
+        else if (const Line *content = std::get_if<Line>(&node.data))
         {
             dst += content->prefix.str();
             dst += content->content.str();

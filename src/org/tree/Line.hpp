@@ -1,12 +1,12 @@
-#ifndef HEADER_org_tree_Content_hpp_ALREAD_INCLUDED
-#define HEADER_org_tree_Content_hpp_ALREAD_INCLUDED
+#ifndef HEADER_org_tree_Line_hpp_ALREAD_INCLUDED
+#define HEADER_org_tree_Line_hpp_ALREAD_INCLUDED
 
 #include <gubg/Strange.hpp>
 #include <string>
 
 namespace org { namespace tree {
 
-    class Content
+    class Line
     {
     public:
         gubg::Strange prefix;

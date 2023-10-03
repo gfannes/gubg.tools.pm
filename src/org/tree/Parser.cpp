@@ -18,9 +18,10 @@ namespace org { namespace tree {
         {
             auto &child = childs.emplace_back();
             MSS(child.init(Type::Line));
-            auto &content = child.content();
-            content.content = line;
-            content.postfix = end;
+
+            auto &line_ch = child.line();
+            line_ch.content = line;
+            line_ch.postfix = end;
         }
 
         // Compute the ix::Range for each node recursively
@@ -33,7 +34,7 @@ namespace org { namespace tree {
     // Privates
     void Parser::reset_()
     {
-        *this = Parser();
+        *this = Parser(markup_type_);
     }
 
     bool Parser::init_ix_range_recursive_(Node &node, gubg::ix::Range &ix_range)
@@ -48,7 +49,7 @@ namespace org { namespace tree {
             }
             node.ix_range = ix_range;
         }
-        else if (auto *content = std::get_if<Content>(&node.data))
+        else if (auto *content = std::get_if<Line>(&node.data))
         {
             const auto my_size = content->size();
             node.ix_range = gubg::ix::Range(ix_range.stop(), my_size);

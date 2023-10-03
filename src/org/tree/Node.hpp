@@ -1,7 +1,7 @@
 #ifndef HEADER_org_tree_Node_hpp_ALREAD_INCLUDED
 #define HEADER_org_tree_Node_hpp_ALREAD_INCLUDED
 
-#include <org/tree/Content.hpp>
+#include <org/tree/Line.hpp>
 #include <org/tree/Type.hpp>
 #include <org/types.hpp>
 
@@ -22,7 +22,9 @@ namespace org { namespace tree {
     public:
         Type type = Type::None;
         gubg::ix::Range ix_range;
-        std::variant<Nodes, Content> data;
+        std::variant<Nodes, Line> data;
+
+        void swap(Node &);
 
         bool valid() const { return type != Type::None; }
 
@@ -31,8 +33,8 @@ namespace org { namespace tree {
         Nodes &childs() { return std::get<Nodes>(data); }
         const Nodes &childs() const { return std::get<Nodes>(data); }
 
-        Content &content() { return std::get<Content>(data); }
-        const Content &content() const { return std::get<Content>(data); }
+        Line &line() { return std::get<Line>(data); }
+        const Line &line() const { return std::get<Line>(data); }
 
         Node *find(Ix);
 

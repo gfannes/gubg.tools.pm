@@ -3,6 +3,8 @@
 
 #include <org/tree/Node.hpp>
 
+#include <org/markup/Type.hpp>
+
 #include <gubg/Strange.hpp>
 #include <gubg/ix/Range.hpp>
 
@@ -15,12 +17,16 @@ namespace org { namespace tree {
     public:
         Node root;
 
+        Parser(markup::Type markup_type)
+            : markup_type_(markup_type) {}
+
         bool parse(const std::string &);
 
     private:
         void reset_();
         static bool init_ix_range_recursive_(Node &, gubg::ix::Range &);
 
+        markup::Type markup_type_;
         gubg::Strange strange_;
     };
 

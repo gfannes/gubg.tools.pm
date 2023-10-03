@@ -5,6 +5,13 @@
 
 namespace org { namespace tree {
 
+    void Node::swap(Node &other)
+    {
+        std::swap(type, other.type);
+        std::swap(ix_range, other.ix_range);
+        std::swap(data, other.data);
+    }
+
     bool Node::init(Type type)
     {
         MSS_BEGIN(bool);
@@ -16,7 +23,7 @@ namespace org { namespace tree {
                 data = Nodes{};
                 break;
             case Type::Line:
-                data = Content{};
+                data = Line{};
                 break;
             default:
                 MSS(false);
@@ -37,7 +44,7 @@ namespace org { namespace tree {
             for (const auto &child : *childs)
                 child.write(n);
         }
-        if (const Content *content = std::get_if<Content>(&data))
+        if (const Line *content = std::get_if<Line>(&data))
         {
             auto add_attr = [&](const char *name, const auto &value) {
                 if (!value.empty())

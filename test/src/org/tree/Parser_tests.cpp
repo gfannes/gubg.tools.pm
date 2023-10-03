@@ -23,7 +23,7 @@ TEST_CASE("XXX tests", "[ut][org][tree][Parser]")
         scn.content = "\n# title0\n## title0.0\n## title0.1";
     }
 
-    tree::Parser parser;
+    tree::Parser parser{markup::Type::Markdown};
     const auto ok = parser.parse(std::move(scn.content));
     REQUIRE(ok == exp.ok);
     if (ok)
