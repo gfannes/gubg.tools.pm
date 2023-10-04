@@ -1,7 +1,7 @@
 #include <org/App.hpp>
 
 #include <org/tree/Parser.hpp>
-#include <org/tree/Prefix.hpp>
+#include <org/tree/Content.hpp>
 #include <org/tree/Writer.hpp>
 
 #include <gubg/Signaled.hpp>
@@ -53,34 +53,33 @@ namespace org {
             }
 
             {
-                tree::Line *content = std::get_if<tree::Line>(&node->data);
-                MSS(!!content);
+                tree::Line *line = std::get_if<tree::Line>(&node->data);
+                MSS(!!line);
 
-                tree::Prefix prefix;
-                MSS(prefix.parse(content->content));
+                tree::Content content;
+                MSS(content.parse(line->content));
 
-                const bool is_bullet = prefix.indent && prefix.indent->back() == '-';
                 if (options_.state)
                 {
                     if (options_.state == "-")
-                        prefix.state.reset();
-                    else if (is_bullet && options_.state == "TODO")
-                        prefix.state = "[ ]";
-                    else if (is_bullet && options_.state == "DONE")
-                        prefix.state = "[X]";
-                    else if (is_bullet && options_.state == "QUESTION")
-                        prefix.state = "[?]";
+                        content.state.reset();
+                    else if (line->is_bullet && options_.state == "TODO")
+                        content.state = "[ ]";
+                    else if (line->is_bullet && options_.state == "DONE")
+                        content.state = "[X]";
+                    else if (line->is_bullet && options_.state == "QUESTION")
+                        content.state = "[?]";
                     else
-                        prefix.state = options_.state;
+                        content.state = options_.state;
                 }
                 if (options_.tag)
                 {
-                    prefix.tags = gubg::string::concat(':', *options_.tag, ':');
+                    content.tags = gubg::string::concat(':', *options_.tag, ':');
                 }
 
                 {
-                    MSS(prefix.serialize(tmp_str_));
-                    content->content = tmp_str_;
+                    MSS(content.serialize(tmp_str_));
+                    line->content = tmp_str_;
                 }
             }
 

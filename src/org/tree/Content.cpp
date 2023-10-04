@@ -1,48 +1,20 @@
-#include <org/tree/Prefix.hpp>
+#include <org/tree/Content.hpp>
 
 #include <gubg/mss.hpp>
 #include <gubg/string/concat.hpp>
 
 namespace org { namespace tree {
 
-    void Prefix::reset()
+    void Content::reset()
     {
-        *this = Prefix();
+        *this = Content();
     }
 
-    bool Prefix::parse(gubg::Strange strange)
+    bool Content::parse(gubg::Strange strange)
     {
         MSS_BEGIN(bool);
 
         reset();
-
-        // Indent
-        {
-            const auto sp = strange;
-
-            auto strip_and_append = [&](char ch) {
-                if (const auto count = strange.strip_left(ch); count > 0)
-                {
-                    if (!indent)
-                        indent.emplace();
-                    indent->append(count, ch);
-                    return true;
-                }
-                return false;
-            };
-
-            strip_and_append(' ');
-
-            for (auto ch : {'#', '*', '-'})
-                if (strip_and_append(ch))
-                    break;
-
-            if (!strange.pop_if(' '))
-            {
-                indent.reset();
-                strange = sp;
-            }
-        }
 
         // State
         {
@@ -96,7 +68,7 @@ namespace org { namespace tree {
         MSS_END();
     }
 
-    bool Prefix::serialize(std::string &dst) const
+    bool Content::serialize(std::string &dst) const
     {
         MSS_BEGIN(bool);
         dst.resize(0);
@@ -108,7 +80,6 @@ namespace org { namespace tree {
                 dst += *str_opt;
             }
         };
-        append(indent);
         append(state);
         append(rest);
         append(tags);

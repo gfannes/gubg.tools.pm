@@ -1,5 +1,5 @@
-#ifndef HEADER_org_tree_Prefix_hpp_ALREAD_INCLUDED
-#define HEADER_org_tree_Prefix_hpp_ALREAD_INCLUDED
+#ifndef HEADER_org_tree_Content_hpp_ALREAD_INCLUDED
+#define HEADER_org_tree_Content_hpp_ALREAD_INCLUDED
 
 #include <gubg/Strange.hpp>
 
@@ -7,10 +7,9 @@
 
 namespace org { namespace tree {
 
-    class Prefix
+    class Content
     {
     public:
-        std::optional<std::string> indent;
         std::optional<std::string> state;
         std::optional<std::string> rest;
         std::optional<std::string> tags;

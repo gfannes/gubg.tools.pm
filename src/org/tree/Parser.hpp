@@ -4,6 +4,7 @@
 #include <org/tree/Node.hpp>
 
 #include <org/markup/Type.hpp>
+#include <org/markup/Parser.hpp>
 
 #include <gubg/Strange.hpp>
 #include <gubg/ix/Range.hpp>
@@ -27,6 +28,7 @@ namespace org { namespace tree {
         static bool init_ix_range_recursive_(Node &, gubg::ix::Range &);
 
         markup::Type markup_type_;
+        markup::Parser markup_parser_{markup_type_};
         gubg::Strange strange_;
     };
 

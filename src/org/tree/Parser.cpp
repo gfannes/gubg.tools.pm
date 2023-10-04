@@ -14,14 +14,15 @@ namespace org { namespace tree {
 
         strange_ = content;
         auto &childs = root.childs();
-        for (gubg::Strange line, end; strange_.pop_line(line, end);)
+        for (gubg::Strange line_stg, end_stg; strange_.pop_line(line_stg, end_stg);)
         {
-            auto &child = childs.emplace_back();
+            Node &child = childs.emplace_back();
             MSS(child.init(Type::Line));
 
-            auto &line_ch = child.line();
-            line_ch.content = line;
-            line_ch.postfix = end;
+            Line &line = child.line();
+            MSS(markup_parser_.pop_prefix(line.prefix, line.is_bullet, line_stg));
+            line.content = line_stg;
+            line.postfix = end_stg;
         }
 
         // Compute the ix::Range for each node recursively

@@ -13,6 +13,8 @@ namespace org { namespace tree {
         gubg::Strange content;
         gubg::Strange postfix;
 
+        bool is_bullet = false;
+
         std::size_t size() const { return prefix.size() + content.size() + postfix.size(); }
 
     private:
