@@ -4,9 +4,19 @@
 
 namespace org { namespace tree {
 
+    bool Parser::init(markup::Type markup_type)
+    {
+        MSS_BEGIN(bool);
+        markup_type_ = markup_type;
+        MSS(markup_parser_.init(markup_type));
+        MSS_END();
+    }
+
     bool Parser::parse(const std::string &content)
     {
         MSS_BEGIN(bool);
+
+        MSS(markup_type_ != markup::Type::None);
 
         reset_();
 
@@ -14,12 +24,14 @@ namespace org { namespace tree {
 
         strange_ = content;
         auto &childs = root.childs();
-        for (gubg::Strange line_stg, end_stg; strange_.pop_line(line_stg, end_stg);)
+        Ix line_ix = 0;
+        for (gubg::Strange line_stg, end_stg; strange_.pop_line(line_stg, end_stg); ++line_ix)
         {
             Node &child = childs.emplace_back();
             MSS(child.init(Type::Line));
 
             Line &line = child.line();
+            line.ix = line_ix;
             MSS(markup_parser_.pop_prefix(line.prefix, line.is_bullet, line_stg));
             line.content = line_stg;
             line.postfix = end_stg;
@@ -35,7 +47,9 @@ namespace org { namespace tree {
     // Privates
     void Parser::reset_()
     {
-        *this = Parser(markup_type_);
+        auto markup_type = markup_type_;
+        *this = Parser();
+        init(markup_type);
     }
 
     bool Parser::init_ix_range_recursive_(Node &node, gubg::ix::Range &ix_range)

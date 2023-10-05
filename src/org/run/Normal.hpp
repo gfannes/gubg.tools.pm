@@ -3,6 +3,7 @@
 
 #include <org/Options.hpp>
 #include <org/tree/Node.hpp>
+#include <org/tree/Parser.hpp>
 
 #include <gubg/Logger.hpp>
 
@@ -28,6 +29,8 @@ namespace org { namespace run {
         gubg::Logger log_;
 
         tree::Node root_;
+
+        tree::Parser parser_;
 
         mutable std::string tmp_str_;
     };

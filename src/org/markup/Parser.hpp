@@ -10,15 +10,14 @@ namespace org { namespace markup {
     class Parser
     {
     public:
-        Parser(Type type)
-            : type_(type) {}
+        bool init(Type);
 
         bool pop_prefix(gubg::Strange &prefix, bool &is_bullet, gubg::Strange &line) const;
 
         bool extract_link(gubg::Strange &text, gubg::Strange &link, gubg::Strange line) const;
 
     private:
-        Type type_;
+        Type type_ = Type::None;
     };
 
 }} // namespace org::markup

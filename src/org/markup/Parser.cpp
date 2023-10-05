@@ -6,9 +6,18 @@
 
 namespace org { namespace markup {
 
+    bool Parser::init(Type type)
+    {
+        MSS_BEGIN(bool);
+        type_ = type;
+        MSS_END();
+    }
+
     bool Parser::pop_prefix(gubg::Strange &prefix, bool &is_bullet, gubg::Strange &line) const
     {
         MSS_BEGIN(bool);
+
+        MSS(type_ != Type::None);
 
         is_bullet = false;
 
@@ -69,6 +78,7 @@ namespace org { namespace markup {
             case Type::Org:
                 MSS_Q(line.pop_until('['));
                 MSS(line.pop_bracket(link, "[]"));
+                link.pop_if("file:");
                 MSS(line.pop_bracket(text, "[]"));
                 break;
             default: MSS(false); break;

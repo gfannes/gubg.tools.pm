@@ -1,13 +1,16 @@
 #include <org/run/LSP.hpp>
+#include <org/tree/Content.hpp>
+#include <org/tree/Node.hpp>
 
 #include <gubg/Signaled.hpp>
+#include <gubg/file/Filesystem.hpp>
 #include <gubg/mss.hpp>
-#include <org/tree/Node.hpp>
+#include <gubg/string/concat.hpp>
 
 namespace org { namespace run {
 
     LSP::LSP(const Options &options)
-        : options_(options) {}
+        : options_(options), log_({.filename = options.log_filepath}) {}
 
     bool LSP::run()
     {
@@ -29,7 +32,7 @@ namespace org { namespace run {
             std::string method;
             MSS(read_(method, "method", request));
 
-            std::optional<int> id;
+            std::optional<Id> id;
             if (request.count("id"))
                 MSS(read_(id.emplace(), "id", request));
 
@@ -65,13 +68,69 @@ namespace org { namespace run {
             {
                 MSS(!!id);
 
-                response.set(true).ref() = {
-                    {"jsonrpc", jsonrpc},
-                    {"id", *id},
-                    {"result", {{{"range", {{"start", {{"character", 0}, {"line", 0}}}, {"end", {{"character", 0}, {"line", 0}}}}}, {"uri", "file:///home/geertf/tmp/a.txt"}}}},
-                };
+                Pos pos;
+                MSS(read_(pos, request));
+
+                std::string document_fp;
+                {
+                    const nlohmann::json *ptr = &request;
+                    MSS(read_(ptr, "params", *ptr));
+                    MSS(read_(ptr, "textDocument", *ptr));
+                    std::string uri;
+                    MSS(read_(uri, "uri", *ptr));
+                    gubg::Strange uri_se{uri};
+                    MSS(uri_se.pop_if("file://"));
+                    uri_se.pop_all(document_fp);
+                }
+                log_.os(0) << C(document_fp) << std::endl;
+
+                MSS(gubg::file::read(tmp_str_, document_fp));
+
+                const auto markup_type = markup::guess_from_filepath(document_fp);
+                MSS(!!markup_type);
+
+                MSS(parser_.init(*markup_type));
+                MSS(parser_.parse(tmp_str_));
+
+                const auto node = parser_.root.find_line(pos.line);
+                MSS(!!node);
+                MSS(node->type == tree::Type::Line);
+                const auto &line = node->line();
+
+                markup::Parser parser;
+                MSS(parser.init(*markup_type));
+                gubg::Strange text, link;
+                if (parser.extract_link(text, link, line.content))
+                {
+                    log_.os(0) << C(link) << std::endl;
+                    std::filesystem::path link_fp = link.str();
+                    if (!link_fp.is_absolute())
+                    {
+                        auto dir = std::filesystem::path{document_fp}.parent_path();
+                        log_.os(0) << "Not absolute " << C(dir) << std::endl;
+                        link_fp = dir / link_fp;
+                    }
+                    log_.os(0) << C(link_fp) << std::endl;
+
+                    response.set(true).ref() = {
+                        {"jsonrpc", jsonrpc},
+                        {"id", *id},
+                        {"result", {{{"range", {{"start", {{"character", 0}, {"line", 0}}}, {"end", {{"character", 0}, {"line", 0}}}}}, {"uri", gubg::string::concat("file://", link_fp.string())}}}},
+                    };
+                }
+                else
+                {
+                    response.set(true).ref() = {
+                        {"jsonrpc", jsonrpc},
+                        {"id", *id},
+                        {"result", nullptr},
+                    };
+                }
             }
             else if (method == "textDocument/didOpen")
+            {
+            }
+            else if (method == "textDocument/didClose")
             {
             }
             else
@@ -103,7 +162,7 @@ namespace org { namespace run {
         MSS_END();
     }
 
-    bool LSP::read_(int &value, const std::string &name, const nlohmann::json &jobj)
+    bool LSP::read_(std::size_t &value, const std::string &name, const nlohmann::json &jobj)
     {
         MSS_BEGIN(bool);
         auto it = jobj.find(name);
@@ -114,31 +173,27 @@ namespace org { namespace run {
         MSS_END();
     }
 
+    bool LSP::read_(const nlohmann::json *&ptr, const std::string &name, const nlohmann::json &jobj)
+    {
+        MSS_BEGIN(bool);
+        auto it = jobj.find(name);
+        MSS(it != jobj.end(), log_.error() << "Could not find '" << name << "'" << std::endl);
+        MSS(it.value().is_object());
+        ptr = &it.value();
+        MSS_END();
+    }
+
     bool LSP::read_(Pos &pos, const nlohmann::json &jobj)
     {
         MSS_BEGIN(bool);
 
-        auto params_it = jobj.find("params");
-        MSS(params_it != jobj.end(), log_.error() << "Could not find 'params'" << std::endl);
-        const auto &params = params_it.value();
-        MSS(params.is_object(), log_.error() << "Expected 'params' to be an object" << std::endl);
+        const nlohmann::json *ptr;
 
-        auto position_it = params.find("position");
-        MSS(position_it != params.end(), log_.error() << "Could not find 'position'" << std::endl);
-        const auto &position = position_it.value();
-        MSS(position.is_object(), log_.error() << "Expected 'position' to be an object" << std::endl);
+        MSS(read_(ptr, "params", jobj));
+        MSS(read_(ptr, "position", *ptr));
 
-        {
-            int line;
-            MSS(read_(line, "line", position));
-            pos.line = line;
-        }
-
-        {
-            int character;
-            MSS(read_(character, "character", position));
-            pos.col = character;
-        }
+        MSS(read_(pos.line, "line", *ptr));
+        MSS(read_(pos.col, "character", *ptr));
 
         MSS_END();
     }

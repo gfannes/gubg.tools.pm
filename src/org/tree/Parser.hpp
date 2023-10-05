@@ -18,8 +18,7 @@ namespace org { namespace tree {
     public:
         Node root;
 
-        Parser(markup::Type markup_type)
-            : markup_type_(markup_type) {}
+        bool init(markup::Type markup_type);
 
         bool parse(const std::string &);
 
@@ -27,8 +26,8 @@ namespace org { namespace tree {
         void reset_();
         static bool init_ix_range_recursive_(Node &, gubg::ix::Range &);
 
-        markup::Type markup_type_;
-        markup::Parser markup_parser_{markup_type_};
+        markup::Type markup_type_ = markup::Type::None;
+        markup::Parser markup_parser_;
         gubg::Strange strange_;
     };
 

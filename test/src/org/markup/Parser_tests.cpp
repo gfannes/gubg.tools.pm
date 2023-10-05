@@ -86,7 +86,8 @@ TEST_CASE("markup::Parser.pop_prefix tests", "[org][markup][Parser][pop_prefix]"
         }
     }
 
-    markup::Parser parser{scn.markup_type};
+    markup::Parser parser;
+    REQUIRE(parser.init(scn.markup_type));
 
     gubg::Strange prefix_se;
     bool is_bullet = false;
@@ -151,7 +152,8 @@ TEST_CASE("markup::Parser.extract_link tests", "[org][markup][Parser][extract_li
         }
     }
 
-    markup::Parser parser{scn.markup_type};
+    markup::Parser parser;
+    REQUIRE(parser.init(scn.markup_type));
 
     gubg::Strange text_se, link_se, line_se{scn.line};
     const auto ok = parser.extract_link(text_se, link_se, line_se);

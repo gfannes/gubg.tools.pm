@@ -36,7 +36,8 @@ namespace org { namespace tree {
         Line &line() { return std::get<Line>(data); }
         const Line &line() const { return std::get<Line>(data); }
 
-        Node *find(Ix);
+        Node *find_ix(Ix ix);
+        Node *find_line(Ix line);
 
         void write(gubg::naft::Node &parent) const;
 

@@ -56,9 +56,19 @@ namespace org { namespace tree {
         }
     }
 
-    Node *Node::find(Ix ix)
+    Node *Node::find_ix(Ix ix)
     {
         return find_recursive_(ix, *this);
+    }
+    Node *Node::find_line(Ix line_ix)
+    {
+        Nodes *childs = std::get_if<Nodes>(&data);
+        for (auto &child : *childs)
+        {
+            if (child.type == Type::Line && child.line().ix == line_ix)
+                return &child;
+        }
+        return nullptr;
     }
 
     // Privates

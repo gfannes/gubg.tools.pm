@@ -1,7 +1,6 @@
 #include <org/run/Normal.hpp>
 
 #include <org/tree/Content.hpp>
-#include <org/tree/Parser.hpp>
 #include <org/tree/Writer.hpp>
 
 #include <gubg/Strange.hpp>
@@ -29,7 +28,7 @@ namespace org { namespace run {
             {
                 MSS(options_.primary < options_.ranges.size());
                 const gubg::ix::Range &range = options_.ranges[options_.primary];
-                node = root_.find(range.start());
+                node = root_.find_ix(range.start());
                 MSS(!!node);
                 std::cout << "Found node " << *node << std::endl;
             }
@@ -81,10 +80,10 @@ namespace org { namespace run {
         auto markup_type = markup::guess_from_filepath(options_.filepath);
         MSS(!!markup_type, log_.error() << "Could not guess markup type for '" << options_.filepath << "'" << std::endl);
 
-        tree::Parser parser{*markup_type};
-        MSS(parser.parse(tmp_str_));
+        MSS(parser_.init(*markup_type));
+        MSS(parser_.parse(tmp_str_));
 
-        std::swap(parser.root, root_);
+        std::swap(parser_.root, root_);
 
         MSS_END();
     }
