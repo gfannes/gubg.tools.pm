@@ -1,4 +1,5 @@
-#include <org/App.hpp>
+#include <org/run/LSP.hpp>
+#include <org/run/Normal.hpp>
 
 #include <gubg/Logger.hpp>
 #include <gubg/mss.hpp>
@@ -14,14 +15,23 @@ namespace org {
         std::cout << options << std::endl;
 
         if (options.print_help)
-        {
             std::cout << options.help();
-        }
         else
-        {
-            App app{options};
-            MSS(app.run());
-        }
+            switch (options.mode)
+            {
+                case Mode::Normal:
+                {
+                    run::Normal app{options};
+                    MSS(app.run());
+                }
+                break;
+                case Mode::LSP:
+                {
+                    run::LSP app{options};
+                    MSS(app.run());
+                }
+                break;
+            }
 
         MSS_END();
     }
