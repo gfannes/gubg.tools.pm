@@ -13,7 +13,9 @@ namespace org { namespace markup {
         Parser(Type type)
             : type_(type) {}
 
-        bool pop_prefix(gubg::Strange &prefix, bool &is_bullet, gubg::Strange &line);
+        bool pop_prefix(gubg::Strange &prefix, bool &is_bullet, gubg::Strange &line) const;
+
+        bool extract_link(gubg::Strange &text, gubg::Strange &link, gubg::Strange line) const;
 
     private:
         Type type_;
