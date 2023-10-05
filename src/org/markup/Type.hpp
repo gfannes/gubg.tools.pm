@@ -8,6 +8,7 @@ namespace org { namespace markup {
 
     enum class Type
     {
+        None,
         Org,
         Markdown,
     };

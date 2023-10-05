@@ -10,6 +10,8 @@ namespace org { namespace markup {
     {
         MSS_BEGIN(bool);
 
+        is_bullet = false;
+
         std::optional<std::size_t> count;
         gubg::Strange my_line = line;
         switch (type_)
