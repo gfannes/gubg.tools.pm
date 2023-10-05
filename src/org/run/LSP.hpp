@@ -18,6 +18,12 @@ namespace org { namespace run {
         bool read_json_message_(nlohmann::json &) const;
         bool read_(std::string &, const std::string &, const nlohmann::json &);
         bool read_(int &, const std::string &, const nlohmann::json &);
+        struct Pos
+        {
+            Ix line = 0;
+            Ix col = 0;
+        };
+        bool read_(Pos &, const nlohmann::json &);
 
         const Options &options_;
 

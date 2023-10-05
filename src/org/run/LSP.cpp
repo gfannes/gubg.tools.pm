@@ -64,6 +64,7 @@ namespace org { namespace run {
             else if (method == "textDocument/definition")
             {
                 MSS(!!id);
+
                 response.set(true).ref() = {
                     {"jsonrpc", jsonrpc},
                     {"id", *id},
@@ -110,6 +111,35 @@ namespace org { namespace run {
         MSS(it.value().is_number_integer());
         value = it.value();
         log_.os(0) << C(name) C(value) << std::endl;
+        MSS_END();
+    }
+
+    bool LSP::read_(Pos &pos, const nlohmann::json &jobj)
+    {
+        MSS_BEGIN(bool);
+
+        auto params_it = jobj.find("params");
+        MSS(params_it != jobj.end(), log_.error() << "Could not find 'params'" << std::endl);
+        const auto &params = params_it.value();
+        MSS(params.is_object(), log_.error() << "Expected 'params' to be an object" << std::endl);
+
+        auto position_it = params.find("position");
+        MSS(position_it != params.end(), log_.error() << "Could not find 'position'" << std::endl);
+        const auto &position = position_it.value();
+        MSS(position.is_object(), log_.error() << "Expected 'position' to be an object" << std::endl);
+
+        {
+            int line;
+            MSS(read_(line, "line", position));
+            pos.line = line;
+        }
+
+        {
+            int character;
+            MSS(read_(character, "character", position));
+            pos.col = character;
+        }
+
         MSS_END();
     }
 
