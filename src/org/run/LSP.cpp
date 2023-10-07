@@ -2,10 +2,12 @@
 #include <org/tree/Content.hpp>
 #include <org/tree/Node.hpp>
 
-#include <gubg/Signaled.hpp>
 #include <gubg/file/Filesystem.hpp>
 #include <gubg/mss.hpp>
+#include <gubg/Signaled.hpp>
 #include <gubg/string/concat.hpp>
+
+#include <cstdlib>
 
 namespace org { namespace run {
 
@@ -82,7 +84,6 @@ namespace org { namespace run {
                     MSS(uri_se.pop_if("file://"));
                     uri_se.pop_all(document_fp);
                 }
-                log_.os(0) << C(document_fp) << std::endl;
 
                 MSS(gubg::file::read(tmp_str_, document_fp));
 
@@ -102,21 +103,35 @@ namespace org { namespace run {
                 gubg::Strange text, link;
                 if (parser.extract_link(text, link, line.content))
                 {
-                    log_.os(0) << C(link) << std::endl;
-                    std::filesystem::path link_fp = link.str();
-                    if (!link_fp.is_absolute())
+                    if (link.starts_with("https://") || link.starts_with("http://"))
                     {
-                        auto dir = std::filesystem::path{document_fp}.parent_path();
-                        log_.os(0) << "Not absolute " << C(dir) << std::endl;
-                        link_fp = dir / link_fp;
-                    }
-                    log_.os(0) << C(link_fp) << std::endl;
+                        auto command = gubg::string::concat("xdg-open", ' ', link.str());
 
-                    response.set(true).ref() = {
-                        {"jsonrpc", jsonrpc},
-                        {"id", *id},
-                        {"result", {{{"range", {{"start", {{"character", 0}, {"line", 0}}}, {"end", {{"character", 0}, {"line", 0}}}}}, {"uri", gubg::string::concat("file://", link_fp.string())}}}},
-                    };
+                        const auto code = std::system(command.c_str());
+                        if (code != 0)
+                            log_.warning() << "Running command '" << command << "' failed with code " << code << std::endl;
+
+                        response.set(true).ref() = {
+                            {"jsonrpc", jsonrpc},
+                            {"id", *id},
+                            {"result", nullptr},
+                        };
+                    }
+                    else
+                    {
+                        std::filesystem::path link_fp = link.str();
+                        if (!link_fp.is_absolute())
+                        {
+                            auto dir = std::filesystem::path{document_fp}.parent_path();
+                            link_fp = dir / link_fp;
+                        }
+
+                        response.set(true).ref() = {
+                            {"jsonrpc", jsonrpc},
+                            {"id", *id},
+                            {"result", {{{"range", {{"start", {{"character", 0}, {"line", 0}}}, {"end", {{"character", 0}, {"line", 0}}}}}, {"uri", gubg::string::concat("file://", link_fp.string())}}}},
+                        };
+                    }
                 }
                 else
                 {
