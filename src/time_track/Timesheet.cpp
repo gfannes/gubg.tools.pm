@@ -1,5 +1,6 @@
 #include <time_track/Timesheet.hpp>
 
+#include <gubg/Range_macro.hpp>
 #include <gubg/Strange.hpp>
 #include <gubg/file/Filesystem.hpp>
 #include <gubg/mss.hpp>
@@ -180,6 +181,10 @@ namespace time_track {
                     else if (key == "power")
                     {
                         dayinfo.power = std::stod(value);
+                    }
+                    else if (key == "expense")
+                    {
+                        dayinfo.expenses.push_back({.description = name_, .cost = std::stod(value)});
                     }
                 }
             }
@@ -430,7 +435,7 @@ namespace time_track {
         Story__Day__Details story__day__details;
 
         WorkDeepFocus total_wdf;
-        std::ostringstream latex, latex_rnd, latex_power, tmp;
+        std::ostringstream latex, latex_rnd, latex_power, latex_expense, tmp;
         latex << "\\begin{longtable}{@{\\extracolsep{\\fill}\\hspace{\\tabcolsep}} l r r }" << std::endl;
         latex << "\\hline" << std::endl;
         latex << "{\\bf Omschrijving} & \\multicolumn{1}{c}{\\bf Aantal} & \\multicolumn{1}{c}{\\bf Eenheidsprijs (\\euro)} \\\\*" << std::endl;
@@ -442,7 +447,9 @@ namespace time_track {
         latex_power << "\\textbf{Stroomverbruik buildservers} \\\\" << std::endl;
         const double price_per_kWh = 0.75;
 
-        double total_hours = 0.0, total_rnd_cost = 0.0, total_power_cost = 0.0;
+        latex_expense << "\\textbf{Aankoop} \\\\" << std::endl;
+
+        double total_hours = 0.0, total_rnd_cost = 0.0, total_power_cost = 0.0, total_expense_cost = 0.0;
 
         std::list<std::vector<std::string>> table;
         table.push_back({"Day", "Work-day", "Focus-day", "Pct-day", "Work-cumul", "Focus-cumul", "Pct-cumul"});
@@ -476,6 +483,14 @@ namespace time_track {
                 powers.push_back(power);
                 latex_power << std::fixed << std::setprecision(2);
                 latex_power << day << " & " << power << " kWh & " << price_per_kWh << " \\\\" << std::endl;
+            }
+
+            for (const Expense &expense : dayinfo.expenses)
+            {
+                total_expense_cost += expense.cost_wo_vat();
+
+                latex_expense << std::fixed << std::setprecision(2);
+                latex_expense << day << " & " << expense.description << " & " << expense.cost_wo_vat() << " \\\\" << std::endl;
             }
 
             WorkDeepFocus total_wdf_day;
@@ -563,10 +578,21 @@ namespace time_track {
             total_cost += total_power_cost;
         }
 
+        if (total_expense_cost > 0)
+        {
+            latex_expense << std::fixed << std::setprecision(2);
+            latex_expense << "{\\bf Subtotaal} & & {\\bf \\euro " << total_expense_cost << "} \\\\*[1.5ex]" << std::endl;
+            latex_expense << "\\hline" << std::endl;
+            latex << latex_expense.str();
+            total_cost += total_expense_cost;
+        }
+
         const auto vat = round_2d(total_cost * 0.21);
+        total_cost = round_2d(total_cost);
         const auto total_cost_vat = total_cost + vat;
 
         latex << "\\hline\\hline" << std::endl;
+        latex << std::fixed << std::setprecision(2);
         latex << "{\\bf Saldo} & & {\\bf \\euro " << total_cost << "} \\\\" << std::endl;
         latex << "{\\bf BTW} & & {\\euro " << vat << "} \\\\" << std::endl;
         latex << "{\\bf Saldo met BTW} & & {\\bf \\euro " << total_cost_vat << "} \\\\" << std::endl;
