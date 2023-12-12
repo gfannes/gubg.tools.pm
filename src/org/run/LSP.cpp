@@ -119,7 +119,17 @@ namespace org { namespace run {
                     }
                     else
                     {
-                        std::filesystem::path link_fp = link.str();
+                        std::string link_str = link.str();
+
+                        // Handle reference to $HOME, only when it is the first character
+                        if (!link_str.empty() && link_str[0] == '~')
+                        {
+                            auto home = std::getenv("HOME");
+                            MSS(!!home, log_.error() << "No 'HOME' environment variable found");
+                            link_str.replace(0, 1, home);
+                        }
+
+                        std::filesystem::path link_fp = link_str;
                         if (!link_fp.is_absolute())
                         {
                             auto dir = std::filesystem::path{document_fp}.parent_path();
