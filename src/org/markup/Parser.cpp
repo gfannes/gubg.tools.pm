@@ -66,25 +66,41 @@ namespace org { namespace markup {
 
     bool Parser::extract_link(gubg::Strange &text, gubg::Strange &link, gubg::Strange line) const
     {
-        MSS_BEGIN(bool);
-
         switch (type_)
         {
             case Type::Markdown:
-                MSS_Q(line.pop_to('['));
-                MSS(line.pop_bracket(text, "[]"));
-                MSS(line.pop_bracket(link, "()"));
+                // Format: [text](link)
+                while (line.pop_to('['))
+                {
+                    if (!line.pop_bracket(text, "[]"))
+                        continue;
+                    if (!line.pop_bracket(link, "()"))
+                        continue;
+                    // Found link
+                    return true;
+                }
                 break;
             case Type::Org:
-                MSS_Q(line.pop_until('['));
-                MSS(line.pop_bracket(link, "[]"));
-                link.pop_if("file:");
-                MSS(line.pop_bracket(text, "[]"));
+                // Format: [[link][text]]
+                while (line.pop_to('['))
+                {
+                    gubg::Strange my_line;
+                    if (!line.pop_bracket(my_line, "[]"))
+                        continue;
+                    if (!my_line.pop_bracket(link, "[]"))
+                        continue;
+                    link.pop_if("file:");
+                    if (!my_line.pop_bracket(text, "[]"))
+                        continue;
+                    // Found link
+                    return true;
+                }
                 break;
-            default: MSS(false); break;
+            case Type::None: break;
         }
 
-        MSS_END();
+        // Could not find link
+        return false;
     }
 
 }} // namespace org::markup

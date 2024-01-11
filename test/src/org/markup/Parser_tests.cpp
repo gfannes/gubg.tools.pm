@@ -134,6 +134,20 @@ TEST_CASE("markup::Parser.extract_link tests", "[org][markup][Parser][extract_li
             exp.link = "link";
             scn.line = "bla [text](link) bli";
         }
+        SECTION("link in list")
+        {
+            exp.ok = true;
+            exp.text = "text";
+            exp.link = "link";
+            scn.line = "* bla [text](link) bli";
+        }
+        SECTION("link in list with state")
+        {
+            exp.ok = true;
+            exp.text = "text";
+            exp.link = "link";
+            scn.line = "* [ ] bla [text](link) bli";
+        }
     }
     SECTION("Org")
     {
