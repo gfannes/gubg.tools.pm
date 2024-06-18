@@ -1,5 +1,5 @@
-#ifndef HEADER_org_markup_Type_hpp_ALREAD_INCLUDED
-#define HEADER_org_markup_Type_hpp_ALREAD_INCLUDED
+#ifndef HEADER_org_markup_Type_hpp_ALREADY_INCLUDED
+#define HEADER_org_markup_Type_hpp_ALREADY_INCLUDED
 
 #include <ostream>
 #include <optional>

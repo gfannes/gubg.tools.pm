@@ -1,5 +1,5 @@
-#ifndef HEADER_org_Options_hpp_ALREAD_INCLUDED
-#define HEADER_org_Options_hpp_ALREAD_INCLUDED
+#ifndef HEADER_org_Options_hpp_ALREADY_INCLUDED
+#define HEADER_org_Options_hpp_ALREADY_INCLUDED
 
 #include <org/types.hpp>
 

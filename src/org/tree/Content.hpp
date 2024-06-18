@@ -1,5 +1,5 @@
-#ifndef HEADER_org_tree_Content_hpp_ALREAD_INCLUDED
-#define HEADER_org_tree_Content_hpp_ALREAD_INCLUDED
+#ifndef HEADER_org_tree_Content_hpp_ALREADY_INCLUDED
+#define HEADER_org_tree_Content_hpp_ALREADY_INCLUDED
 
 #include <gubg/Strange.hpp>
 

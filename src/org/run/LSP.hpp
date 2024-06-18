@@ -1,5 +1,5 @@
-#ifndef HEADER_org_run_LSP_hpp_ALREAD_INCLUDED
-#define HEADER_org_run_LSP_hpp_ALREAD_INCLUDED
+#ifndef HEADER_org_run_LSP_hpp_ALREADY_INCLUDED
+#define HEADER_org_run_LSP_hpp_ALREADY_INCLUDED
 
 #include <org/Options.hpp>
 #include <org/types.hpp>
