@@ -47,7 +47,7 @@ namespace org { namespace run {
                     else if (line->is_bullet && options_.state == "TODO")
                         content.state = "[ ]";
                     else if (line->is_bullet && options_.state == "DONE")
-                        content.state = "[X]";
+                        content.state = "[x]";
                     else if (line->is_bullet && options_.state == "QUESTION")
                         content.state = "[?]";
                     else
