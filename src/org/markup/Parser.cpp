@@ -31,7 +31,7 @@ namespace org { namespace markup {
                     count = line.size() - my_line.size();
                 else
                 {
-                    my_line.strip_left(' ');
+                    my_line.strip_left(" \t");
                     for (char ch : {'*', '-'})
                         if (my_line.pop_if(ch) && my_line.pop_if(' '))
                         {

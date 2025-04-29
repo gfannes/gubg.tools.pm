@@ -9,8 +9,6 @@
 #include <gubg/mss.hpp>
 #include <gubg/string/concat.hpp>
 
-#include <fstream>
-
 namespace org { namespace run {
 
     bool Normal::run()
