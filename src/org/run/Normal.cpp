@@ -50,6 +50,8 @@ namespace org { namespace run {
                         content.state = "[x]";
                     else if (line->is_bullet && options_.state == "QUESTION")
                         content.state = "[?]";
+                    else if (line->is_bullet && options_.state == "CALLOUT")
+                        content.state = "[!]";
                     else if (line->is_bullet && options_.state == "NEXT")
                         content.state = "[*]";
                     else

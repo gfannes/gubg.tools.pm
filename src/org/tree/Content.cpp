@@ -18,7 +18,7 @@ namespace org { namespace tree {
 
         // State
         {
-            for (auto some_state : {"TODO", "QUESTION", "ACTIVE", "NEXT", "WIP", "FOCUS", "CHECK", "REWORK", "BLOCKED", "CANCELED", "DONE"})
+            for (auto some_state : {"TODO", "QUESTION", "CALLOUT", "ACTIVE", "NEXT", "WIP", "FOCUS", "CHECK", "REWORK", "BLOCKED", "CANCELED", "DONE"})
                 if (!state)
                 {
                     const auto sp = strange;
