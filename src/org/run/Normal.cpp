@@ -44,6 +44,8 @@ namespace org { namespace run {
                         content.state.reset();
                     else if (line->is_bullet && options_.state == "TODO")
                         content.state = "[ ]";
+                    else if (line->is_bullet && options_.state == "NEXT")
+                        content.state = "[*]";
                     else if (line->is_bullet && options_.state == "WIP")
                         content.state = "[/]";
                     else if (line->is_bullet && options_.state == "DONE")
@@ -52,8 +54,10 @@ namespace org { namespace run {
                         content.state = "[?]";
                     else if (line->is_bullet && options_.state == "CALLOUT")
                         content.state = "[!]";
-                    else if (line->is_bullet && options_.state == "NEXT")
-                        content.state = "[*]";
+                    else if (line->is_bullet && options_.state == "FORWARD")
+                        content.state = "[>]";
+                    else if (line->is_bullet && options_.state == "CANCELED")
+                        content.state = "[-]";
                     else
                         content.state = options_.state;
                 }
