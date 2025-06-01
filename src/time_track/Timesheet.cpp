@@ -565,7 +565,7 @@ namespace time_track {
         latex << latex_rnd.str();
         total_cost += total_rnd_cost;
 
-        if (powers.size() > 0)
+        if (false && powers.size() > 0)
         {
             double total_power = powers.back();
             if (powers.size() > 1)
