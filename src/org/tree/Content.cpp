@@ -3,12 +3,9 @@
 #include <gubg/mss.hpp>
 #include <gubg/string/concat.hpp>
 
-namespace org { namespace tree {
+namespace org::tree {
 
-    void Content::reset()
-    {
-        *this = Content();
-    }
+    void Content::reset() { *this = Content(); }
 
     bool Content::parse(gubg::Strange strange)
     {
@@ -18,7 +15,7 @@ namespace org { namespace tree {
 
         // State
         {
-            for (auto some_state : {"TODO", "QUESTION", "CALLOUT", "ACTIVE", "NEXT", "WIP", "FOCUS", "CHECK", "REWORK", "BLOCKED", "CANCELED", "DONE"})
+            for (auto some_state : {"TODO", "NEXT", "WIP", "DONE", "QUESTION", "CALLOUT", "HANDLED", "PLANNED", "ASSIGNED", "CANCELED"})
                 if (!state)
                 {
                     const auto sp = strange;
@@ -86,4 +83,4 @@ namespace org { namespace tree {
         MSS_END();
     }
 
-}} // namespace org::tree
+} // namespace org::tree

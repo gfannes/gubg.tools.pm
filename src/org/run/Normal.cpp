@@ -9,6 +9,8 @@
 #include <gubg/mss.hpp>
 #include <gubg/string/concat.hpp>
 
+#include <string>
+
 namespace org { namespace run {
 
     bool Normal::run()
@@ -55,8 +57,12 @@ namespace org { namespace run {
                         content.state = "[?]";
                     else if (line->is_bullet && options_.state == "CALLOUT")
                         content.state = "[!]";
-                    else if (line->is_bullet && options_.state == "FORWARD")
+                    else if (line->is_bullet && options_.state == "HANDLED")
+                        content.state = "[<]";
+                    else if (line->is_bullet && options_.state == "PLANNED")
                         content.state = "[>]";
+                    else if (line->is_bullet && options_.state == "ASSIGNED")
+                        content.state = "[~]";
                     else if (line->is_bullet && options_.state == "CANCELED")
                         content.state = "[-]";
                     else
