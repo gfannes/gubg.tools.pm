@@ -47,7 +47,7 @@ namespace org { namespace run {
                         content.state.reset();
                     else if (line->is_bullet && options_.state == "TODO")
                         content.state = "[ ]";
-                    else if (line->is_bullet && options_.state == "NEXT")
+                    else if (line->is_bullet && options_.state == "GO")
                         content.state = "[*]";
                     else if (line->is_bullet && options_.state == "WIP")
                         content.state = "[/]";
