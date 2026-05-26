@@ -12,7 +12,7 @@ namespace org { namespace run {
     class LSP
     {
     public:
-        LSP(const Options &);
+        LSP(const Options &, gubg::Logger &log);
 
         bool run();
 
@@ -31,8 +31,7 @@ namespace org { namespace run {
         bool read_(Pos &, const nlohmann::json &);
 
         const Options &options_;
-
-        gubg::Logger log_;
+        gubg::Logger &log_;
 
         tree::Parser parser_;
 

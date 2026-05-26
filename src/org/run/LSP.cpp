@@ -11,8 +11,8 @@
 
 namespace org { namespace run {
 
-    LSP::LSP(const Options &options)
-        : options_(options), log_({.filename = options.log_filepath}) {}
+    LSP::LSP(const Options &options, gubg::Logger &log)
+        : options_(options), log_(log) {}
 
     bool LSP::run()
     {

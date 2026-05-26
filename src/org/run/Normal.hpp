@@ -14,8 +14,8 @@ namespace org { namespace run {
     class Normal
     {
     public:
-        Normal(const Options &options)
-            : options_(options), log_({.filename = options.log_filepath}) {}
+        Normal(const Options &options, gubg::Logger &log)
+            : options_(options), log_(log) {}
 
         bool run();
 
@@ -25,8 +25,7 @@ namespace org { namespace run {
         bool write_(const std::string &fp);
 
         const Options &options_;
-
-        gubg::Logger log_;
+        gubg::Logger &log_;
 
         tree::Node root_;
 

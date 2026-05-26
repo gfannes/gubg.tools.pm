@@ -1,15 +1,15 @@
 #include <org/Options.hpp>
 
-#include <gubg/Strange.hpp>
 #include <gubg/cli/Range.hpp>
 #include <gubg/mss.hpp>
+#include <gubg/Strange.hpp>
 #include <gubg/string/concat.hpp>
 
 #include <sstream>
 
 namespace org {
 
-    bool Options::init(int argc, const char **argv)
+    bool Options::init(int argc, const char **argv, gubg::Logger &log)
     {
         MSS_BEGIN(bool);
 
@@ -22,9 +22,13 @@ namespace org {
             auto is = [&](const char *sh, const char *lh) {
                 return arg == sh || arg == lh;
             };
-            if (false) {}
+            if (false)
+            {
+            }
             else if (is("-h", "--help"))
                 print_help = true;
+            else if (is("-v", "--verbose"))
+                MSS(argr.pop(verbose), log.error() << "Expected verbosity level" << std::endl);
             else if (is("-m", "--mode"))
             {
                 std::string mode_str;
@@ -64,9 +68,11 @@ namespace org {
         MSS_END();
     }
 
-    bool Options::init(EnvVars env_vars)
+    bool Options::init(EnvVars env_vars, gubg::Logger &log)
     {
         MSS_BEGIN(bool);
+
+        log.os({}) << "Init from helix" << std::endl;
 
         auto getenv = [](std::string &dst, const std::string &name) {
             MSS_BEGIN(bool);
@@ -97,6 +103,7 @@ namespace org {
                             MSS(strange.pop_decimal(begin));
                             MSS(strange.pop_if(':'));
                             MSS(strange.pop_decimal(size));
+                            log.os({}) << C(begin) C(size) << std::endl;
                             ranges.emplace_back(begin, size);
                         }
                     }
@@ -113,6 +120,7 @@ namespace org {
         std::ostringstream oss;
         oss << "Help for " << exe_name << std::endl;
         oss << "    -h --help    Print this help" << std::endl;
+        oss << "    -v --verbose Verbosity level [deflaut is 0]" << std::endl;
         oss << "    -m --mode    Mode: normal|lsp [default is normal]" << std::endl;
         oss << "    -l --log     Filepath used for logging" << std::endl;
         oss << "    -i --input   Input filepath" << std::endl;

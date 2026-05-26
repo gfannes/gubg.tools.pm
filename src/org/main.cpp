@@ -4,49 +4,41 @@
 #include <gubg/Logger.hpp>
 #include <gubg/mss.hpp>
 
-namespace org {
-    bool main(int argc, const char **argv)
-    {
-        MSS_BEGIN(bool);
-
-        Options options;
-        MSS(options.init(argc, argv));
-        MSS(options.init(EnvVars::Helix));
-        std::cout << options << std::endl;
-
-        if (options.print_help)
-            std::cout << options.help();
-        else
-            switch (options.mode)
-            {
-                case Mode::Normal:
-                {
-                    run::Normal app{options};
-                    MSS(app.run());
-                }
-                break;
-                case Mode::LSP:
-                {
-                    run::LSP app{options};
-                    MSS(app.run());
-                }
-                break;
-            }
-
-        MSS_END();
-    }
-} // namespace org
-
 int main(int argc, const char **argv)
 {
+    MSS_BEGIN(int);
+
     gubg::Logger log;
 
-    if (!org::main(argc, argv))
-    {
-        log.error() << "Something went wrong" << std::endl;
-        return -1;
-    }
+    org::Options options;
+    MSS(options.init(argc, argv, log), log.error() << "Could not interpret all CLI arguments" << std::endl);
+    if (!log.to_file(options.log_filepath))
+        log.warning() << "Cannot log to '" << options.log_filepath << "'" << std::endl;
+    log.level = options.verbose;
+    log.os(1) << options << std::endl;
+
+    MSS(options.init(org::EnvVars::Helix, log), log.error() << "Could not find expected Helix environment variables" << std::endl);
+
+    if (options.print_help)
+        log.os(log.level) << options.help();
+    else
+        switch (options.mode)
+        {
+            case org::Mode::Normal:
+            {
+                org::run::Normal app{options, log};
+                MSS(app.run());
+            }
+            break;
+            case org::Mode::LSP:
+            {
+                org::run::LSP app{options, log};
+                MSS(app.run());
+            }
+            break;
+        }
 
     log.os(0) << "Everything went OK" << std::endl;
-    return 0;
+
+    MSS_END();
 }

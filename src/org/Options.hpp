@@ -7,6 +7,7 @@
 #include <gubg/Logger.hpp>
 #include <gubg/naft/Node.hpp>
 #include <gubg/naft/stream.hpp>
+#include <gubg/Logger.hpp>
 
 #include <cstdlib>
 #include <optional>
@@ -32,6 +33,7 @@ namespace org {
         std::string exe_name;
 
         bool print_help = false;
+        unsigned int verbose = 0;
 
         Mode mode = Mode::Normal;
 
@@ -44,8 +46,8 @@ namespace org {
         std::optional<std::string> state;
         std::optional<std::string> tag;
 
-        bool init(int argc, const char **argv);
-        bool init(EnvVars);
+        bool init(int argc, const char **argv, gubg::Logger &log);
+        bool init(EnvVars, gubg::Logger &log);
 
         std::string help() const;
 
