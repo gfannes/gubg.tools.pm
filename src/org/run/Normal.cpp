@@ -27,11 +27,17 @@ namespace org { namespace run {
             tree::Node *node = nullptr;
             {
                 MSS(options_.primary < options_.ranges.size());
-                const gubg::ix::Range &range = options_.ranges[options_.primary];
+
                 // &todo: Take UTF8 into account: Helix's ranges are codepoints, not bytes
-                node = root_.find_ix(range.start());
-                MSS(!!node);
-                std::cout << "Found node " << *node << std::endl;
+                
+                const gubg::ix::Range &range = options_.ranges[options_.primary];
+                auto start = range.start();
+                if (start == tmp_str_.size() && start > 0 && range.empty())
+                    // When using org in Helix at the end of an unsaved file, the auto-save will move the cursor to an auto-added newline
+                    --start;
+
+                node = root_.find_ix(start);
+                MSS(!!node, log_.error() << "Could not find node" << std::endl);
             }
 
             {
